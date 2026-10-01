@@ -1,0 +1,4 @@
+interface:
+  display_name: "Implement Cart API Assignment"
+  short_description: "Build the contract-first Cart API exactly"
+  default_prompt: "Use $implement-cart-api-assignment to implement or audit this Cart API assignment exactly."

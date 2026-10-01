@@ -1,0 +1,39 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id         String     @id @db.Uuid
+  sku        String     @unique
+  name       String
+  priceCents Int        @map("price_cents")
+  stock      Int
+  isActive   Boolean    @default(true) @map("is_active")
+  cartItems  CartItem[]
+
+  @@map("products")
+}
+
+model Cart {
+  id     String     @id @db.Uuid
+  status String     @default("open")
+  items  CartItem[]
+
+  @@map("carts")
+}
+
+model CartItem {
+  cartId    String  @map("cart_id") @db.Uuid
+  productId String  @map("product_id") @db.Uuid
+  quantity  Int
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id])
+
+  @@id([cartId, productId])
+  @@map("cart_items")
+}

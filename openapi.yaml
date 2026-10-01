@@ -1,0 +1,404 @@
+openapi: 3.1.0
+info:
+  title: Cart API
+  version: 1.0.0
+  description: Contract-first API for browsing products and managing carts.
+servers:
+  - url: http://localhost:3000
+paths:
+  /products:
+    get:
+      operationId: listProducts
+      summary: List active products currently offered for sale
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Active products
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductList'
+              example:
+                items:
+                  - id: 10000000-0000-4000-8000-000000000001
+                    sku: KEYBOARD-001
+                    name: Mechanical Keyboard
+                    price_cents: 129900
+                    stock: 8
+                limit: 20
+                offset: 0
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /carts:
+    post:
+      operationId: createCart
+      summary: Create an empty cart
+      responses:
+        '201':
+          description: Cart created
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+            Location:
+              description: Relative URL of the created cart
+              schema:
+                type: string
+                pattern: '^/carts/[0-9a-fA-F-]{36}$'
+              example: /carts/20000000-0000-4000-8000-000000000001
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+              example:
+                id: 20000000-0000-4000-8000-000000000001
+                status: open
+                items: []
+                subtotal_cents: 0
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /carts/{cartId}:
+    parameters:
+      - $ref: '#/components/parameters/CartId'
+    get:
+      operationId: getCart
+      summary: Get a cart with its items and subtotal
+      responses:
+        '200':
+          description: Cart found
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /carts/{cartId}/items:
+    parameters:
+      - $ref: '#/components/parameters/CartId'
+    post:
+      operationId: addCartItem
+      summary: Add a product to an open cart
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddItemRequest'
+            example:
+              product_id: 10000000-0000-4000-8000-000000000001
+              quantity: 2
+      responses:
+        '201':
+          description: Item added; the updated cart is returned
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '422':
+          $ref: '#/components/responses/UnavailableError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /carts/{cartId}/items/{productId}:
+    parameters:
+      - $ref: '#/components/parameters/CartId'
+      - $ref: '#/components/parameters/ProductId'
+    patch:
+      operationId: updateCartItem
+      summary: Replace the quantity of an item in an open cart
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateItemRequest'
+            example:
+              quantity: 3
+      responses:
+        '200':
+          description: Quantity changed; the updated cart is returned
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '422':
+          $ref: '#/components/responses/UnavailableError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      operationId: deleteCartItem
+      summary: Remove an item from an open cart
+      responses:
+        '204':
+          description: Item removed; no response body
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+components:
+  parameters:
+    Limit:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 50
+        default: 20
+      example: 20
+    Offset:
+      name: offset
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+      example: 0
+    CartId:
+      name: cartId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ProductId:
+      name: productId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  headers:
+    RequestId:
+      description: Correlation identifier used by the response and structured logs
+      required: true
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    Product:
+      type: object
+      additionalProperties: false
+      required: [id, sku, name, price_cents, stock]
+      properties:
+        id:
+          type: string
+          format: uuid
+        sku:
+          type: string
+        name:
+          type: string
+        price_cents:
+          type: integer
+          minimum: 1
+        stock:
+          type: integer
+          minimum: 0
+    ProductList:
+      type: object
+      additionalProperties: false
+      required: [items, limit, offset]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 50
+        offset:
+          type: integer
+          minimum: 0
+    CartItem:
+      type: object
+      additionalProperties: false
+      required: [product_id, sku, name, price_cents, quantity, line_total_cents]
+      properties:
+        product_id:
+          type: string
+          format: uuid
+        sku:
+          type: string
+        name:
+          type: string
+        price_cents:
+          type: integer
+          minimum: 1
+        quantity:
+          type: integer
+          minimum: 1
+          maximum: 10
+        line_total_cents:
+          type: integer
+          minimum: 1
+    Cart:
+      type: object
+      additionalProperties: false
+      required: [id, status, items, subtotal_cents]
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [open, checked_out]
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CartItem'
+        subtotal_cents:
+          type: integer
+          minimum: 0
+    AddItemRequest:
+      type: object
+      additionalProperties: false
+      required: [product_id, quantity]
+      properties:
+        product_id:
+          type: string
+          format: uuid
+        quantity:
+          type: integer
+          minimum: 1
+          maximum: 10
+    UpdateItemRequest:
+      type: object
+      additionalProperties: false
+      required: [quantity]
+      properties:
+        quantity:
+          type: integer
+          minimum: 1
+          maximum: 10
+    ErrorDetail:
+      type: object
+      additionalProperties: false
+      required: [field, issue]
+      properties:
+        field:
+          type: string
+        issue:
+          type: string
+    Error:
+      type: object
+      additionalProperties: false
+      required: [code, message, details, request_id]
+      properties:
+        code:
+          type: string
+          enum:
+            - VALIDATION_ERROR
+            - CART_NOT_FOUND
+            - ITEM_NOT_FOUND
+            - PRODUCT_UNAVAILABLE
+            - INSUFFICIENT_STOCK
+            - ITEM_ALREADY_IN_CART
+            - CART_CLOSED
+            - INTERNAL_SERVER_ERROR
+        message:
+          type: string
+        details:
+          type: array
+          items:
+            $ref: '#/components/schemas/ErrorDetail'
+        request_id:
+          type: string
+          format: uuid
+  responses:
+    ValidationError:
+      description: Request does not conform to the OpenAPI contract
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: VALIDATION_ERROR
+            message: Request is invalid
+            details:
+              - field: quantity
+                issue: must be less than or equal to 10
+            request_id: 7f3c2a9e-1b4d-4c8a-9e21-5d6f0a3b8c10
+    NotFoundError:
+      description: Cart or cart item not found
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    ConflictError:
+      description: Request conflicts with cart, item, or stock state
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    UnavailableError:
+      description: Referenced product is unavailable
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InternalError:
+      description: Unexpected server or persistence failure
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: INTERNAL_SERVER_ERROR
+            message: Internal server error
+            details: []
+            request_id: 7f3c2a9e-1b4d-4c8a-9e21-5d6f0a3b8c10

@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Báo cáo quyết định kỹ thuật - Contract-first Cart API</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172033;
+      --muted: #5d687b;
+      --line: #dce2ec;
+      --paper: #ffffff;
+      --canvas: #f4f6fa;
+      --brand: #2558d9;
+      --brand-soft: #edf2ff;
+      --code: #111827;
+      --success: #147a52;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--canvas);
+      font: 16px/1.68 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    main {
+      width: min(1040px, calc(100% - 32px));
+      margin: 32px auto;
+      padding: clamp(28px, 5vw, 64px);
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 18px 55px rgba(26, 39, 67, .08);
+    }
+    header { padding-bottom: 28px; border-bottom: 1px solid var(--line); }
+    .eyebrow { margin: 0 0 8px; color: var(--brand); font-size: .82rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+    h1 { margin: 0; max-width: 780px; font-size: clamp(2rem, 5vw, 3.5rem); line-height: 1.08; letter-spacing: -.035em; }
+    .lead { max-width: 780px; margin: 20px 0 0; color: var(--muted); font-size: 1.08rem; }
+    nav { margin: 30px 0 42px; padding: 20px 24px; background: var(--brand-soft); border-radius: 12px; }
+    nav strong { display: block; margin-bottom: 10px; }
+    nav ol { columns: 2; margin: 0; padding-left: 22px; }
+    nav a { color: var(--brand); text-decoration: none; }
+    nav a:hover { text-decoration: underline; }
+    section { margin: 48px 0; scroll-margin-top: 20px; }
+    h2 { margin: 0 0 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brand-soft); font-size: 1.65rem; line-height: 1.3; }
+    h3 { margin: 28px 0 8px; font-size: 1.13rem; }
+    p { margin: 10px 0; }
+    ul, ol { padding-left: 24px; }
+    li + li { margin-top: 5px; }
+    table { width: 100%; margin: 20px 0; border-collapse: collapse; font-size: .94rem; }
+    th, td { padding: 12px 14px; border: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { background: #f7f9fc; }
+    code { padding: .12em .35em; color: #17346f; background: #edf2ff; border-radius: 5px; font-size: .9em; }
+    pre { overflow: auto; margin: 18px 0; padding: 18px 20px; color: #e5eefc; background: var(--code); border-radius: 12px; line-height: 1.55; }
+    pre code { padding: 0; color: inherit; background: transparent; }
+    .decision { padding: 18px 20px; border-left: 4px solid var(--success); background: #effaf5; border-radius: 0 10px 10px 0; }
+    .tradeoff { padding: 18px 20px; border-left: 4px solid #d58a15; background: #fff8e8; border-radius: 0 10px 10px 0; }
+    .architecture-map { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(240px, .7fr); gap: 24px; margin: 24px 0; }
+    .flow-column { display: flex; flex-direction: column; align-items: stretch; }
+    .flow-node { padding: 13px 16px; text-align: center; background: #f7f9fc; border: 1px solid #bfc9da; border-radius: 10px; }
+    .flow-node strong { display: block; margin-bottom: 2px; color: #183b83; }
+    .flow-node span { color: var(--muted); font-size: .9rem; }
+    .flow-node.database { color: white; background: #244a91; border-color: #244a91; }
+    .flow-node.database strong { color: white; }
+    .flow-arrow { height: 28px; color: var(--brand); text-align: center; font-size: 1.2rem; line-height: 28px; }
+    .return-label { margin: 12px 0; padding: 9px 12px; color: #31533f; background: #effaf5; border-radius: 8px; text-align: center; font-size: .9rem; }
+    .side-stack { display: flex; flex-direction: column; gap: 14px; }
+    .architecture-note { padding: 16px; background: var(--brand-soft); border: 1px solid #cad7ff; border-radius: 10px; }
+    .architecture-note.error { background: #fff5f2; border-color: #f1c9be; }
+    .architecture-note.log { background: #effaf5; border-color: #bfe1d1; }
+    .architecture-note strong { display: block; margin-bottom: 6px; }
+    footer { margin-top: 56px; padding-top: 20px; color: var(--muted); border-top: 1px solid var(--line); font-size: .9rem; }
+    @media (max-width: 720px) {
+      main { width: 100%; margin: 0; border: 0; border-radius: 0; }
+      nav ol { columns: 1; }
+      table { display: block; overflow-x: auto; }
+      .architecture-map { grid-template-columns: 1fr; }
+    }
+    @media print {
+      body { background: white; font-size: 11pt; }
+      main { width: 100%; margin: 0; padding: 0; border: 0; box-shadow: none; }
+      nav { display: none; }
+      section { break-inside: avoid-page; }
+      a { color: inherit; text-decoration: none; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <p class="eyebrow">Advanced Web Development</p>
+    <h1>Báo cáo quyết định kỹ thuật<br>Contract-first Cart API</h1>
+    <p class="lead">Giải thích các lựa chọn kiến trúc, công nghệ, phương án thay thế và điểm đánh đổi trong quá trình hoàn thiện dự án.</p>
+  </header>
+
+  <nav aria-label="Mục lục">
+    <strong>Mục lục</strong>
+    <ol>
+      <li><a href="#overview">Tổng quan và stack</a></li>
+      <li><a href="#runtime">Node.js và Express</a></li>
+      <li><a href="#contract">OpenAPI và validation</a></li>
+      <li><a href="#database">PostgreSQL và Prisma</a></li>
+      <li><a href="#errors">Error contract</a></li>
+      <li><a href="#logging">Logging</a></li>
+      <li><a href="#docker">Docker và migration</a></li>
+      <li><a href="#architecture">Sơ đồ kiến trúc</a></li>
+      <li><a href="#requirements">Ma trận yêu cầu</a></li>
+      <li><a href="#evidence">Evidence kiểm thử</a></li>
+      <li><a href="#decisions">Contract decisions</a></li>
+      <li><a href="#demo">Kịch bản demo</a></li>
+      <li><a href="#limits">Hạn chế và kết luận</a></li>
+    </ol>
+  </nav>
+
+  <section id="overview">
+    <h2>1. Tổng quan và stack cuối cùng</h2>
+    <p>Nhóm xây dựng sáu endpoint cho Product và Cart, tập trung vào đặc tả API rõ ràng, kiểm tra dữ liệu trước khi truy cập database, định dạng lỗi thống nhất và log JSON dễ tra cứu. Toàn bộ công nghệ dưới đây là quyết định chủ động của nhóm.</p>
+    <table>
+      <thead><tr><th>Hạng mục</th><th>Quyết định</th><th>Lý do chính</th></tr></thead>
+      <tbody>
+        <tr><td>Nền tảng/framework</td><td>Node.js 20+, Express 5</td><td>JavaScript xuyên suốt, middleware đơn giản</td></tr>
+        <tr><td>Database/ORM</td><td>PostgreSQL 16, Prisma</td><td>Relational constraints, transaction và migration rõ ràng</td></tr>
+        <tr><td>Đặc tả/tài liệu API</td><td>OpenAPI 3.1, Swagger UI</td><td>Một nguồn dùng chung cho tài liệu và API thực tế</td></tr>
+        <tr><td>Validation</td><td>express-openapi-validator</td><td>Validate trực tiếp từ OpenAPI</td></tr>
+        <tr><td>Logging</td><td>Pino, pino-http, Docker local driver</td><td>Log JSON có cấu trúc và tự giới hạn dung lượng</td></tr>
+        <tr><td>Testing</td><td>Jest, Supertest</td><td>HTTP acceptance test tự động</td></tr>
+        <tr><td>Đóng gói và triển khai</td><td>Multi-stage Docker, Compose</td><td>Mọi thành viên dùng cùng môi trường và quy trình khởi động</td></tr>
+      </tbody>
+    </table>
+    <div class="decision"><strong>Nguyên tắc:</strong> nhóm ưu tiên một nguồn đặc tả API, phân chia module rõ ràng, dữ liệu mẫu có thể tạo lại nhất quán và cách vận hành phù hợp với quy mô sáu endpoint.</div>
+  </section>
+
+  <section id="runtime">
+    <h2>2. Node.js và Express.js</h2>
+    <p>Node.js phù hợp REST API thiên về I/O. Express có middleware model rõ, tích hợp trực tiếp với Pino, Swagger UI và OpenAPI validator. Hàm <code>createApp({ repository, logger })</code> cũng cho phép dependency injection trong test mà không cần DI framework.</p>
+    <h3>Phương án không chọn</h3>
+    <ul>
+      <li><strong>Spring Boot:</strong> enterprise tooling tốt nhưng nhóm ưu tiên JavaScript xuyên suốt và ít boilerplate hơn.</li>
+      <li><strong>NestJS:</strong> module/DI mạnh nhưng thêm abstraction chưa cần cho API nhỏ.</li>
+      <li><strong>Fastify:</strong> hiệu năng tốt, nhưng nhóm ưu tiên hệ sinh thái middleware quen thuộc của Express; framework throughput chưa phải nút thắt.</li>
+      <li><strong>Node http thuần:</strong> giảm dependency nhưng phải tự xây routing, middleware và error pipeline.</li>
+    </ul>
+    <div class="tradeoff"><strong>Điểm đánh đổi:</strong> Express không quy định sẵn kiến trúc, nên nhóm phải chủ động tách route, service, repository, error và các thành phần hạ tầng.</div>
+  </section>
+
+  <section id="contract">
+    <h2>3. Contract-first, Swagger UI và validation</h2>
+    <p><code>openapi.yaml</code> là nguồn duy nhất cho tài liệu tại <code>/docs</code>, kiểm tra request và kiểm tra response. Nhờ đó tài liệu và API thực tế không phải duy trì hai schema độc lập.</p>
+    <p>Validator không coerce kiểu, không xóa field lạ và không cho query parameter ngoài contract. Vì middleware chạy trước routes, request sai không thể chạm service, repository hoặc Prisma.</p>
+    <h3>Phương án không chọn</h3>
+    <ul>
+      <li><strong>Markdown thủ công:</strong> không machine-readable và dễ lệch implementation.</li>
+      <li><strong>Postman làm nguồn chính:</strong> hữu ích cho demo nhưng sẽ trở thành contract thứ hai.</li>
+      <li><strong>Code-first annotations:</strong> làm schema phụ thuộc code, trái mục tiêu contract-first.</li>
+      <li><strong>Joi/Zod song song:</strong> tạo thêm một schema validation cần đồng bộ với OpenAPI.</li>
+    </ul>
+  </section>
+
+  <section id="database">
+    <h2>4. PostgreSQL và Prisma</h2>
+    <p>Quan hệ Product-Cart-CartItem cần foreign key, unique/composite key, check constraint và transaction. PostgreSQL phù hợp hơn document database cho mô hình này. Prisma cung cấp schema mapping, migration, generated client, seed/reset và transaction API.</p>
+    <ul>
+      <li>Giá luôn đọc từ database, không tin giá client gửi.</li>
+      <li>Tiền được lưu và tính bằng integer cents.</li>
+      <li>Composite key ngăn trùng sản phẩm trong một cart.</li>
+      <li>Mutation chạy trong transaction.</li>
+    </ul>
+    <h3>Phương án không chọn</h3>
+    <p>MongoDB không tận dụng tốt relational constraints; raw SQL làm tăng mapping/transaction boilerplate; SQLite khác môi trường PostgreSQL đích; Sequelize và TypeORM dùng được nhưng nhóm đánh giá Prisma có schema và migration workflow gọn hơn.</p>
+    <h3>Seed fixtures và mục đích kiểm thử</h3>
+    <p>Seed dùng UUID, SKU, giá, stock và trạng thái cố định. Mỗi lần reset database đều tạo lại cùng dữ liệu đầu vào, nên acceptance tests không phụ thuộc dữ liệu do test trước để lại.</p>
+    <table>
+      <thead><tr><th>Fixture</th><th>Trạng thái</th><th>Giá/stock</th><th>Mục đích kiểm thử</th></tr></thead>
+      <tbody>
+        <tr><td>Mechanical Keyboard</td><td>Active, còn hàng</td><td>129900 cents; stock 8</td><td>Add/update/delete thành công và tính subtotal từ giá database.</td></tr>
+        <tr><td>Wireless Mouse</td><td>Active, còn hàng</td><td>59900 cents; stock 4</td><td>Quantity 5 tạo INSUFFICIENT_STOCK nhưng vẫn hợp schema 1-10; tham gia test subtotal.</td></tr>
+        <tr><td>27-inch Monitor</td><td>Active, còn hàng</td><td>349900 cents; stock 6</td><td>Đủ ba sản phẩm active còn hàng; kiểm tra danh sách và thứ tự.</td></tr>
+        <tr><td>USB Headset</td><td>Active, hết hàng</td><td>89900 cents; stock 0</td><td>Phân biệt “đang bán” và “còn hàng”: vẫn được liệt kê nhưng không thể thêm với quantity dương.</td></tr>
+        <tr><td>Legacy Webcam</td><td>Inactive, còn stock</td><td>49900 cents; stock 5</td><td>Bị loại khỏi product list; khi add trả PRODUCT_UNAVAILABLE.</td></tr>
+        <tr><td>Cart <code>20000000-...-0001</code></td><td>checked_out</td><td>Không có item</td><td>Mutation phải trả CART_CLOSED.</td></tr>
+      </tbody>
+    </table>
+    <p>Ba trạng thái sản phẩm được bao phủ: <strong>3 active còn hàng, 1 active hết hàng và 1 inactive</strong>. Seed xóa dữ liệu cũ rồi tạo lại bộ fixture trước mỗi acceptance test.</p>
+  </section>
+
+  <section id="errors">
+    <h2>5. Error contract và request ID</h2>
+    <p>Mọi lỗi có bốn field ổn định: <code>code</code>, <code>message</code>, <code>details</code> và <code>request_id</code>. <code>AppError</code> biểu diễn lỗi ứng dụng; <code>cartErrors</code> tạo lỗi nghiệp vụ; middleware trung tâm chuyển validator/domain/unexpected errors về cùng format.</p>
+    <pre><code>{
+  "code": "VALIDATION_ERROR",
+  "message": "Request is invalid",
+  "details": [],
+  "request_id": "7f3c2a9e-..."
+}</code></pre>
+    <p>Cùng UUID xuất hiện trong <code>X-Request-Id</code>, error body và log. Client không nhận stack trace, SQL hoặc secret.</p>
+  </section>
+
+  <section id="logging">
+    <h2>6. Logging: Pino thay vì ELK trong phạm vi hiện tại</h2>
+    <p>Pino và pino-http tạo log JSON có method, URL, status, thời gian xử lý và request ID. Authorization, cookie, password, token và secret được che trước khi ghi. Ứng dụng ghi log ra stdout; Docker lưu lại, giới hạn dung lượng và tự xoay vòng các file log phía dưới.</p>
+    <pre><code>logging:
+  driver: local
+  options:
+    max-size: "10m"
+    max-file: "5"</code></pre>
+    <p>Cấu hình giới hạn khoảng 50 MB log/container trước compression, tránh <code>api.log</code> tăng vô hạn và tránh lưu trùng.</p>
+    <h3>Phương án không chọn</h3>
+    <ul>
+      <li><strong>console.log:</strong> chỉ ghi nội dung ra stdout và không tự cung cấp cơ chế lưu trữ. Khi chạy Node trực tiếp, log chỉ hiện trên terminal và không còn để tra cứu sau khi đóng terminal nếu không chuyển output sang file hoặc hệ thống thu thập log. Trong Docker, stdout vẫn có thể được lưu lại, nhưng các dòng console.log thường thiếu level, request ID, định dạng thống nhất và cơ chế che dữ liệu nhạy cảm, nên khó xác định request gây lỗi và khó điều tra sự cố.</li>
+      <li><strong>Morgan:</strong> access log tốt nhưng không đủ cho application/domain errors.</li>
+      <li><strong>Winston:</strong> nhiều transport nhưng cấu hình nặng hơn nhu cầu JSON logging hiện tại.</li>
+      <li><strong>ELK:</strong> search/dashboard mạnh nhưng tốn tài nguyên và công vận hành cho một service nhỏ.</li>
+    </ul>
+    <p>Việc giữ stdout JSON cho phép bổ sung ELK, Loki hoặc cloud logging sau này mà không sửa business layer.</p>
+  </section>
+
+  <section id="docker">
+    <h2>7. Docker và migration lifecycle</h2>
+    <p>Dockerfile nhiều giai đoạn sinh Prisma Client trong bước build, chỉ giữ dependency cần thiết trong image chạy API và sử dụng user không phải root. Compose xác định thứ tự:</p>
+    <pre><code>postgres --healthy--&gt; migrate --completed successfully--&gt; api</code></pre>
+    <p><code>migrate</code> là one-shot service chạy <code>prisma migrate deploy</code>. API chỉ bắt đầu khi database có schema hợp lệ. Seed là thao tác chủ động, không tự chạy ở mỗi production startup.</p>
+    <div class="tradeoff"><strong>Điểm đánh đổi:</strong> Docker làm lần build đầu tiên lâu hơn. Với hệ thống production lớn, migration nên chạy như một job trong CI/CD; service chạy một lần trong Compose phù hợp local và demo.</div>
+  </section>
+
+  <section id="architecture">
+    <h2>8. Kiến trúc hệ thống và source code</h2>
+    <h3>Sơ đồ thành phần và request lifecycle</h3>
+    <div class="architecture-map" role="img" aria-label="Luồng request từ HTTP qua middleware, OpenAPI validation, route, service, repository, Prisma và PostgreSQL; response được kiểm tra bằng OpenAPI; lỗi đi tới central error handler">
+      <div class="flow-column">
+        <div class="flow-node"><strong>HTTP Request</strong><span>Request từ client hoặc Swagger UI</span></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node"><strong>Request ID &amp; Logging Middleware</strong><span>Sinh UUID, đặt response header và mở logging context</span></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node"><strong>OpenAPI Request Validation</strong><span>Kiểm tra path, query và body trước business code</span></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node"><strong>Route / Controller</strong><span>Đọc HTTP input, gọi service, đặt status và header</span></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node"><strong>Business Service</strong><span>Business rules và điều phối transaction</span></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node"><strong>Repository / Prisma</strong><span>Query và mutation dữ liệu</span></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node database"><strong>PostgreSQL</strong>Dữ liệu và constraints</div>
+        <div class="return-label">Dữ liệu quay lại qua Repository → Service → Route</div>
+        <div class="flow-node"><strong>OpenAPI Response Validation</strong><span>Đối chiếu response thật với openapi.yaml</span></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node"><strong>HTTP Response</strong><span>Body và X-Request-Id gửi về client</span></div>
+      </div>
+      <aside class="side-stack">
+        <div class="architecture-note"><strong>openapi.yaml</strong>Cung cấp schema cho request validation, response validation và trang <code>/docs</code>.</div>
+        <div class="architecture-note log"><strong>Logging là chức năng dùng chung</strong>Theo dõi toàn bộ request lifecycle và ghi status, thời gian xử lý cùng request ID ra stdout.</div>
+        <div class="architecture-note error"><strong>Central Error Handler</strong>Nhận lỗi từ validator, route, service, repository và response validation; sau đó tạo error response thống nhất.</div>
+      </aside>
+    </div>
+
+    <h3>Trách nhiệm từng thành phần</h3>
+    <table>
+      <thead><tr><th>Thành phần</th><th>Trách nhiệm</th><th>Không chịu trách nhiệm</th></tr></thead>
+      <tbody>
+        <tr><td>server.js</td><td>Khởi động server và đóng Prisma khi dừng</td><td>Route và business rule</td></tr>
+        <tr><td>app.js</td><td>Ghép middleware và dependency theo đúng thứ tự</td><td>Query database</td></tr>
+        <tr><td>Request ID/logging</td><td>Sinh ID, đặt header, ghi request completion</td><td>Quyết định business error</td></tr>
+        <tr><td>OpenAPI validator</td><td>Kiểm tra path, query, body và response</td><td>Kiểm tra trạng thái dữ liệu trong database</td></tr>
+        <tr><td>Route/controller</td><td>Đọc request, gọi service, tạo HTTP response</td><td>Prisma query và quy tắc tồn kho</td></tr>
+        <tr><td>Business service</td><td>Business rules, transaction flow và response model</td><td>Express request/response</td></tr>
+        <tr><td>Repository</td><td>Prisma query và transaction boundary</td><td>HTTP status và response header</td></tr>
+        <tr><td>Central error handler</td><td>Chuẩn hóa mọi lỗi; không lộ stack, SQL hoặc secret</td><td>Tiếp tục operation đã thất bại</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Chiều phụ thuộc</h3>
+    <pre><code>route → service → repository → Prisma → PostgreSQL</code></pre>
+    <p>Route biết service, nhưng service không biết Express route. Service sử dụng repository, còn repository không biết HTTP status hay response header. <code>app.js</code> là nơi tạo và nối các thành phần. Logging, request ID, OpenAPI validation và error handling được đặt trong middleware pipeline để không phải lặp lại ở từng endpoint.</p>
+
+    <h3>Cấu trúc source code</h3>
+    <pre><code>src/
+├── app.js                 # middleware và composition
+├── server.js              # process lifecycle
+├── config/logger.js
+├── database/prisma.js
+├── errors/
+├── routes/
+├── middleware/
+├── services/
+└── repositories/</code></pre>
+    <p>Cây thư mục giúp tìm implementation của từng thành phần trong sơ đồ. Nhóm không thêm DI framework vì constructor injection hiện tại đã đủ cho một service.</p>
+  </section>
+
+  <section id="requirements">
+    <h2>9. Ma trận đối chiếu yêu cầu với implementation</h2>
+    <h3>Sáu endpoint</h3>
+    <table>
+      <thead><tr><th>Endpoint</th><th>Request</th><th>Success response</th><th>Lỗi chính</th><th>Implementation</th></tr></thead>
+      <tbody>
+        <tr><td><code>GET /products</code></td><td><code>limit</code> 1-50, mặc định 20; <code>offset ≥ 0</code>, mặc định 0</td><td>200 <code>ProductList</code></td><td>400, 500</td><td>productRoutes → listProducts → repository</td></tr>
+        <tr><td><code>POST /carts</code></td><td>Không có body</td><td>201 <code>Cart</code> và Location</td><td>500</td><td>cartRoutes → createCart → repository</td></tr>
+        <tr><td><code>GET /carts/{cartId}</code></td><td><code>cartId</code> là UUID</td><td>200 <code>Cart</code></td><td>400, CART_NOT_FOUND, 500</td><td>cartRoutes → getCart → repository</td></tr>
+        <tr><td><code>POST /carts/{cartId}/items</code></td><td><code>product_id</code> UUID; <code>quantity</code> 1-10; không field lạ</td><td>201 <code>Cart</code></td><td>400, 404, CART_CLOSED, ITEM_ALREADY_IN_CART, INSUFFICIENT_STOCK, PRODUCT_UNAVAILABLE, 500</td><td>cartRoutes → addItem → transaction</td></tr>
+        <tr><td><code>PATCH /carts/{cartId}/items/{productId}</code></td><td>Hai ID là UUID; <code>quantity</code> 1-10</td><td>200 <code>Cart</code></td><td>400, CART_NOT_FOUND, ITEM_NOT_FOUND, CART_CLOSED, INSUFFICIENT_STOCK, PRODUCT_UNAVAILABLE, 500</td><td>cartRoutes → updateItem → transaction</td></tr>
+        <tr><td><code>DELETE /carts/{cartId}/items/{productId}</code></td><td>Hai ID là UUID; không body</td><td>204, body rỗng</td><td>400, CART_NOT_FOUND, ITEM_NOT_FOUND, CART_CLOSED, 500</td><td>cartRoutes → deleteItem → transaction</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Request và response schemas</h3>
+    <table>
+      <thead><tr><th>Schema</th><th>Field và giới hạn</th><th>Nơi sử dụng</th></tr></thead>
+      <tbody>
+        <tr><td>AddItemRequest</td><td><code>product_id: uuid</code>, <code>quantity: integer 1-10</code>, không field lạ</td><td>POST item</td></tr>
+        <tr><td>UpdateItemRequest</td><td><code>quantity: integer 1-10</code>, không field lạ</td><td>PATCH item</td></tr>
+        <tr><td>Product</td><td>id, sku, name, price_cents &gt; 0, stock ≥ 0</td><td>ProductList.items</td></tr>
+        <tr><td>ProductList</td><td>items, limit 1-50, offset ≥ 0</td><td>GET products</td></tr>
+        <tr><td>CartItem</td><td>product_id, sku, name, price, quantity, line total</td><td>Cart.items</td></tr>
+        <tr><td>Cart</td><td>id, status, items, subtotal_cents</td><td>Create/get/add/update responses</td></tr>
+        <tr><td>Error</td><td>code, message, details, request_id; không field lạ</td><td>Mọi response lỗi</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Business rules</h3>
+    <table>
+      <thead><tr><th>Quy tắc</th><th>Error</th><th>Cách kiểm tra</th></tr></thead>
+      <tbody>
+        <tr><td>Cart phải tồn tại</td><td>CART_NOT_FOUND</td><td>findCart trước xử lý</td></tr>
+        <tr><td>Chỉ sửa cart đang open</td><td>CART_CLOSED</td><td>assertOpenCart trước mutation</td></tr>
+        <tr><td>Product tồn tại và active</td><td>PRODUCT_UNAVAILABLE</td><td>findProduct + isActive</td></tr>
+        <tr><td>Quantity không vượt stock</td><td>INSUFFICIENT_STOCK</td><td>So sánh với stock trong database</td></tr>
+        <tr><td>Product chưa có trong cart</td><td>ITEM_ALREADY_IN_CART</td><td>findCartItem trước create</td></tr>
+        <tr><td>Item phải tồn tại</td><td>ITEM_NOT_FOUND</td><td>findCartItem trước update/delete</td></tr>
+        <tr><td>Request sai không chạm database</td><td>VALIDATION_ERROR</td><td>OpenAPI middleware trước router; repository spy xác nhận 0 call</td></tr>
+        <tr><td>500 không lộ nội bộ</td><td>INTERNAL_SERVER_ERROR</td><td>Error middleware không trả stack, SQL hoặc secret</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="evidence">
+    <h2>10. Evidence và quy trình chạy lại</h2>
+    <p>Điều kiện: đã chạy <code>npm ci</code>, có <code>.env</code>, và PostgreSQL đang healthy. Một lệnh reset database, áp dụng migration, chạy seed và thực thi toàn bộ test:</p>
+    <pre><code>npm run test:acceptance</code></pre>
+    <p><strong>Kết quả ghi nhận ngày 01/10/2026:</strong> database reset thành công, seed hoàn tất, 2/2 test suites và 26/26 test cases đều đạt.</p>
+
+    <h3>Ma trận 26 test</h3>
+    <table>
+      <thead><tr><th>Số test</th><th>Kịch bản</th><th>Yêu cầu được chứng minh</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Swagger UI</td><td><code>/docs</code> hoạt động và có request ID</td></tr>
+        <tr><td>4</td><td>List mặc định, limit 0/51, pagination hợp lệ</td><td>GET products, filter/order/pagination và validation</td></tr>
+        <tr><td>1</td><td>Create empty cart</td><td>201, Location và Cart schema</td></tr>
+        <tr><td>3</td><td>quantity 0, 11, "2"</td><td>400; details chỉ quantity; không coerce string</td></tr>
+        <tr><td>2</td><td>Thiếu product_id; field lạ</td><td>400 và cart không thay đổi</td></tr>
+        <tr><td>1</td><td>Unknown cart UUID</td><td>CART_NOT_FOUND</td></tr>
+        <tr><td>1</td><td>Hai product và subtotal</td><td>Tính tiền từ giá đã lưu</td></tr>
+        <tr><td>1</td><td>Inactive product</td><td>PRODUCT_UNAVAILABLE</td></tr>
+        <tr><td>1</td><td>Quantity lớn hơn stock</td><td>INSUFFICIENT_STOCK</td></tr>
+        <tr><td>1</td><td>Checked-out cart</td><td>CART_CLOSED</td></tr>
+        <tr><td>1</td><td>Duplicate product</td><td>ITEM_ALREADY_IN_CART</td></tr>
+        <tr><td>1</td><td>PATCH thành công</td><td>Quantity và subtotal được cập nhật</td></tr>
+        <tr><td>1</td><td>PATCH item thiếu</td><td>ITEM_NOT_FOUND</td></tr>
+        <tr><td>1</td><td>DELETE thành công</td><td>204, body rỗng, request ID</td></tr>
+        <tr><td>1</td><td>DELETE item thiếu</td><td>ITEM_NOT_FOUND</td></tr>
+        <tr><td>1</td><td>Success response/log</td><td>Cùng request ID</td></tr>
+        <tr><td>2</td><td>Invalid path/body với repository spy</td><td>Validation trước database, 0 repository call</td></tr>
+        <tr><td>1</td><td>Database outage</td><td>500 đúng schema, không lộ thông tin</td></tr>
+        <tr><td>1</td><td>Logger redaction</td><td>JSON log và che Authorization/password</td></tr>
+        <tr><td><strong>26</strong></td><td><strong>Tổng cộng</strong></td><td><strong>Tất cả đều đạt</strong></td></tr>
+      </tbody>
+    </table>
+    <p><code>validateResponses: true</code> hoạt động trong chính application được test. Response lệch <code>openapi.yaml</code> sẽ làm test thất bại; test không duy trì một response schema viết lại.</p>
+  </section>
+
+  <section id="decisions">
+    <h2>11. Phân tích contract decisions</h2>
+    <table>
+      <thead><tr><th>Quyết định</th><th>Phương án cân nhắc</th><th>Lý do chọn</th><th>Điểm đánh đổi</th></tr></thead>
+      <tbody>
+        <tr><td>ProductList là <code>{ items, limit, offset }</code></td><td>Mảng trực tiếp; thêm total</td><td>Client biết page đang áp dụng, không cần query count</td><td>Payload dài hơn; chưa tính được tổng số trang</td></tr>
+        <tr><td>Offset ≥ 0, mặc định 0</td><td>Không giới hạn; cursor</td><td>Dễ hiểu và đủ cho dữ liệu nhỏ</td><td>Offset lớn có thể chậm; cursor tốt hơn khi scale</td></tr>
+        <tr><td>Sắp theo SKU</td><td>Không sort; tên; thời gian tạo</td><td>Pagination và test có thứ tự ổn định</td><td>Không nhất thiết là thứ tự hiển thị tốt nhất</td></tr>
+        <tr><td>Active nhưng stock 0 vẫn hiển thị</td><td>Ẩn product hết hàng</td><td>Tách “đang bán” khỏi “đang có hàng”</td><td>Client phải hiển thị trạng thái hết hàng</td></tr>
+        <tr><td>Create cart trả Cart đầy đủ và Location tương đối</td><td>Chỉ ID; body rỗng; URL tuyệt đối</td><td>Một schema chung; hoạt động sau proxy/domain khác</td><td>Response lớn hơn; client tự resolve URL</td></tr>
+        <tr><td>productId là UUID</td><td>String tự do, để DB kiểm tra</td><td>Chặn input sai trước database</td><td>Đổi loại ID sau này cần đổi contract</td></tr>
+        <tr><td>500 dùng INTERNAL_SERVER_ERROR</td><td>Trả message nội bộ</td><td>Code ổn định, không lộ database</td><td>Thông tin chẩn đoán chỉ có trong log</td></tr>
+        <tr><td>Domain details là mảng rỗng</td><td>Trả stock/cart state</td><td>Error code đã đủ, giảm lộ dữ liệu</td><td>UI chi tiết hơn cần mở rộng contract</td></tr>
+        <tr><td>Không cam kết rule precedence</td><td>Công bố thứ tự kiểm tra hiện tại</td><td>Đề không quy định; test tách từng rule</td><td>Client không dựa được vào lỗi xuất hiện trước</td></tr>
+        <tr><td>Chưa reserve/decrement stock</td><td>Giữ chỗ hoặc trừ stock khi add</td><td>Checkout ngoài phạm vi hiện tại</td><td>Cần concurrency strategy khi bổ sung checkout</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="demo">
+    <h2>12. Demo `/docs`, response và log</h2>
+    <p>Mở <code>http://localhost:3000/docs</code>, chọn <code>POST /carts/{cartId}/items</code>, bấm <strong>Try it out</strong>, dùng cart ID <code>20000000-0000-4000-8000-000000000002</code> và body:</p>
+    <pre><code>{
+  "product_id": "10000000-0000-4000-8000-000000000001",
+  "quantity": 11
+}</code></pre>
+    <p>Swagger UI phải hiển thị status 400, header <code>X-Request-Id</code> và error body có cùng <code>request_id</code>. Sau đó tìm ID trong log:</p>
+    <pre><code>docker compose logs api | Select-String '&lt;request-id&gt;'</code></pre>
+    <h3>Evidence thực tế ngày 01/10/2026</h3>
+    <pre><code>HTTP/1.1 400 Bad Request
+X-Request-Id: 2f56781c-d628-4890-ba8b-66159962b6d1</code></pre>
+    <pre><code>{
+  "code": "VALIDATION_ERROR",
+  "message": "Request is invalid",
+  "details": [{ "field": "quantity", "issue": "must be &lt;= 10" }],
+  "request_id": "2f56781c-d628-4890-ba8b-66159962b6d1"
+}</code></pre>
+    <pre><code>{
+  "request_id": "2f56781c-d628-4890-ba8b-66159962b6d1",
+  "req": { "method": "POST", "url": "/carts/.../items" },
+  "res": { "statusCode": 400 },
+  "msg": "request completed"
+}</code></pre>
+    <p>Header, body và Docker log có cùng request ID. Demo chứng minh OpenAPI chặn quantity 11, lỗi được chuẩn hóa và request có thể được truy vết từ client sang server.</p>
+  </section>
+
+  <section id="limits">
+    <h2>13. Hạn chế, hướng mở rộng và kết luận</h2>
+    <p>Authentication, checkout, payment, reservation, distributed tracing, centralized logging, rate limiting, cache, secrets manager và horizontal database scaling nằm ngoài phạm vi hiện tại.</p>
+    <p>Nếu hệ thống mở rộng, bước tiếp theo là log aggregation, trace ID xuyên service, secret management, migration trong CI/CD và concurrency strategy cho inventory.</p>
+    <div class="decision"><strong>Kết luận:</strong> toàn bộ công nghệ là lựa chọn của nhóm. Kết quả cuối ưu tiên việc API tuân thủ đúng đặc tả, dễ cài đặt và chạy lại theo cùng một quy trình, đồng thời phù hợp với quy mô hiện tại. Spring Boot, NestJS hay ELK đều là giải pháp tốt, nhưng nhóm đánh giá chi phí triển khai và vận hành của chúng chưa cần thiết cho API này.</div>
+  </section>
+</main>
+</body>
+</html>
