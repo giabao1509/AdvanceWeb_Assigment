@@ -1,0 +1,397 @@
+{
+  "generatedAt": "2026-10-08T02:56:10.574Z",
+  "browser": "msedge 154.0.4258.62",
+  "logDir": "logs/verify-2026-10-08T02-55-43-169Z",
+  "passed": 44,
+  "failed": 0,
+  "checks": [
+    {
+      "id": "web.baseline.u_small",
+      "description": "Web baseline (u_small) bằng dữ liệu đọc thẳng từ DB",
+      "pass": true,
+      "status": "ok",
+      "diff": null
+    },
+    {
+      "id": "web.bff.u_small",
+      "description": "Web bff (u_small) bằng dữ liệu đọc thẳng từ DB",
+      "pass": true,
+      "status": "ok",
+      "diff": null
+    },
+    {
+      "id": "web.graphql.u_small",
+      "description": "Web graphql (u_small) bằng dữ liệu đọc thẳng từ DB",
+      "pass": true,
+      "status": "ok",
+      "diff": null
+    },
+    {
+      "id": "mobile.bff.u_small.fields",
+      "description": "Mobile bff (u_small) chỉ chứa {id,status,items[{product{name,thumbnailUrl}}]}",
+      "pass": true,
+      "topKeys": [
+        "orders"
+      ],
+      "violations": [],
+      "violationCount": 0
+    },
+    {
+      "id": "mobile.graphql.u_small.fields",
+      "description": "Mobile graphql (u_small) chỉ chứa {id,status,items[{product{name,thumbnailUrl}}]}",
+      "pass": true,
+      "topKeys": [
+        "ordersByUser"
+      ],
+      "violations": [],
+      "violationCount": 0
+    },
+    {
+      "id": "mobile.bff=graphql.u_small",
+      "description": "Mobile BFF và GraphQL (u_small) trả cùng dữ liệu",
+      "pass": true,
+      "diff": null
+    },
+    {
+      "id": "mobile⊂web.u_small",
+      "description": "Mobile (u_small) bằng phép chiếu của web lên trường mobile",
+      "pass": true,
+      "diff": null
+    },
+    {
+      "id": "web.baseline.u_large",
+      "description": "Web baseline (u_large) bằng dữ liệu đọc thẳng từ DB",
+      "pass": true,
+      "status": "ok",
+      "diff": null
+    },
+    {
+      "id": "web.bff.u_large",
+      "description": "Web bff (u_large) bằng dữ liệu đọc thẳng từ DB",
+      "pass": true,
+      "status": "ok",
+      "diff": null
+    },
+    {
+      "id": "web.graphql.u_large",
+      "description": "Web graphql (u_large) bằng dữ liệu đọc thẳng từ DB",
+      "pass": true,
+      "status": "ok",
+      "diff": null
+    },
+    {
+      "id": "mobile.bff.u_large.fields",
+      "description": "Mobile bff (u_large) chỉ chứa {id,status,items[{product{name,thumbnailUrl}}]}",
+      "pass": true,
+      "topKeys": [
+        "orders"
+      ],
+      "violations": [],
+      "violationCount": 0
+    },
+    {
+      "id": "mobile.graphql.u_large.fields",
+      "description": "Mobile graphql (u_large) chỉ chứa {id,status,items[{product{name,thumbnailUrl}}]}",
+      "pass": true,
+      "topKeys": [
+        "ordersByUser"
+      ],
+      "violations": [],
+      "violationCount": 0
+    },
+    {
+      "id": "mobile.bff=graphql.u_large",
+      "description": "Mobile BFF và GraphQL (u_large) trả cùng dữ liệu",
+      "pass": true,
+      "diff": null
+    },
+    {
+      "id": "mobile⊂web.u_large",
+      "description": "Mobile (u_large) bằng phép chiếu của web lên trường mobile",
+      "pass": true,
+      "diff": null
+    },
+    {
+      "id": "web.bff.u_missing",
+      "description": "Web bff: user không tồn tại thì màn hình lỗi USER_NOT_FOUND",
+      "pass": true,
+      "status": "error",
+      "code": "USER_NOT_FOUND"
+    },
+    {
+      "id": "web.graphql.u_missing",
+      "description": "Web graphql: user không tồn tại thì màn hình lỗi USER_NOT_FOUND",
+      "pass": true,
+      "status": "error",
+      "code": "USER_NOT_FOUND"
+    },
+    {
+      "id": "web.graphql-naive.u_small",
+      "description": "Web GraphQL naive (u_small) bằng dữ liệu từ DB",
+      "pass": true,
+      "status": "ok",
+      "diff": null
+    },
+    {
+      "id": "mobile.graphql-naive.u_small",
+      "description": "Mobile GraphQL naive (u_small) bằng phép chiếu của web",
+      "pass": true,
+      "status": "ok",
+      "diff": null
+    },
+    {
+      "id": "web.graphql-naive.u_large",
+      "description": "Web GraphQL naive (u_large) bằng dữ liệu từ DB",
+      "pass": true,
+      "status": "ok",
+      "diff": null
+    },
+    {
+      "id": "mobile.graphql-naive.u_large",
+      "description": "Mobile GraphQL naive (u_large) bằng phép chiếu của web",
+      "pass": true,
+      "status": "ok",
+      "diff": null
+    },
+    {
+      "id": "fault.delay300.web.bff",
+      "description": "delay300: web bff status=ok, user/đơn vẫn đủ, không có tên/giá giả",
+      "pass": true,
+      "status": "ok",
+      "codes": [],
+      "nullProducts": 0,
+      "problems": [],
+      "restOk": true
+    },
+    {
+      "id": "fault.delay300.web.graphql",
+      "description": "delay300: web graphql status=ok, user/đơn vẫn đủ, không có tên/giá giả",
+      "pass": true,
+      "status": "ok",
+      "codes": [],
+      "nullProducts": 0,
+      "problems": [],
+      "restOk": true
+    },
+    {
+      "id": "fault.delay300.web.bff=graphql",
+      "description": "delay300: web BFF và GraphQL đánh dấu lỗi cùng path và mã",
+      "pass": true,
+      "bffErrors": 0,
+      "graphqlErrors": 0
+    },
+    {
+      "id": "fault.delay300.mobile.bff",
+      "description": "delay300: mobile bff status=ok, user/đơn vẫn đủ, không có tên/giá giả",
+      "pass": true,
+      "status": "ok",
+      "codes": [],
+      "nullProducts": 0,
+      "problems": [],
+      "restOk": true
+    },
+    {
+      "id": "fault.delay300.mobile.graphql",
+      "description": "delay300: mobile graphql status=ok, user/đơn vẫn đủ, không có tên/giá giả",
+      "pass": true,
+      "status": "ok",
+      "codes": [],
+      "nullProducts": 0,
+      "problems": [],
+      "restOk": true
+    },
+    {
+      "id": "fault.delay300.mobile.bff=graphql",
+      "description": "delay300: mobile BFF và GraphQL đánh dấu lỗi cùng path và mã",
+      "pass": true,
+      "bffErrors": 0,
+      "graphqlErrors": 0
+    },
+    {
+      "id": "fault.delay3000.web.bff",
+      "description": "delay3000: web bff status=partial, user/đơn vẫn đủ, không có tên/giá giả",
+      "pass": true,
+      "status": "partial",
+      "codes": [
+        "PRODUCT_TIMEOUT"
+      ],
+      "nullProducts": 19,
+      "problems": [],
+      "restOk": true
+    },
+    {
+      "id": "fault.delay3000.web.graphql",
+      "description": "delay3000: web graphql status=partial, user/đơn vẫn đủ, không có tên/giá giả",
+      "pass": true,
+      "status": "partial",
+      "codes": [
+        "PRODUCT_TIMEOUT"
+      ],
+      "nullProducts": 19,
+      "problems": [],
+      "restOk": true
+    },
+    {
+      "id": "fault.delay3000.web.bff=graphql",
+      "description": "delay3000: web BFF và GraphQL đánh dấu lỗi cùng path và mã",
+      "pass": true,
+      "bffErrors": 19,
+      "graphqlErrors": 19
+    },
+    {
+      "id": "fault.delay3000.mobile.bff",
+      "description": "delay3000: mobile bff status=partial, user/đơn vẫn đủ, không có tên/giá giả",
+      "pass": true,
+      "status": "partial",
+      "codes": [
+        "PRODUCT_TIMEOUT"
+      ],
+      "nullProducts": 19,
+      "problems": [],
+      "restOk": true
+    },
+    {
+      "id": "fault.delay3000.mobile.graphql",
+      "description": "delay3000: mobile graphql status=partial, user/đơn vẫn đủ, không có tên/giá giả",
+      "pass": true,
+      "status": "partial",
+      "codes": [
+        "PRODUCT_TIMEOUT"
+      ],
+      "nullProducts": 19,
+      "problems": [],
+      "restOk": true
+    },
+    {
+      "id": "fault.delay3000.mobile.bff=graphql",
+      "description": "delay3000: mobile BFF và GraphQL đánh dấu lỗi cùng path và mã",
+      "pass": true,
+      "bffErrors": 19,
+      "graphqlErrors": 19
+    },
+    {
+      "id": "fault.error500.web.bff",
+      "description": "error500: web bff status=partial, user/đơn vẫn đủ, không có tên/giá giả",
+      "pass": true,
+      "status": "partial",
+      "codes": [
+        "PRODUCT_UNAVAILABLE"
+      ],
+      "nullProducts": 19,
+      "problems": [],
+      "restOk": true
+    },
+    {
+      "id": "fault.error500.web.graphql",
+      "description": "error500: web graphql status=partial, user/đơn vẫn đủ, không có tên/giá giả",
+      "pass": true,
+      "status": "partial",
+      "codes": [
+        "PRODUCT_UNAVAILABLE"
+      ],
+      "nullProducts": 19,
+      "problems": [],
+      "restOk": true
+    },
+    {
+      "id": "fault.error500.web.bff=graphql",
+      "description": "error500: web BFF và GraphQL đánh dấu lỗi cùng path và mã",
+      "pass": true,
+      "bffErrors": 19,
+      "graphqlErrors": 19
+    },
+    {
+      "id": "fault.error500.mobile.bff",
+      "description": "error500: mobile bff status=partial, user/đơn vẫn đủ, không có tên/giá giả",
+      "pass": true,
+      "status": "partial",
+      "codes": [
+        "PRODUCT_UNAVAILABLE"
+      ],
+      "nullProducts": 19,
+      "problems": [],
+      "restOk": true
+    },
+    {
+      "id": "fault.error500.mobile.graphql",
+      "description": "error500: mobile graphql status=partial, user/đơn vẫn đủ, không có tên/giá giả",
+      "pass": true,
+      "status": "partial",
+      "codes": [
+        "PRODUCT_UNAVAILABLE"
+      ],
+      "nullProducts": 19,
+      "problems": [],
+      "restOk": true
+    },
+    {
+      "id": "fault.error500.mobile.bff=graphql",
+      "description": "error500: mobile BFF và GraphQL đánh dấu lỗi cùng path và mã",
+      "pass": true,
+      "bffErrors": 19,
+      "graphqlErrors": 19
+    },
+    {
+      "id": "fault.hang.web.bff",
+      "description": "hang: web bff status=partial, user/đơn vẫn đủ, không có tên/giá giả",
+      "pass": true,
+      "status": "partial",
+      "codes": [
+        "PRODUCT_TIMEOUT"
+      ],
+      "nullProducts": 19,
+      "problems": [],
+      "restOk": true
+    },
+    {
+      "id": "fault.hang.web.graphql",
+      "description": "hang: web graphql status=partial, user/đơn vẫn đủ, không có tên/giá giả",
+      "pass": true,
+      "status": "partial",
+      "codes": [
+        "PRODUCT_TIMEOUT"
+      ],
+      "nullProducts": 19,
+      "problems": [],
+      "restOk": true
+    },
+    {
+      "id": "fault.hang.web.bff=graphql",
+      "description": "hang: web BFF và GraphQL đánh dấu lỗi cùng path và mã",
+      "pass": true,
+      "bffErrors": 19,
+      "graphqlErrors": 19
+    },
+    {
+      "id": "fault.hang.mobile.bff",
+      "description": "hang: mobile bff status=partial, user/đơn vẫn đủ, không có tên/giá giả",
+      "pass": true,
+      "status": "partial",
+      "codes": [
+        "PRODUCT_TIMEOUT"
+      ],
+      "nullProducts": 19,
+      "problems": [],
+      "restOk": true
+    },
+    {
+      "id": "fault.hang.mobile.graphql",
+      "description": "hang: mobile graphql status=partial, user/đơn vẫn đủ, không có tên/giá giả",
+      "pass": true,
+      "status": "partial",
+      "codes": [
+        "PRODUCT_TIMEOUT"
+      ],
+      "nullProducts": 19,
+      "problems": [],
+      "restOk": true
+    },
+    {
+      "id": "fault.hang.mobile.bff=graphql",
+      "description": "hang: mobile BFF và GraphQL đánh dấu lỗi cùng path và mã",
+      "pass": true,
+      "bffErrors": 19,
+      "graphqlErrors": 19
+    }
+  ]
+}

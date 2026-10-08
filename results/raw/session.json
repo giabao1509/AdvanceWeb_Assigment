@@ -1,0 +1,22 @@
+{
+  "startedAt": "2026-10-08T02:46:33.555Z",
+  "logDir": "logs/measure-2026-10-08T02-46-33-076Z",
+  "browser": "msedge 154.0.4258.62",
+  "node": "v24.10.0",
+  "os": "Windows_NT 10.0.26200 x64",
+  "cpu": "12th Gen Intel(R) Core(TM) i7-1260P",
+  "params": {
+    "rounds": 5,
+    "warm": 5,
+    "matrices": [
+      "main",
+      "throttle",
+      "fault"
+    ],
+    "datasets": [
+      "small",
+      "large"
+    ],
+    "throttleMs": 100
+  }
+}

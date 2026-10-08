@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="314" font-family="Segoe UI, system-ui, sans-serif" font-size="11">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="10" y="20" font-size="14" font-weight="600" fill="#24211d">bff · mobile · u_small · localhost</text>
+<text x="10" y="38" fill="#6d675f">run 77 · rid 9aed20b7-058c-41f9-9ff8-1a96b78e6cbc · t_data 40.1 ms · 1 client req · product calls 1</text>
+<line x1="380" y1="56" x2="380" y2="244" stroke="#eeeae4"/>
+<text x="380" y="52" text-anchor="middle" fill="#6d675f">0 ms</text>
+<line x1="505.1303441088716" y1="56" x2="505.1303441088716" y2="244" stroke="#eeeae4"/>
+<text x="505.1303441088716" y="52" text-anchor="middle" fill="#6d675f">20 ms</text>
+<line x1="630.2606882177432" y1="56" x2="630.2606882177432" y2="244" stroke="#eeeae4"/>
+<text x="630.2606882177432" y="52" text-anchor="middle" fill="#6d675f">40 ms</text>
+<line x1="755.3910323266148" y1="56" x2="755.3910323266148" y2="244" stroke="#eeeae4"/>
+<text x="755.3910323266148" y="52" text-anchor="middle" fill="#6d675f">60 ms</text>
+<line x1="880.5213764354864" y1="56" x2="880.5213764354864" y2="244" stroke="#eeeae4"/>
+<text x="880.5213764354864" y="52" text-anchor="middle" fill="#6d675f">80 ms</text>
+<line x1="1005.6517205443581" y1="56" x2="1005.6517205443581" y2="244" stroke="#eeeae4"/>
+<text x="1005.6517205443581" y="52" text-anchor="middle" fill="#6d675f">100 ms</text>
+<text x="10" y="77" fill="#24211d">tải :5173/styles.css</text>
+<rect x="498.2481751852144" y="68" width="63.81647549086307" height="10" rx="2" fill="#b9b2a6"><title>tải :5173/styles.css: 18.9 → 29.1 ms (10.2 ms)</title></rect>
+<rect x="0" y="82" width="1120" height="18" fill="#faf9f7"/>
+<text x="10" y="95" fill="#24211d">tải :5173/render.js</text>
+<rect x="539.5411887388113" y="86" width="35.66214807219376" height="10" rx="2" fill="#b9b2a6"><title>tải :5173/render.js: 25.5 → 31.2 ms (5.7 ms)</title></rect>
+<text x="10" y="113" fill="#24211d">tải :5173/adapters/baseline.js</text>
+<rect x="665.9228362899371" y="104" width="27.52867570045555" height="10" rx="2" fill="#b9b2a6"><title>tải :5173/adapters/baseline.js: 45.7 → 50.1 ms (4.4 ms)</title></rect>
+<rect x="0" y="118" width="1120" height="18" fill="#faf9f7"/>
+<text x="10" y="131" fill="#24211d">tải :5173/adapters/bff.js</text>
+<rect x="665.9228362899371" y="122" width="39.416058393129106" height="10" rx="2" fill="#b9b2a6"><title>tải :5173/adapters/bff.js: 45.7 → 52.0 ms (6.3 ms)</title></rect>
+<text x="10" y="149" fill="#24211d">tải :5173/adapters/graphql.js</text>
+<rect x="666.5484880081506" y="140" width="40.66736183538342" height="10" rx="2" fill="#b9b2a6"><title>tải :5173/adapters/graphql.js: 45.8 → 52.3 ms (6.5 ms)</title></rect>
+<rect x="0" y="154" width="1120" height="18" fill="#faf9f7"/>
+<text x="10" y="167" fill="#24211d">tải :5173/adapters/http.js</text>
+<rect x="707.215849843534" y="158" width="18.14389989811707" height="10" rx="2" fill="#b9b2a6"><title>tải :5173/adapters/http.js: 52.3 → 55.2 ms (2.9 ms)</title></rect>
+<text x="10" y="185" fill="#24211d">browser fetch :4010/bff/mobile/orders/u_small</text>
+<rect x="818.5818560992643" y="176" width="101.98123045339173" height="10" rx="2" fill="#2f6db0"><title>browser fetch :4010/bff/mobile/orders/u_small: 70.1 → 86.4 ms (16.3 ms)</title></rect>
+<rect x="0" y="190" width="1120" height="18" fill="#faf9f7"/>
+<text x="10" y="203" fill="#24211d">bff GET /bff/mobile/orders/u_small</text>
+<rect x="833.7594092168708" y="194" width="81.81740419735843" height="10" rx="2" fill="#6b4f3a"><title>bff GET /bff/mobile/orders/u_small: 72.5 → 85.6 ms (13.1 ms)</title></rect>
+<text x="10" y="221" fill="#24211d">order GET /users/u_small/orders</text>
+<rect x="835.0745609048315" y="214" width="45.128258602864435" height="6" rx="2" fill="#c08321" opacity="0.28"><title>Bên gọi chờ: 72.7 → 79.9 ms (7.2 ms)</title></rect>
+<rect x="846.5366959413668" y="212" width="21.453316442982214" height="10" rx="2" fill="#c08321"><title>order GET /users/u_small/orders: 74.6 → 78.0 ms (3.4 ms)</title></rect>
+<rect x="847.074858252373" y="210" width="2" height="14" fill="#111"><title>DB query @ 74.81 ms</title></rect>
+<rect x="853.0442110938949" y="210" width="2" height="14" fill="#111"><title>DB query @ 75.77 ms</title></rect>
+<rect x="0" y="226" width="1120" height="18" fill="#faf9f7"/>
+<text x="10" y="239" fill="#24211d">product GET /products?ids=p_001,p_002,p_003,p_004,p_005,p_006</text>
+<rect x="881.6043526802764" y="232" width="28.16058394170159" height="6" rx="2" fill="#b5473a" opacity="0.28"><title>Bên gọi chờ: 80.2 → 84.7 ms (4.5 ms)</title></rect>
+<rect x="887.259046697501" y="230" width="12.945308426790575" height="10" rx="2" fill="#b5473a"><title>product GET /products?ids=p_001,p_002,p_003,p_004,p_005,p_006: 81.1 → 83.1 ms (2.1 ms)</title></rect>
+<rect x="888.980998274674" y="228" width="2" height="14" fill="#111"><title>DB query @ 81.51 ms</title></rect>
+<line x1="814.827945778329" y1="56" x2="814.827945778329" y2="250" stroke="#2f6db0" stroke-width="1.5" stroke-dasharray="4 3"/>
+<text x="817.827945778329" y="262" text-anchor="start" fill="#2f6db0" font-weight="600">data-start 69.5 ms</text>
+<line x1="1065.7142857142858" y1="56" x2="1065.7142857142858" y2="250" stroke="#b5473a" stroke-width="1.5" stroke-dasharray="4 3"/>
+<text x="1062.7142857142858" y="276" text-anchor="end" fill="#b5473a" font-weight="600">screen-complete 109.6 ms</text>
+<rect x="10" y="292" width="12" height="10" fill="#b9b2a6"/><text x="26" y="301" fill="#24211d">tải trang</text>
+<rect x="130" y="292" width="12" height="10" fill="#2f6db0"/><text x="146" y="301" fill="#24211d">browser fetch</text>
+<rect x="250" y="292" width="12" height="10" fill="#8a6fc4"/><text x="266" y="301" fill="#24211d">CORS preflight</text>
+<rect x="370" y="292" width="12" height="10" fill="#6b4f3a"/><text x="386" y="301" fill="#24211d">composer</text>
+<rect x="490" y="292" width="12" height="10" fill="#3f8f5f"/><text x="506" y="301" fill="#24211d">User</text>
+<rect x="610" y="292" width="12" height="10" fill="#c08321"/><text x="626" y="301" fill="#24211d">Order</text>
+<rect x="730" y="292" width="12" height="10" fill="#b5473a"/><text x="746" y="301" fill="#24211d">Product</text>
+<rect x="850" y="290" width="2" height="14" fill="#111"/><text x="856" y="301" fill="#24211d">DB query</text>
+<text x="10" y="278" fill="#6d675f">Trục x tính từ performance.timeOrigin. Thanh nhạt: thời gian bên gọi (composer) chờ; thanh đậm: service xử lý. 6 request ảnh (sau screen-complete) không vẽ.</text>
+</svg>

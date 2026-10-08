@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>API composition</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <h1>API composition: chọn biến thể</h1>
+      <p class="muted">
+        Mỗi trang đặt mốc <code>data-start</code> và <code>screen-complete</code> (DevTools › Performance). Mở DevTools ›
+        Network để xem waterfall.
+      </p>
+      <table class="matrix">
+        <thead>
+          <tr><th>Biến thể</th><th>Web · u_small</th><th>Web · u_large</th><th>Mobile · u_small</th><th>Mobile · u_large</th></tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <p class="muted">
+        GraphQL chạy ở chế độ <code id="mode">?</code> (đổi bằng <code>npm start</code> / <code>npm run start:naive</code>).
+        GraphiQL: <a href="http://localhost:4020/graphql">http://localhost:4020/graphql</a>
+      </p>
+    </main>
+    <script type="module">
+      const variants = [
+        ['baseline', 'Baseline (browser tự ghép)', false],
+        ['bff', 'BFF', true],
+        ['graphql', 'GraphQL', true],
+      ];
+      const cell = (page, v, u, ok) => (ok ? `<td><a href="/${page}.html?variant=${v}&user=${u}">mở</a></td>` : '<td class="muted">—</td>');
+      document.getElementById('rows').innerHTML = variants
+        .map(
+          ([v, label, mobile]) =>
+            `<tr><th>${label}</th>${cell('web', v, 'u_small', true)}${cell('web', v, 'u_large', true)}${cell('mobile', v, 'u_small', mobile)}${cell('mobile', v, 'u_large', mobile)}</tr>`,
+        )
+        .join('');
+      fetch('http://localhost:4020/__mode')
+        .then((r) => r.json())
+        .then((m) => (document.getElementById('mode').textContent = m.productLoader))
+        .catch(() => (document.getElementById('mode').textContent = 'không kết nối được'));
+    </script>
+  </body>
+</html>

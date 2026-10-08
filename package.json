@@ -1,0 +1,29 @@
+{
+  "name": "block2-api-composition",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Web nâng cao - Tuần 2 - Block 2: API composition (baseline, BFF, GraphQL)",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "seed": "node scripts/seed.js",
+    "start": "node scripts/start.js --fault",
+    "start:naive": "node scripts/start.js --naive --fault",
+    "verify": "node scripts/verify.js",
+    "measure": "node scripts/measure.js",
+    "measure:quick": "node scripts/measure.js --quick --datasets small",
+    "report": "node scripts/report.js",
+    "waterfall": "node scripts/waterfall.js",
+    "all": "npm run seed && npm run verify && npm run measure && npm run report && npm run waterfall"
+  },
+  "dependencies": {
+    "better-sqlite3": "^13.0.3",
+    "dataloader": "^2.2.3",
+    "express": "^5.2.1",
+    "graphql": "^16.14.2",
+    "graphql-yoga": "^5.24.2",
+    "playwright": "^1.64.0"
+  }
+}

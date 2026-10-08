@@ -1,0 +1,458 @@
+# Trace N+1 trước và sau khi sửa (GraphQL, web)
+
+Tự sinh bởi scripts/waterfall.js từ log `logs/measure-2026-10-08T02-46-33-076Z`. Mỗi mục là lần warm có t_data gần median nhất. Thời gian tính từ lúc GraphQL nhận request.
+
+| Bản | Dataset | rid | Product call | Product DB query | cache-hit | Call Product chạy song song tối đa | Thời gian xử lý ở GraphQL (ms) | t_data (ms) |
+|---|---|---|---|---|---|---|---|---|
+| gql-naive | small | `ad4ec74b-cd98-4e59-b092-e367df586db7` | 19 | 19 | 0 | 19 | 20.2 | 66.9 |
+| gql-naive | large | `395734c7-3ea7-4962-adc3-53858a666ad3` | 399 | 399 | 0 | 399 | 249.7 | 321.9 |
+| gql-batched | small | `924b6016-bb11-4650-963f-a0ef84585c32` | 1 | 1 | 13 | 1 | 14.1 | 49.4 |
+| gql-batched | large | `32f8a5e3-4dac-4743-adde-84ae56de1860` | 1 | 1 | 369 | 1 | 38.0 | 114.8 |
+
+## gql-naive · small (rid `ad4ec74b-cd98-4e59-b092-e367df586db7`)
+
+```
+  #   bắt đầu        thời lượng  status  request
+  1  +    6.66 ms     3.50 ms  200  GET /products/p_001
+  2  +    6.96 ms     3.60 ms  200  GET /products/p_002
+  3  +    7.15 ms     3.74 ms  200  GET /products/p_003
+  4  +    7.32 ms     3.90 ms  200  GET /products/p_004
+  5  +    7.45 ms     4.11 ms  200  GET /products/p_005
+  6  +    7.56 ms     4.47 ms  200  GET /products/p_006
+  7  +    7.73 ms     5.38 ms  200  GET /products/p_001
+  8  +    7.94 ms     5.56 ms  200  GET /products/p_002
+  9  +    8.09 ms     5.70 ms  200  GET /products/p_003
+ 10  +    8.26 ms     6.01 ms  200  GET /products/p_004
+ 11  +    8.38 ms     6.76 ms  200  GET /products/p_005
+ 12  +    8.49 ms     7.39 ms  200  GET /products/p_006
+ 13  +    8.67 ms     7.83 ms  200  GET /products/p_001
+ 14  +    8.81 ms     8.05 ms  200  GET /products/p_002
+ 15  +    8.94 ms     8.31 ms  200  GET /products/p_003
+ 16  +    9.08 ms     8.63 ms  200  GET /products/p_004
+ 17  +    9.20 ms     9.12 ms  200  GET /products/p_005
+ 18  +    9.31 ms     9.71 ms  200  GET /products/p_006
+ 19  +    9.47 ms    10.02 ms  200  GET /products/p_001
+```
+
+## gql-naive · large (rid `395734c7-3ea7-4962-adc3-53858a666ad3`)
+
+<details><summary>399 call tới Product Service (bấm để mở)</summary>
+
+```
+  #   bắt đầu        thời lượng  status  request
+  1  +   11.03 ms    91.52 ms  200  GET /products/p_001
+  2  +   11.49 ms    91.57 ms  200  GET /products/p_002
+  3  +   11.80 ms    91.64 ms  200  GET /products/p_003
+  4  +   12.11 ms    91.71 ms  200  GET /products/p_004
+  5  +   12.37 ms    91.86 ms  200  GET /products/p_005
+  6  +   12.62 ms    92.04 ms  200  GET /products/p_006
+  7  +   12.91 ms    92.14 ms  200  GET /products/p_007
+  8  +   13.10 ms    92.32 ms  200  GET /products/p_008
+  9  +   13.28 ms    92.63 ms  200  GET /products/p_009
+ 10  +   13.46 ms    92.85 ms  200  GET /products/p_010
+ 11  +   13.64 ms    93.09 ms  200  GET /products/p_011
+ 12  +   13.93 ms    93.21 ms  200  GET /products/p_012
+ 13  +   14.23 ms    93.29 ms  200  GET /products/p_013
+ 14  +   14.81 ms    93.05 ms  200  GET /products/p_014
+ 15  +   15.21 ms    93.03 ms  200  GET /products/p_015
+ 16  +   15.59 ms    92.97 ms  200  GET /products/p_016
+ 17  +   15.88 ms    93.03 ms  200  GET /products/p_017
+ 18  +   16.11 ms    93.15 ms  200  GET /products/p_018
+ 19  +   16.36 ms    93.25 ms  200  GET /products/p_019
+ 20  +   16.61 ms    93.38 ms  200  GET /products/p_020
+ 21  +   16.81 ms    93.54 ms  200  GET /products/p_021
+ 22  +   17.02 ms    93.69 ms  200  GET /products/p_022
+ 23  +   17.22 ms    93.87 ms  200  GET /products/p_023
+ 24  +   17.46 ms    93.99 ms  200  GET /products/p_024
+ 25  +   17.68 ms    94.13 ms  200  GET /products/p_025
+ 26  +   17.90 ms    94.31 ms  200  GET /products/p_026
+ 27  +   18.09 ms    94.48 ms  200  GET /products/p_027
+ 28  +   18.29 ms    94.74 ms  200  GET /products/p_028
+ 29  +   18.49 ms    94.90 ms  200  GET /products/p_029
+ 30  +   18.67 ms    95.10 ms  200  GET /products/p_030
+ 31  +   18.86 ms    95.37 ms  200  GET /products/p_001
+ 32  +   19.06 ms    95.62 ms  200  GET /products/p_002
+ 33  +   19.25 ms    95.78 ms  200  GET /products/p_003
+ 34  +   19.48 ms    95.90 ms  200  GET /products/p_004
+ 35  +   19.68 ms    96.04 ms  200  GET /products/p_005
+ 36  +   19.89 ms    96.21 ms  200  GET /products/p_006
+ 37  +   20.11 ms    96.34 ms  200  GET /products/p_007
+ 38  +   20.31 ms    96.94 ms  200  GET /products/p_008
+ 39  +   20.51 ms    97.15 ms  200  GET /products/p_009
+ 40  +   20.79 ms    97.19 ms  200  GET /products/p_010
+ 41  +   20.99 ms    97.29 ms  200  GET /products/p_011
+ 42  +   21.23 ms    97.38 ms  200  GET /products/p_012
+ 43  +   21.42 ms    97.52 ms  200  GET /products/p_013
+ 44  +   21.67 ms    97.59 ms  200  GET /products/p_014
+ 45  +   21.85 ms    97.71 ms  200  GET /products/p_015
+ 46  +   22.05 ms    97.81 ms  200  GET /products/p_016
+ 47  +   22.27 ms    98.17 ms  200  GET /products/p_017
+ 48  +   22.46 ms    98.44 ms  200  GET /products/p_018
+ 49  +   22.65 ms    98.57 ms  200  GET /products/p_019
+ 50  +   22.86 ms    98.66 ms  200  GET /products/p_020
+ 51  +   23.06 ms    98.74 ms  200  GET /products/p_021
+ 52  +   23.28 ms    98.87 ms  200  GET /products/p_022
+ 53  +   23.49 ms    98.99 ms  200  GET /products/p_023
+ 54  +   23.68 ms    99.08 ms  200  GET /products/p_024
+ 55  +   23.90 ms    99.16 ms  200  GET /products/p_025
+ 56  +   24.10 ms    99.23 ms  200  GET /products/p_026
+ 57  +   24.31 ms    99.31 ms  200  GET /products/p_027
+ 58  +   24.54 ms    99.38 ms  200  GET /products/p_028
+ 59  +   24.73 ms    99.48 ms  200  GET /products/p_029
+ 60  +   24.90 ms    99.63 ms  200  GET /products/p_030
+ 61  +   25.09 ms    99.77 ms  200  GET /products/p_001
+ 62  +   25.29 ms    99.89 ms  200  GET /products/p_002
+ 63  +   25.49 ms   100.00 ms  200  GET /products/p_003
+ 64  +   25.71 ms   100.07 ms  200  GET /products/p_004
+ 65  +   25.89 ms   100.19 ms  200  GET /products/p_005
+ 66  +   26.07 ms   100.30 ms  200  GET /products/p_006
+ 67  +   26.28 ms   100.40 ms  200  GET /products/p_007
+ 68  +   26.50 ms   100.52 ms  200  GET /products/p_008
+ 69  +   26.69 ms   100.77 ms  200  GET /products/p_009
+ 70  +   26.89 ms   100.89 ms  200  GET /products/p_010
+ 71  +   27.16 ms   101.01 ms  200  GET /products/p_011
+ 72  +   27.43 ms   101.05 ms  200  GET /products/p_012
+ 73  +   27.68 ms   101.13 ms  200  GET /products/p_013
+ 74  +   27.92 ms   101.20 ms  200  GET /products/p_014
+ 75  +   28.13 ms   101.30 ms  200  GET /products/p_015
+ 76  +   28.33 ms   101.40 ms  200  GET /products/p_016
+ 77  +   28.52 ms   101.56 ms  200  GET /products/p_017
+ 78  +   28.71 ms   101.68 ms  200  GET /products/p_018
+ 79  +   29.27 ms   101.43 ms  200  GET /products/p_019
+ 80  +   29.57 ms   101.43 ms  200  GET /products/p_020
+ 81  +   29.85 ms   101.43 ms  200  GET /products/p_021
+ 82  +   30.13 ms   101.43 ms  200  GET /products/p_022
+ 83  +   30.40 ms   101.46 ms  200  GET /products/p_023
+ 84  +   30.70 ms   101.47 ms  200  GET /products/p_024
+ 85  +   30.92 ms   101.55 ms  200  GET /products/p_025
+ 86  +   31.19 ms   101.58 ms  200  GET /products/p_026
+ 87  +   31.40 ms   101.67 ms  200  GET /products/p_027
+ 88  +   31.64 ms   101.74 ms  200  GET /products/p_028
+ 89  +   31.87 ms   101.85 ms  200  GET /products/p_029
+ 90  +   32.11 ms   101.98 ms  200  GET /products/p_030
+ 91  +   32.36 ms   102.04 ms  200  GET /products/p_001
+ 92  +   32.60 ms   102.09 ms  200  GET /products/p_002
+ 93  +   32.84 ms   102.13 ms  200  GET /products/p_003
+ 94  +   33.13 ms   102.13 ms  200  GET /products/p_004
+ 95  +   33.34 ms   102.26 ms  200  GET /products/p_005
+ 96  +   33.54 ms   102.36 ms  200  GET /products/p_006
+ 97  +   33.82 ms   102.47 ms  200  GET /products/p_007
+ 98  +   34.09 ms   102.54 ms  200  GET /products/p_008
+ 99  +   34.35 ms   102.59 ms  200  GET /products/p_009
+100  +   34.63 ms   102.73 ms  200  GET /products/p_010
+101  +   34.89 ms   102.89 ms  200  GET /products/p_011
+102  +   35.12 ms   103.04 ms  200  GET /products/p_012
+103  +   35.36 ms   103.13 ms  200  GET /products/p_013
+104  +   35.55 ms   103.22 ms  200  GET /products/p_014
+105  +   35.72 ms   103.35 ms  200  GET /products/p_015
+106  +   35.88 ms   103.53 ms  200  GET /products/p_016
+107  +   36.02 ms   103.69 ms  200  GET /products/p_017
+108  +   36.16 ms   103.88 ms  200  GET /products/p_018
+109  +   36.31 ms   104.05 ms  200  GET /products/p_019
+110  +   36.47 ms   104.28 ms  200  GET /products/p_020
+111  +   36.60 ms   104.45 ms  200  GET /products/p_021
+112  +   36.77 ms   104.57 ms  200  GET /products/p_022
+113  +   36.91 ms   104.70 ms  200  GET /products/p_023
+114  +   37.04 ms   104.85 ms  200  GET /products/p_024
+115  +   37.18 ms   105.03 ms  200  GET /products/p_025
+116  +   37.33 ms   105.19 ms  200  GET /products/p_026
+117  +   37.46 ms   105.34 ms  200  GET /products/p_027
+118  +   37.62 ms   105.45 ms  200  GET /products/p_028
+119  +   37.82 ms   105.52 ms  200  GET /products/p_029
+120  +   38.01 ms   105.61 ms  200  GET /products/p_030
+121  +   38.21 ms   105.76 ms  200  GET /products/p_001
+122  +   38.44 ms   105.86 ms  200  GET /products/p_002
+123  +   38.65 ms   105.93 ms  200  GET /products/p_003
+124  +   38.91 ms   105.96 ms  200  GET /products/p_004
+125  +   39.10 ms   105.98 ms  200  GET /products/p_005
+126  +   39.31 ms   105.98 ms  200  GET /products/p_006
+127  +   39.53 ms   105.99 ms  200  GET /products/p_007
+128  +   39.76 ms   106.96 ms  200  GET /products/p_008
+129  +   39.95 ms   107.31 ms  200  GET /products/p_009
+130  +   40.16 ms   107.52 ms  200  GET /products/p_010
+131  +   40.42 ms   107.79 ms  200  GET /products/p_011
+132  +   40.70 ms   107.91 ms  200  GET /products/p_012
+133  +   40.93 ms   108.06 ms  200  GET /products/p_013
+134  +   41.16 ms   108.20 ms  200  GET /products/p_014
+135  +   41.36 ms   108.40 ms  200  GET /products/p_015
+136  +   41.58 ms   108.53 ms  200  GET /products/p_016
+137  +   41.78 ms   108.69 ms  200  GET /products/p_017
+138  +   41.97 ms   108.82 ms  200  GET /products/p_018
+139  +   42.16 ms   108.94 ms  200  GET /products/p_019
+140  +   42.38 ms   109.01 ms  200  GET /products/p_020
+141  +   42.58 ms   109.12 ms  200  GET /products/p_021
+142  +   42.84 ms   109.15 ms  200  GET /products/p_022
+143  +   43.04 ms   109.26 ms  200  GET /products/p_023
+144  +   43.24 ms   109.35 ms  200  GET /products/p_024
+145  +   43.45 ms   109.43 ms  200  GET /products/p_025
+146  +   43.74 ms   109.49 ms  200  GET /products/p_026
+147  +   44.02 ms   109.54 ms  200  GET /products/p_027
+148  +   44.28 ms   109.58 ms  200  GET /products/p_028
+149  +   44.50 ms   109.84 ms  200  GET /products/p_029
+150  +   44.98 ms   109.66 ms  200  GET /products/p_030
+151  +   45.31 ms   109.65 ms  200  GET /products/p_001
+152  +   45.62 ms   109.70 ms  200  GET /products/p_002
+153  +   46.00 ms   109.66 ms  200  GET /products/p_003
+154  +   46.33 ms   109.60 ms  200  GET /products/p_004
+155  +   46.61 ms   109.60 ms  200  GET /products/p_005
+156  +   46.86 ms   109.61 ms  200  GET /products/p_006
+157  +   47.31 ms   109.48 ms  200  GET /products/p_007
+158  +   47.61 ms   109.45 ms  200  GET /products/p_008
+159  +   47.83 ms   109.50 ms  200  GET /products/p_009
+160  +   48.07 ms   109.55 ms  200  GET /products/p_010
+161  +   48.30 ms   109.60 ms  200  GET /products/p_011
+162  +   48.51 ms   109.66 ms  200  GET /products/p_012
+163  +   48.74 ms   109.90 ms  200  GET /products/p_013
+164  +   48.97 ms   109.95 ms  200  GET /products/p_014
+165  +   49.19 ms   110.01 ms  200  GET /products/p_015
+166  +   49.44 ms   110.03 ms  200  GET /products/p_016
+167  +   49.66 ms   110.11 ms  200  GET /products/p_017
+168  +   49.88 ms   110.17 ms  200  GET /products/p_018
+169  +   50.09 ms   110.25 ms  200  GET /products/p_019
+170  +   50.30 ms   110.35 ms  200  GET /products/p_020
+171  +   50.51 ms   110.43 ms  200  GET /products/p_021
+172  +   50.79 ms   110.41 ms  200  GET /products/p_022
+173  +   51.00 ms   110.47 ms  200  GET /products/p_023
+174  +   51.24 ms   110.47 ms  200  GET /products/p_024
+175  +   51.47 ms   110.48 ms  200  GET /products/p_025
+176  +   51.67 ms   110.50 ms  200  GET /products/p_026
+177  +   51.86 ms   110.58 ms  200  GET /products/p_027
+178  +   52.07 ms   110.62 ms  200  GET /products/p_028
+179  +   52.28 ms   110.62 ms  200  GET /products/p_029
+180  +   52.48 ms   110.67 ms  200  GET /products/p_030
+181  +   52.70 ms   110.75 ms  200  GET /products/p_001
+182  +   52.91 ms   110.84 ms  200  GET /products/p_002
+183  +   53.10 ms   110.93 ms  200  GET /products/p_003
+184  +   53.35 ms   110.94 ms  200  GET /products/p_004
+185  +   53.54 ms   111.02 ms  200  GET /products/p_005
+186  +   53.72 ms   111.12 ms  200  GET /products/p_006
+187  +   53.93 ms   111.20 ms  200  GET /products/p_007
+188  +   54.16 ms   111.25 ms  200  GET /products/p_008
+189  +   54.38 ms   111.32 ms  200  GET /products/p_009
+190  +   54.60 ms   111.38 ms  200  GET /products/p_010
+191  +   54.81 ms   111.42 ms  200  GET /products/p_011
+192  +   55.03 ms   111.48 ms  200  GET /products/p_012
+193  +   55.28 ms   111.51 ms  200  GET /products/p_013
+194  +   55.58 ms   111.54 ms  200  GET /products/p_014
+195  +   55.81 ms   111.59 ms  200  GET /products/p_015
+196  +   56.04 ms   111.65 ms  200  GET /products/p_016
+197  +   56.25 ms   111.72 ms  200  GET /products/p_017
+198  +   56.45 ms   111.83 ms  200  GET /products/p_018
+199  +   56.67 ms   111.99 ms  200  GET /products/p_019
+200  +   56.90 ms   112.02 ms  200  GET /products/p_020
+201  +   57.09 ms   112.10 ms  200  GET /products/p_021
+202  +   57.35 ms   112.12 ms  200  GET /products/p_022
+203  +   57.56 ms   112.23 ms  200  GET /products/p_023
+204  +   57.76 ms   112.32 ms  200  GET /products/p_024
+205  +   57.98 ms   112.45 ms  200  GET /products/p_025
+206  +   58.20 ms   112.50 ms  200  GET /products/p_026
+207  +   58.41 ms   112.58 ms  200  GET /products/p_027
+208  +   58.62 ms   112.64 ms  200  GET /products/p_028
+209  +   58.80 ms   112.73 ms  200  GET /products/p_029
+210  +   58.98 ms   112.86 ms  200  GET /products/p_030
+211  +   59.20 ms   112.93 ms  200  GET /products/p_001
+212  +   59.41 ms   113.00 ms  200  GET /products/p_002
+213  +   59.59 ms   113.09 ms  200  GET /products/p_003
+214  +   59.79 ms   113.17 ms  200  GET /products/p_004
+215  +   60.01 ms   113.26 ms  200  GET /products/p_005
+216  +   60.23 ms   113.32 ms  200  GET /products/p_006
+217  +   60.60 ms   113.27 ms  200  GET /products/p_007
+218  +   61.00 ms   113.15 ms  200  GET /products/p_008
+219  +   61.43 ms   112.99 ms  200  GET /products/p_009
+220  +   61.71 ms   112.99 ms  200  GET /products/p_010
+221  +   61.92 ms   113.06 ms  200  GET /products/p_011
+222  +   62.11 ms   113.15 ms  200  GET /products/p_012
+223  +   62.33 ms   113.24 ms  200  GET /products/p_013
+224  +   62.72 ms   113.18 ms  200  GET /products/p_014
+225  +   63.03 ms   113.15 ms  200  GET /products/p_015
+226  +   63.30 ms   113.87 ms  200  GET /products/p_016
+227  +   63.55 ms   113.92 ms  200  GET /products/p_017
+228  +   63.78 ms   114.03 ms  200  GET /products/p_018
+229  +   64.03 ms   114.14 ms  200  GET /products/p_019
+230  +   64.29 ms   114.21 ms  200  GET /products/p_020
+231  +   64.64 ms   114.20 ms  200  GET /products/p_021
+232  +   64.90 ms   114.26 ms  200  GET /products/p_022
+233  +   65.13 ms   114.32 ms  200  GET /products/p_023
+234  +   65.36 ms   114.39 ms  200  GET /products/p_024
+235  +   65.61 ms   114.42 ms  200  GET /products/p_025
+236  +   65.87 ms   114.44 ms  200  GET /products/p_026
+237  +   66.08 ms   114.53 ms  200  GET /products/p_027
+238  +   66.37 ms   114.52 ms  200  GET /products/p_028
+239  +   66.62 ms   114.54 ms  200  GET /products/p_029
+240  +   66.83 ms   114.74 ms  200  GET /products/p_030
+241  +   67.08 ms   114.83 ms  200  GET /products/p_001
+242  +   67.32 ms   114.86 ms  200  GET /products/p_002
+243  +   67.55 ms   114.92 ms  200  GET /products/p_003
+244  +   67.79 ms   114.95 ms  200  GET /products/p_004
+245  +   68.01 ms   114.99 ms  200  GET /products/p_005
+246  +   68.31 ms   114.96 ms  200  GET /products/p_006
+247  +   68.61 ms   114.96 ms  200  GET /products/p_007
+248  +   68.85 ms   115.01 ms  200  GET /products/p_008
+249  +   69.07 ms   115.06 ms  200  GET /products/p_009
+250  +   69.35 ms   115.05 ms  200  GET /products/p_010
+251  +   69.56 ms   115.10 ms  200  GET /products/p_011
+252  +   69.77 ms   115.22 ms  200  GET /products/p_012
+253  +   69.98 ms   115.33 ms  200  GET /products/p_013
+254  +   70.19 ms   115.41 ms  200  GET /products/p_014
+255  +   70.40 ms   115.49 ms  200  GET /products/p_015
+256  +   70.68 ms   115.48 ms  200  GET /products/p_016
+257  +   70.88 ms   115.55 ms  200  GET /products/p_017
+258  +   71.06 ms   115.63 ms  200  GET /products/p_018
+259  +   71.34 ms   115.63 ms  200  GET /products/p_019
+260  +   71.57 ms   115.69 ms  200  GET /products/p_020
+261  +   71.77 ms   115.77 ms  200  GET /products/p_021
+262  +   71.98 ms   115.87 ms  200  GET /products/p_022
+263  +   72.16 ms   115.96 ms  200  GET /products/p_023
+264  +   72.35 ms   116.05 ms  200  GET /products/p_024
+265  +   72.59 ms   116.09 ms  200  GET /products/p_025
+266  +   72.91 ms   116.04 ms  200  GET /products/p_026
+267  +   73.16 ms   116.08 ms  200  GET /products/p_027
+268  +   73.44 ms   116.08 ms  200  GET /products/p_028
+269  +   73.68 ms   116.15 ms  200  GET /products/p_029
+270  +   73.92 ms   116.19 ms  200  GET /products/p_030
+271  +   74.16 ms   116.23 ms  200  GET /products/p_001
+272  +   74.43 ms   116.23 ms  200  GET /products/p_002
+273  +   74.69 ms   116.25 ms  200  GET /products/p_003
+274  +   74.95 ms   116.26 ms  200  GET /products/p_004
+275  +   75.16 ms   116.32 ms  200  GET /products/p_005
+276  +   75.37 ms   116.41 ms  200  GET /products/p_006
+277  +   75.62 ms   116.44 ms  200  GET /products/p_007
+278  +   75.84 ms   116.51 ms  200  GET /products/p_008
+279  +   76.05 ms   116.68 ms  200  GET /products/p_009
+280  +   76.30 ms   117.25 ms  200  GET /products/p_010
+281  +   76.50 ms   117.42 ms  200  GET /products/p_011
+282  +   76.65 ms   117.59 ms  200  GET /products/p_012
+283  +   76.81 ms   117.77 ms  200  GET /products/p_013
+284  +   77.01 ms   117.92 ms  200  GET /products/p_014
+285  +   77.15 ms   118.10 ms  200  GET /products/p_015
+286  +   77.40 ms   118.20 ms  200  GET /products/p_016
+287  +   77.57 ms   118.38 ms  200  GET /products/p_017
+288  +   77.75 ms   118.50 ms  200  GET /products/p_018
+289  +   77.95 ms   118.59 ms  200  GET /products/p_019
+290  +   78.12 ms   118.83 ms  200  GET /products/p_020
+291  +   78.28 ms   118.98 ms  200  GET /products/p_021
+292  +   78.50 ms   119.07 ms  200  GET /products/p_022
+293  +   78.68 ms   119.25 ms  200  GET /products/p_023
+294  +   78.84 ms   119.43 ms  200  GET /products/p_024
+295  +   79.01 ms   119.55 ms  200  GET /products/p_025
+296  +   79.18 ms   119.66 ms  200  GET /products/p_026
+297  +   79.34 ms   119.76 ms  200  GET /products/p_027
+298  +   79.50 ms   119.88 ms  200  GET /products/p_028
+299  +   79.68 ms   119.97 ms  200  GET /products/p_029
+300  +   79.88 ms   120.07 ms  200  GET /products/p_030
+301  +   80.12 ms   120.15 ms  200  GET /products/p_001
+302  +   80.40 ms   120.22 ms  200  GET /products/p_002
+303  +   80.66 ms   120.24 ms  200  GET /products/p_003
+304  +   80.94 ms   120.26 ms  200  GET /products/p_004
+305  +   81.19 ms   120.33 ms  200  GET /products/p_005
+306  +   81.43 ms   120.41 ms  200  GET /products/p_006
+307  +   81.65 ms   120.50 ms  200  GET /products/p_007
+308  +   81.88 ms   120.57 ms  200  GET /products/p_008
+309  +   82.08 ms   120.65 ms  200  GET /products/p_009
+310  +   82.29 ms   121.02 ms  200  GET /products/p_010
+311  +   82.52 ms   121.08 ms  200  GET /products/p_011
+312  +   82.72 ms   121.19 ms  200  GET /products/p_012
+313  +   82.93 ms   121.37 ms  200  GET /products/p_013
+314  +   83.13 ms   121.51 ms  200  GET /products/p_014
+315  +   83.32 ms   121.63 ms  200  GET /products/p_015
+316  +   83.52 ms   121.73 ms  200  GET /products/p_016
+317  +   83.70 ms   121.91 ms  200  GET /products/p_017
+318  +   83.91 ms   122.04 ms  200  GET /products/p_018
+319  +   84.12 ms   122.13 ms  200  GET /products/p_019
+320  +   84.33 ms   122.23 ms  200  GET /products/p_020
+321  +   84.54 ms   122.37 ms  200  GET /products/p_021
+322  +   84.75 ms   122.52 ms  200  GET /products/p_022
+323  +   84.94 ms   122.69 ms  200  GET /products/p_023
+324  +   85.13 ms   122.84 ms  200  GET /products/p_024
+325  +   85.33 ms   122.98 ms  200  GET /products/p_025
+326  +   85.53 ms   123.10 ms  200  GET /products/p_026
+327  +   85.73 ms   130.07 ms  200  GET /products/p_027
+328  +   85.93 ms   130.61 ms  200  GET /products/p_028
+329  +   86.16 ms   130.80 ms  200  GET /products/p_029
+330  +   86.34 ms   130.98 ms  200  GET /products/p_030
+331  +   86.57 ms   131.12 ms  200  GET /products/p_001
+332  +   86.77 ms   131.38 ms  200  GET /products/p_002
+333  +   86.96 ms   131.55 ms  200  GET /products/p_003
+334  +   87.18 ms   131.66 ms  200  GET /products/p_004
+335  +   87.44 ms   131.72 ms  200  GET /products/p_005
+336  +   87.68 ms   131.81 ms  200  GET /products/p_006
+337  +   87.89 ms   131.91 ms  200  GET /products/p_007
+338  +   88.11 ms   132.00 ms  200  GET /products/p_008
+339  +   88.31 ms   132.17 ms  200  GET /products/p_009
+340  +   88.56 ms   132.29 ms  200  GET /products/p_010
+341  +   88.77 ms   132.44 ms  200  GET /products/p_011
+342  +   88.97 ms   132.60 ms  200  GET /products/p_012
+343  +   89.28 ms   132.65 ms  200  GET /products/p_013
+344  +   89.51 ms   132.78 ms  200  GET /products/p_014
+345  +   89.70 ms   132.96 ms  200  GET /products/p_015
+346  +   89.89 ms   133.09 ms  200  GET /products/p_016
+347  +   90.07 ms   133.43 ms  200  GET /products/p_017
+348  +   90.26 ms   133.58 ms  200  GET /products/p_018
+349  +   90.51 ms   133.71 ms  200  GET /products/p_019
+350  +   90.75 ms   133.93 ms  200  GET /products/p_020
+351  +   90.95 ms   134.15 ms  200  GET /products/p_021
+352  +   91.17 ms   134.23 ms  200  GET /products/p_022
+353  +   91.42 ms   134.28 ms  200  GET /products/p_023
+354  +   91.61 ms   134.37 ms  200  GET /products/p_024
+355  +   91.82 ms   134.49 ms  200  GET /products/p_025
+356  +   92.02 ms   134.62 ms  200  GET /products/p_026
+357  +   92.21 ms   134.75 ms  200  GET /products/p_027
+358  +   92.40 ms   134.88 ms  200  GET /products/p_028
+359  +   92.61 ms   135.14 ms  200  GET /products/p_029
+360  +   92.80 ms   135.31 ms  200  GET /products/p_030
+361  +   93.00 ms   135.57 ms  200  GET /products/p_001
+362  +   93.20 ms   135.72 ms  200  GET /products/p_002
+363  +   93.37 ms   135.86 ms  200  GET /products/p_003
+364  +   93.58 ms   135.95 ms  200  GET /products/p_004
+365  +   93.87 ms   135.94 ms  200  GET /products/p_005
+366  +   94.08 ms   136.12 ms  200  GET /products/p_006
+367  +   94.33 ms   136.28 ms  200  GET /products/p_007
+368  +   94.68 ms   136.23 ms  200  GET /products/p_008
+369  +   95.14 ms   136.07 ms  200  GET /products/p_009
+370  +   95.40 ms   136.19 ms  200  GET /products/p_010
+371  +   95.64 ms   136.40 ms  200  GET /products/p_011
+372  +   95.87 ms   136.54 ms  200  GET /products/p_012
+373  +   96.07 ms   136.74 ms  200  GET /products/p_013
+374  +   96.30 ms   136.88 ms  200  GET /products/p_014
+375  +   96.49 ms   137.13 ms  200  GET /products/p_015
+376  +   96.73 ms   137.33 ms  200  GET /products/p_016
+377  +   96.91 ms   137.84 ms  200  GET /products/p_017
+378  +   97.09 ms   138.17 ms  200  GET /products/p_018
+379  +   97.32 ms   138.38 ms  200  GET /products/p_019
+380  +   97.53 ms   138.70 ms  200  GET /products/p_020
+381  +   97.71 ms   138.98 ms  200  GET /products/p_021
+382  +   97.91 ms   139.32 ms  200  GET /products/p_022
+383  +   98.09 ms   139.75 ms  200  GET /products/p_023
+384  +   98.26 ms   140.15 ms  200  GET /products/p_024
+385  +   98.46 ms   140.40 ms  200  GET /products/p_025
+386  +   98.70 ms   140.62 ms  200  GET /products/p_026
+387  +   98.88 ms   141.05 ms  200  GET /products/p_027
+388  +   99.08 ms   141.31 ms  200  GET /products/p_028
+389  +   99.26 ms   141.74 ms  200  GET /products/p_029
+390  +   99.43 ms   142.04 ms  200  GET /products/p_030
+391  +   99.63 ms   142.51 ms  200  GET /products/p_001
+392  +   99.82 ms   142.86 ms  200  GET /products/p_002
+393  +  100.00 ms   143.13 ms  200  GET /products/p_003
+394  +  100.27 ms   143.44 ms  200  GET /products/p_004
+395  +  100.49 ms   143.88 ms  200  GET /products/p_005
+396  +  100.73 ms   144.24 ms  200  GET /products/p_006
+397  +  100.98 ms   144.64 ms  200  GET /products/p_007
+398  +  101.21 ms   145.02 ms  200  GET /products/p_008
+399  +  101.41 ms   145.28 ms  200  GET /products/p_009
+```
+
+</details>
+
+## gql-batched · small (rid `924b6016-bb11-4650-963f-a0ef84585c32`)
+
+```
+  #   bắt đầu        thời lượng  status  request
+  1  +    9.79 ms     3.08 ms  200  GET /products?ids=p_001,p_002,p_003,p_004,p_005,p_006
+```
+
+## gql-batched · large (rid `32f8a5e3-4dac-4743-adde-84ae56de1860`)
+
+```
+  #   bắt đầu        thời lượng  status  request
+  1  +   24.58 ms     5.53 ms  200  GET /products?ids=p_001,p_002,p_003,p_004,p_005,p_006,p_007,p_008,p_009,p_010,p_011,p_012,p_013,p_014,p_015,p_016,p_017,p_018,p_019,p_020,p_021,p_022,p_023,p_024,p_025,p_026,p_027,p_028,p_029,p_030
+```
