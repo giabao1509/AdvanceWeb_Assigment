@@ -171,7 +171,29 @@ Mỗi service sở hữu một file SQLite riêng. Vì vậy BFF và GraphQL kh�
 
 Query GraphQL lồng sâu hoặc lặp nhiều field có thể khuếch đại số resolver, lượng dữ liệu và CPU dù DataLoader đã giảm Product call. Client hiện chỉ dùng query cố định; nếu public API cần bổ sung giới hạn depth/complexity, pagination, rate limit và operation allowlist hoặc persisted query.
 
-## 7. Phương án không chọn và phạm vi chấp nhận
+## 7. Phương án thay thế và phạm vi chấp nhận
+
+### REST Aggregator dùng chung
+
+Một phương án nằm giữa BFF và GraphQL là tạo một service REST chuyên ghép dữ liệu, nhưng chỉ cung cấp **một contract chung** cho mọi client. Khác với BFF, service này không có endpoint hoặc response riêng cho web và mobile. Khác với GraphQL, client không tự chọn field; server quyết định trước cấu trúc response.
+
+Cách phương án này hoạt động:
+
+1. Client gửi một request, ví dụ `GET /dashboard/:userId`, tới REST Aggregator.
+2. Aggregator gọi User và Order song song.
+3. Khi có các `productId`, Aggregator bỏ trùng rồi gọi Product theo batch.
+4. Aggregator ghép kết quả thành một response cố định và trả lại cho client.
+
+| Điểm đáng cân nhắc | Đánh đổi |
+|---|---|
+| Client chỉ cần gửi một request | Web và mobile bị ràng buộc vào cùng một response model |
+| Ít endpoint và logic mapping hơn BFF theo từng client | Client đơn giản có thể nhận thừa dữ liệu; client mới có thể lại thiếu field |
+| Dễ triển khai, cache và theo dõi hơn GraphQL | Thay đổi contract chung có thể ảnh hưởng nhiều client cùng lúc |
+| Contract REST cố định nên dễ viết tài liệu và test | Service dễ phình to nếu mọi màn hình đều đưa logic ghép vào đây |
+
+Nhóm không chọn phương án này cho Block 2 vì nó khá giống BFF web nhưng không thể hiện được lợi ích của contract riêng cho mobile, đồng thời cũng không cho thấy khả năng chọn field và bài toán N+1 như GraphQL. Tuy vậy, đây là lựa chọn hợp lý khi số loại client ít, dữ liệu trả về tương đối ổn định và nhóm muốn giữ hệ thống REST đơn giản.
+
+### Các lựa chọn khác không dùng trong Block 2
 
 | Phương án | Vì sao không chọn cho Block 2 |
 |---|---|

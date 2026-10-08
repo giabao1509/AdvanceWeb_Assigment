@@ -98,7 +98,7 @@
   <div class="layout">
     <nav aria-label="Mục lục">
       <strong>Nội dung</strong>
-      <a href="#problem">1. Bối cảnh</a><a href="#architecture">2. Sơ đồ quyết định</a><a href="#request-flow">3. Luồng request</a><a href="#stack">4. Ma trận quyết định</a><a href="#composition">5. API composition</a><a href="#shared">6. Lỗi và ranh giới</a><a href="#limits">7. Phạm vi</a><a href="#conclusion">8. Kết luận</a>
+      <a href="#problem">1. Bối cảnh</a><a href="#architecture">2. Sơ đồ quyết định</a><a href="#request-flow">3. Luồng request</a><a href="#stack">4. Ma trận quyết định</a><a href="#composition">5. API composition</a><a href="#shared">6. Lỗi và ranh giới</a><a href="#limits">7. Phương án thay thế</a><a href="#conclusion">8. Kết luận</a>
     </nav>
 
     <main>
@@ -226,14 +226,33 @@
         <p>Query lồng sâu có thể khuếch đại số resolver, payload và CPU dù DataLoader đã giảm Product call. Nếu public API cần giới hạn depth/complexity, pagination, rate limit và allowlist hoặc persisted query.</p>
       </section>
 
-      <section id="limits"><h2>7. Phương án không chọn và phạm vi</h2><table><thead><tr><th>Phương án</th><th>Vì sao không chọn</th></tr></thead><tbody>
+      <section id="limits">
+        <h2>7. Phương án thay thế và phạm vi</h2>
+        <h3>REST Aggregator dùng chung</h3>
+        <p>Một phương án nằm giữa BFF và GraphQL là tạo một service REST chuyên ghép dữ liệu, nhưng chỉ cung cấp <b>một contract chung</b> cho mọi client. Khác với BFF, service này không có endpoint hoặc response riêng cho web và mobile. Khác với GraphQL, client không tự chọn field; server quyết định trước cấu trúc response.</p>
+        <ol>
+          <li>Client gửi một request, ví dụ <code>GET /dashboard/:userId</code>, tới REST Aggregator.</li>
+          <li>Aggregator gọi User và Order song song.</li>
+          <li>Khi có các <code>productId</code>, Aggregator bỏ trùng rồi gọi Product theo batch.</li>
+          <li>Aggregator ghép kết quả thành một response cố định và trả lại cho client.</li>
+        </ol>
+        <div class="trade">
+          <div class="good"><strong>Điểm đáng cân nhắc</strong><ul><li>Client chỉ cần gửi một request.</li><li>Ít endpoint và logic mapping hơn BFF theo từng client.</li><li>Dễ triển khai, cache và theo dõi hơn GraphQL.</li><li>Contract REST cố định nên dễ viết tài liệu và test.</li></ul></div>
+          <div class="cost"><strong>Đánh đổi</strong><ul><li>Web và mobile bị ràng buộc vào cùng một response model.</li><li>Client đơn giản có thể nhận thừa dữ liệu; client mới có thể lại thiếu field.</li><li>Thay đổi contract chung có thể ảnh hưởng nhiều client cùng lúc.</li><li>Service dễ phình to nếu mọi màn hình đều đưa logic ghép vào đây.</li></ul></div>
+        </div>
+        <p>Nhóm không chọn phương án này cho Block 2 vì nó khá giống BFF web nhưng không thể hiện được lợi ích của contract riêng cho mobile, đồng thời cũng không cho thấy khả năng chọn field và bài toán N+1 như GraphQL. Tuy vậy, đây là lựa chọn hợp lý khi số loại client ít, dữ liệu trả về tương đối ổn định và nhóm muốn giữ hệ thống REST đơn giản.</p>
+
+        <h3>Các lựa chọn khác không dùng trong Block 2</h3>
+        <table><thead><tr><th>Phương án</th><th>Vì sao không chọn</th></tr></thead><tbody>
         <tr><td>PostgreSQL</td><td>Tăng chi phí cài đặt; SQLite đã đủ cho phạm vi bài</td></tr>
         <tr><td>JSON hoặc in-memory</td><td>Không thể hiện chi phí DB query</td></tr>
         <tr><td>React hoặc Vue</td><td>Framework UI có thể làm nhiễu phép so sánh composition</td></tr>
         <tr><td>Cache Product toàn cục</td><td>Có thể cũ dữ liệu và rò phạm vi request</td></tr>
         <tr><td>Fail-fast khi Product lỗi</td><td>Làm mất toàn bộ đơn hàng dù dữ liệu chính vẫn hữu ích</td></tr>
         <tr><td>ELK hoặc Jaeger</td><td>Quá nặng cho bài chạy cục bộ</td></tr>
-      </tbody></table><p class="muted">Ngoài phạm vi: authentication, pagination, concurrent load, triển khai nhiều máy và GraphQL depth/complexity limit. Hệ thống bán hàng thật cũng nên snapshot giá tại thời điểm mua.</p></section>
+        </tbody></table>
+        <p class="muted">Ngoài phạm vi: authentication, pagination, concurrent load, triển khai nhiều máy và GraphQL depth/complexity limit. Hệ thống bán hàng thật cũng nên snapshot giá tại thời điểm mua.</p>
+      </section>
 
       <section id="conclusion">
         <h2>8. Kết luận</h2>
