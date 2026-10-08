@@ -1,4 +1,4 @@
-// BFF (decisions.md mục 4.5): mỗi loại client một endpoint, 1 request.
+// BFF: mỗi loại client một endpoint, 1 request.
 import { URLS, fetchJson, withRid } from './http.js';
 
 const enc = encodeURIComponent;

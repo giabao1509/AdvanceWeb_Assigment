@@ -1,6 +1,6 @@
-// GraphQL :4020, một endpoint POST /graphql cho cả web và mobile (decisions.md mục 4.6).
-// PRODUCT_LOADER=naive   -> mỗi dòng hàng gọi GET /products/:id (N+1, M call)
-// PRODUCT_LOADER=batched -> DataLoader theo request, batch + dedup qua GET /products?ids=
+// GraphQL :4020 có hai endpoint tường minh:
+// /graphql-naive   -> mỗi dòng hàng gọi GET /products/:id (N+1, M call)
+// /graphql-batched -> DataLoader theo request, batch + dedup qua GET /products?ids=
 import DataLoader from 'dataloader';
 import { GraphQLError } from 'graphql';
 import { createSchema, createYoga } from 'graphql-yoga';
@@ -8,8 +8,6 @@ import { log } from '../shared/context.js';
 import { MESSAGES, fatalUpstream } from '../shared/errors.js';
 import { createApp, listen } from '../shared/server.js';
 import { fetchOrders, fetchProductOne, fetchProductsBatch, fetchUser } from '../shared/upstream.js';
-
-const PRODUCT_LOADER = process.env.PRODUCT_LOADER === 'naive' ? 'naive' : 'batched';
 
 const typeDefs = /* GraphQL */ `
   type Query {
@@ -86,7 +84,7 @@ const resolvers = {
   },
   OrderItem: {
     product: async (item, _, ctx) => {
-      if (PRODUCT_LOADER === 'naive') {
+      if (ctx.mode === 'naive') {
         const r = await fetchProductOne(item.productId);
         if (r.product) return r.product;
         throw gqlError(r.code);
@@ -97,13 +95,14 @@ const resolvers = {
 };
 
 // DataLoader mới cho mỗi request: batch + dedup chỉ trong phạm vi một request.
-function createContext() {
+function createContext(mode) {
   const loader = new DataLoader(async (ids) => {
     const results = await fetchProductsBatch([...ids]);
     return ids.map((id) => toProduct(results.get(id)));
   });
   const seen = new Set();
   return {
+    mode,
     loadProduct(id) {
       if (seen.has(id)) log({ kind: 'cache-hit', key: id });
       else seen.add(id);
@@ -112,19 +111,26 @@ function createContext() {
   };
 }
 
-const yoga = createYoga({
-  schema: createSchema({ typeDefs, resolvers }),
-  context: createContext,
-  graphqlEndpoint: '/graphql',
-  cors: false, // CORS do shared/server.js xử lý, giống mọi server khác
-  graphiql: true,
-  landingPage: false,
-  logging: false,
-});
+const schema = createSchema({ typeDefs, resolvers });
+
+function createEndpoint(graphqlEndpoint, mode) {
+  return createYoga({
+    schema,
+    context: () => createContext(mode),
+    graphqlEndpoint,
+    cors: false, // CORS do shared/server.js xử lý, giống mọi server khác
+    graphiql: true,
+    landingPage: false,
+    logging: false,
+  });
+}
+
+const naiveYoga = createEndpoint('/graphql-naive', 'naive');
+const batchedYoga = createEndpoint('/graphql-batched', 'batched');
 
 const app = createApp('graphql');
-app.get('/__mode', (req, res) => res.json({ productLoader: PRODUCT_LOADER }));
-app.use(yoga.graphqlEndpoint, yoga);
+app.use(naiveYoga.graphqlEndpoint, naiveYoga);
+app.use(batchedYoga.graphqlEndpoint, batchedYoga);
 
 listen(app, 'graphql');
-console.log(`[graphql] PRODUCT_LOADER=${PRODUCT_LOADER}`);
+console.log('[graphql] endpoints: /graphql-naive, /graphql-batched');

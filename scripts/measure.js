@@ -1,4 +1,4 @@
-// Chạy ma trận đo (decisions.md mục 6.3, 7.4) và ghi bảng đo thô results/raw/runs.csv.
+// Chạy ma trận đo và ghi bảng đo thô results/raw/runs.csv.
 //   npm run measure                 -> đầy đủ: main + throttle + fault
 //   node scripts/measure.js --quick -> 1 lượt × 2 warm, để thử nhanh
 //   node scripts/measure.js --matrix main,fault --rounds 5 --warm 5
@@ -38,8 +38,7 @@ const COMBOS = [
   { variant: 'gql-batched', client: 'web' },
   { variant: 'gql-batched', client: 'mobile' },
 ];
-const pageVariant = (v) => (v.startsWith('gql') ? 'graphql' : v);
-const loaderOf = (v) => (v === 'gql-naive' ? 'naive' : 'batched');
+const pageVariant = (v) => (v.startsWith('gql-') ? v.replace('gql-', 'graphql-') : v);
 
 const FAULTS = [
   { id: 'delay300', mode: 'delay', delayMs: 300 },
@@ -203,7 +202,7 @@ try {
         const cold = [];
         const warm = [];
         for (let round = 1; round <= ROUNDS; round++) {
-          await stack.restart({ productLoader: loaderOf(variant) });
+          await stack.restart();
           cold.push(await run(browser, tail, { variant, client: c, dataset, round, mode: 'cold', runNo: 1 }));
           for (let w = 1; w <= WARM; w++) warm.push(await run(browser, tail, { variant, client: c, dataset, round, mode: 'warm', runNo: w + 1 }));
         }
@@ -217,7 +216,7 @@ try {
     console.log(`\n[throttle] RTT +${THROTTLE_MS} ms, 1 lượt × ${WARM} warm (1 lần khởi động bỏ đi)`);
     for (const dataset of DATASETS) {
       for (const { variant, client: c } of COMBOS) {
-        await stack.restart({ productLoader: loaderOf(variant) });
+        await stack.restart();
         await run(browser, tail, { variant, client: c, dataset, mode: 'cold', record: false });
         const rows = [];
         for (let w = 1; w <= WARM; w++) {
@@ -231,7 +230,7 @@ try {
   if (MATRICES.includes('fault')) {
     console.log(`\n[fault] ${FAULTS.map((f) => f.id).join(', ')} × {bff, gql-batched} × {web, mobile} × small, ${WARM} warm`);
     for (const variant of ['bff', 'gql-batched']) {
-      await stack.restart({ productLoader: 'batched' });
+      await stack.restart();
       for (const c of ['web', 'mobile']) await run(browser, tail, { variant, client: c, dataset: 'small', mode: 'cold', record: false });
       for (const f of FAULTS) {
         await setFault(f.mode, f.delayMs);

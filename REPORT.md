@@ -1,172 +1,195 @@
-# Báo cáo: API composition (baseline, BFF, GraphQL)
+# BÁO CÁO QUYẾT ĐỊNH KỸ THUẬT — BLOCK 02
 
-> Mọi con số dưới đây lấy từ phiên đo `logs/measure-2026-10-08T02-46-33-076Z`: 570 lần chạy, không lần nào invalid hay lệch số đếm. Nguồn: [`results/summary.md`](results/summary.md) và [`results/raw/runs.csv`](results/raw/runs.csv). Phần nhận định là cách đọc số liệu: nhóm cần tự đối chiếu với bảng thô, log và diff trước khi trình bày, vì câu trả lời của agent không được dùng làm evidence.
->
-> Môi trường đo: Windows 11, Node 24.10, Edge 154 (headless, qua Playwright), CPU i7-1260P. Client và cả 5 server chạy trên **cùng một máy**, qua localhost.
+## API Composition: Baseline, BFF và GraphQL
 
-## 1. Problem
+> Báo cáo tập trung vào các quyết định khi thiết kế và hiện thực Block 2. Kết quả benchmark thực tế được tách khỏi tài liệu này.
 
-- Dashboard cần dữ liệu của 3 service: User → tên người dùng, Order → đơn và dòng hàng, Product → tên, giá, ảnh.
-- Ở baseline, browser phải tự gọi tuần tự 3 service rồi tự ghép dữ liệu.
-- Web cần đủ trường. Mobile chỉ cần mã đơn, trạng thái, tên product và ảnh.
-- Product lặp lại giữa các đơn:
+## 1. Bối cảnh
 
-  | User | Đơn (N) | Dòng hàng (M) | Product khác nhau (K) |
-  |---|---|---|---|
-  | `u_small` | 10 | 19 | 6 |
-  | `u_large` | 200 | 399 | 30 |
+Màn hình đơn hàng cần dữ liệu từ ba service độc lập:
 
-## 2. Solution
+- User Service: hồ sơ người dùng.
+- Order Service: đơn hàng và các dòng hàng.
+- Product Service: tên, giá và ảnh sản phẩm.
 
-Quyết định chi tiết: [`decisions.md`](decisions.md).
+Block 2 giữ nguyên dữ liệu và giao diện, chỉ thay đổi nơi ghép dữ liệu. Ba phương án được hiện thực để làm rõ ba kiểu API composition:
 
-| | Baseline | BFF | GraphQL |
-|---|---|---|---|
-| Client gọi | 3 request tuần tự | 1 request / client | 1 `POST /graphql` (+1 preflight CORS) |
-| Ghép ở | browser | `bff/server.js` | resolver + DataLoader |
-| Gọi nội bộ | – | User ‖ Order song song → Product batch | User → Order → Product: naive gọi từng dòng hàng; batched gom và dedup theo request |
-| Mobile | – | endpoint riêng, không gọi User | query `ordersByUser`, không gọi User |
-| Product lỗi | – | P2: `product: null` kèm `errors[{path, extensions.code}]`, HTTP 200 | P2: field nullable kèm `errors[]` chuẩn GraphQL |
-
-## 3. Kết quả chính
-
-### 3.1 Số request và số call (giống nhau ở mọi lần chạy)
-
-| Biến thể | Client req | Preflight | User call/DB | Order call/DB | Product call/DB (small → large) | cache-hit (small → large) |
-|---|---|---|---|---|---|---|
-| Baseline (web) | 3 | 0 | 1/1 | 1/2 | 1/1 → 1/1 | – |
-| BFF web | 1 | 0 | 1/1 | 1/2 | 1/1 → 1/1 | – |
-| BFF mobile | 1 | 0 | **0/0** | 1/2 | 1/1 → 1/1 | – |
-| GraphQL naive (web/mobile) | 1 | 1 | 1/1 (mobile 0/0) | 1/2 | **19/19 → 399/399** | 0 |
-| GraphQL batched (web/mobile) | 1 | 1 | 1/1 (mobile 0/0) | 1/2 | **1/1 → 1/1** | 13 → 369 |
-
-Mọi số đều khớp bảng giả thuyết ở `decisions.md` mục 5.4.
-
-- Bản naive gọi Product **M lần**: tăng theo số dòng hàng, tức tăng theo số đơn.
-- Bản batched luôn gọi **1 lần** và dedup M → K id (`cache-hit = M − K`).
-- Trace từng call: [`results/traces/graphql-n-plus-1.md`](results/traces/graphql-n-plus-1.md).
-
-### 3.2 Thời gian màn hình hoàn tất `t_data` (ms, median [min–max], warm, n = 25)
-
-| Biến thể · client | small | large |
+| Phương án | Nơi ghép | Vai trò trong bài |
 |---|---|---|
-| Baseline · web | 82.5 [39.3–142.3] | 114.3 [80.6–147.5] |
-| BFF · web | 51.0 [31.0–75.6] | 83.8 [67.7–140.7] |
-| GraphQL naive · web | 66.9 [36.5–137.6] | **321.9** [144.9–387.0] |
-| GraphQL batched · web | 49.4 [34.6–80.7] | 114.8 [74.2–158.7] |
-| BFF · mobile | 40.1 [30.3–70.3] | 69.1 [39.7–106.3] |
-| GraphQL naive · mobile | 55.1 [32.5–97.7] | 291.9 [114.9–389.8] |
-| GraphQL batched · mobile | 47.3 [30.6–80.4] | 81.4 [52.6–126.3] |
+| Baseline | Browser | Mốc tham chiếu đơn giản, thể hiện chi phí ghép ở client |
+| BFF | Server theo từng loại client | Tối ưu contract riêng cho web và mobile |
+| GraphQL | Resolver trên server | Cho client chọn trường và làm rõ bài toán N+1 |
 
-Cold, lần đầu sau restart, n = 5:
+## 2. Sơ đồ quyết định
 
-- Hầu hết biến thể chậm hơn warm khoảng 20–70 ms, ví dụ BFF web small là 106.4 so với 51.0. Riêng baseline web small gần như bằng warm (84.5 so với 82.5).
-- GraphQL naive large mất 429.8 ms ở cold, so với 321.9 ms ở warm.
+```mermaid
+flowchart TD
+    need(["Cần ghép User, Order, Product"])
+    goal{Mục tiêu của phương án?}
+    baseline["Baseline: browser ghép"]
+    bff["BFF: contract theo client"]
+    graphql["GraphQL: client chọn trường"]
+    baselineImpl["Gọi tuần tự và tự ghép"]
+    bffImpl["Web song song, mobile bỏ User"]
+    graphqlImpl["Naive để đối chứng, DataLoader là chính"]
 
-Throttle RTT +100 ms (warm, n = 5):
+    need --> goal
+    goal -->|"Mốc so sánh"| baseline
+    goal -->|"Shape ổn định"| bff
+    goal -->|"Truy vấn linh hoạt"| graphql
+    baseline --> baselineImpl
+    bff --> bffImpl
+    graphql --> graphqlImpl
 
-| | Baseline | BFF web | GraphQL batched web |
+    style graphqlImpl fill:#CDF4D3,stroke:#66D575
+```
+
+Sơ đồ cho thấy đây không phải lựa chọn một phương án “thắng tuyệt đối”. Mỗi phương án trả lời một nhu cầu khác nhau; các điều kiện dữ liệu, render, logging và lỗi được giữ thống nhất để việc so sánh công bằng.
+
+## 3. Luồng request và response
+
+Ba sơ đồ dưới đây cho thấy chính xác nơi dữ liệu được ghép. Mũi tên sang phải là request; mũi tên nét đứt là response.
+
+### Baseline — browser tự ghép
+
+```mermaid
+sequenceDiagram
+    participant C as Browser
+    participant U as User Service
+    participant O as Order Service
+    participant P as Product Service
+    C->>U: GET /users/:id
+    U-->>C: user
+    C->>O: GET /users/:id/orders
+    O-->>C: orders + productId
+    C->>P: GET /products?ids=...
+    P-->>C: products
+    C->>C: Ghép dữ liệu và render
+```
+
+### BFF — server trả đúng shape cho client
+
+```mermaid
+sequenceDiagram
+    participant C as Browser
+    participant B as BFF
+    participant U as User Service
+    participant O as Order Service
+    participant P as Product Service
+    C->>B: GET /bff/web/dashboard/:id
+    B->>U: User và Order được gọi song song
+    B->>O: GET orders
+    U-->>B: user
+    O-->>B: orders + productId
+    B->>P: GET /products?ids=...
+    P-->>B: products
+    B-->>C: response đã ghép
+```
+
+### GraphQL batched — resolver ghép theo field
+
+```mermaid
+sequenceDiagram
+    participant C as Browser
+    participant G as GraphQL
+    participant U as User Service
+    participant O as Order Service
+    participant P as Product Service
+    C->>G: POST /graphql-batched
+    G->>U: Query.user
+    U-->>G: user
+    G->>O: User.orders
+    O-->>G: orders + productId
+    G->>P: DataLoader batch productId
+    P-->>G: products
+    G-->>C: data và errors
+```
+
+Ở mobile, BFF và GraphQL dùng luồng Orders trực tiếp nên không gọi User Service.
+
+## 4. Ma trận quyết định chính
+
+| Chủ đề | Quyết định | Lý do | Đánh đổi chấp nhận |
 |---|---|---|---|
-| small | 406.5 | 156.5 | 171.9 |
-| large | 455.6 | 203.0 | 173.9 |
+| Nền tảng | Node.js 20+, Express 5, GraphQL Yoga | Một ngôn ngữ, phù hợp tác vụ I/O và dựng nhiều service nhanh | Không so sánh các runtime hoặc framework server |
+| Dữ liệu | Mỗi service sở hữu một SQLite DB | Giữ ranh giới service, seed nhanh, đếm được SQL thật | Không đại diện hạ tầng production |
+| Mô hình đơn hàng | `orders` 1–n `order_items`, liên kết Product bằng ID | Tạo tình huống composition và N+1 rõ ràng | Không có khóa ngoại xuyên service |
+| Product API | Có endpoint batch, giới hạn 100 ID | BFF và DataLoader có thể deduplicate và gom request | Phía gọi phải chia chunk và map lại theo ID |
+| BFF | Một endpoint cho web, một endpoint cho mobile | Mỗi client nhận đúng shape cần dùng; mobile không gọi User | Thêm service và tăng số contract cần duy trì |
+| GraphQL | Hai query root và DataLoader mới cho từng request | Client chọn trường; batch và cache không rò giữa request | Phải kiểm soát N+1 và độ phức tạp query |
+| Client | HTML, CSS, JavaScript thuần; dùng chung renderer | Tách ảnh hưởng của UI framework khỏi bài toán composition | Phải tự quản lý DOM và adapter |
+| Quan sát | `rid`, JSON Lines và `AsyncLocalStorage` | Nối browser request, service call và DB query theo một luồng | Logging tự xây chỉ phù hợp phạm vi bài tập |
+| Đo lường | Playwright, context mới, cùng mốc `screen-complete` | Đo cùng điều kiện và bao gồm hành vi browser | Không mô phỏng tải đồng thời hoặc production |
+| Xử lý lỗi | Product lỗi trả partial; User/Order lỗi toàn màn hình | Giữ phần đơn hàng còn hữu ích, không tạo dữ liệu Product giả | Client phải xử lý `product: null`; HTTP 200 cần marker riêng |
 
-Lưu ý giới hạn ở mục 6.
+## 5. Quyết định cho từng phương án composition
 
-Đọc số liệu:
+### Baseline
 
-1. **Baseline trả giá theo số round-trip tuần tự.**
-   - Trên localhost, BFF nhanh hơn baseline 31 ms (small) và 31 ms (large).
-   - Có throttle 100 ms, BFF nhanh hơn khoảng 250 ms, tức khoảng 2.5 RTT. Đúng 2 request tuần tự bị bỏ, cộng phần JS ghép dữ liệu.
-2. **N+1 chỉ thấy rõ khi dữ liệu lớn.**
-   - Ở small (19 call), naive chỉ chậm hơn batched khoảng 17 ms.
-   - Ở large (399 call), naive chậm gần 3 lần: 321.9 so với 114.8 ms. Thời gian xử lý trong GraphQL tăng từ 38.0 lên 249.7 ms (xem trace).
-   - Bản naive còn mở tới 399 call chạy song song tới Product Service.
-3. **GraphQL batched ngang BFF ở small** (49.4 so với 51.0), **chậm hơn ở large** (114.8 so với 83.8 ms với web, 81.4 so với 69.1 ms với mobile). Phần chênh có thể đến từ:
-   - chi phí thực thi GraphQL khi resolve 399 field `product` qua DataLoader;
-   - preflight `OPTIONS`.
+Browser gọi tuần tự User → Order → Product batch rồi tự ghép model. Dù User và Order có thể gọi song song, luồng tuần tự được giữ có chủ đích để làm mốc so sánh và thể hiện chi phí khi logic composition nằm ở client.
 
-   Hai phần này chưa được tách riêng để đo.
-4. **Mobile nhanh hơn web** ở cùng biến thể, vì payload nhỏ hơn, không gọi User và render ít hơn.
+### BFF
 
-Biên độ min–max khá rộng, ví dụ baseline small dao động 39–142 ms. Nguyên nhân: mốc `screen-complete` đặt sau 2 lần `requestAnimationFrame` nên bị làm tròn theo frame (16.7 ms), và client cùng server tranh CPU trên một máy. Vì vậy nên so bằng median, không so bằng một lần chạy lẻ.
+- Web dùng `GET /bff/web/dashboard/:userId`; User và Order được gọi song song, sau đó Product được batch.
+- Mobile dùng `GET /bff/mobile/orders/:userId`; không gọi User và chỉ trả trường cần hiển thị.
 
-### 3.3 Payload (body JSON client nhận, không nén / gzip)
+Quyết định này ưu tiên contract rõ ràng cho từng client. Đổi lại, thêm loại client có thể làm tăng số endpoint và logic mapping.
 
-| | Baseline web | BFF / GraphQL web | BFF / GraphQL mobile |
-|---|---|---|---|
-| small | 9.2 KB / 1.2 KB | 4.7 KB / 0.8 KB | 1.9 KB / 0.3 KB |
-| large | 93.8 KB / 5.1 KB | 92.2 KB / 4.6 KB | 38.1 KB / 1.6 KB |
+### GraphQL
 
-- **Mobile nhỏ hơn web khoảng 59–60%**, và chỉ chứa đúng các trường mobile cần (kiểm tra bằng whitelist khoá trong `verify.json`).
-- **Baseline ở small nặng gấp đôi** vì nhận cả trường nội bộ (`description`, `category`, `userId`, `productId`).
-- **Ở large, khoảng cách gần như biến mất** (93.8 so với 92.2 KB). Response đã ghép là dạng phi chuẩn hoá: lặp lại object product cho cả 399 dòng hàng. Trong khi đó, baseline chỉ tải 30 product một lần. Đây là trade-off đáng nói của composition, dù gzip thu hẹp được phần lớn khác biệt (5.1 so với 4.6 KB).
-- GraphQL lớn hơn BFF vài chục byte do envelope `data`. Khi có lỗi thì lớn hơn rõ: 6.8 so với 6.0 KB với web small, vì mỗi lỗi kèm thêm `locations`.
+- `user(id)` phục vụ web; `ordersByUser(userId)` phục vụ mobile mà không cần gọi User Service.
+- `POST /graphql-naive` giữ lại để minh họa N+1.
+- `POST /graphql-batched` dùng DataLoader tạo mới cho mỗi request, batch và deduplicate Product ID.
 
-### 3.4 Product Service chậm hoặc lỗi (policy P2, small, warm, n = 5)
+Resolver không truy vấn SQLite trực tiếp. `Query.user` gọi User Service, `User.orders` và `Query.ordersByUser` gọi Order Service; chỉ `OrderItem.product` gọi Product Service. Vì resolver field này chạy cho từng dòng hàng, bản naive tạo tối đa `M` HTTP call Product cho `M` item — đó là N+1 ở lớp API composition.
 
-| Fault | Màn hình | Mã lỗi | `t_data` BFF web / GQL web | Product call / DB | Call bị timeout |
-|---|---|---|---|---|---|
-| delay 300 ms | ok, đủ dữ liệu | – | 351.3 / 359.5 | 1 / 1 | 0 |
-| delay 3000 ms | partial | `PRODUCT_TIMEOUT` | 1064.6 / 1071.2 | 1 / 0 | 1 |
-| lỗi 500 | partial | `PRODUCT_UNAVAILABLE` | 42.0 / 41.4 | 1 / 0 | 0 |
-| hang | partial | `PRODUCT_TIMEOUT` | 1051.3 / 1051.1 | 1 / 0 | 1 |
+Ở bản batched, mọi lời gọi `load(productId)` trong cùng request được DataLoader gom vào một batch. Key trùng nhau được deduplicate và cache trong đúng request đó. Batch tiếp tục chia tối đa 100 ID cho mỗi Product request, sau đó đưa kết quả vào `Map` theo ID vì không được giả định thứ tự response giống thứ tự input. Cache không dùng chung giữa các HTTP request nên không rò dữ liệu hoặc làm sai phép đo.
 
-- Timeout 1000 ms giữ màn hình ở mức khoảng 1.05 s, kể cả khi Product treo hẳn. Không có retry nên số call vẫn là 1.
-- Product DB = 0 khi bị timeout: Product Service thấy bên gọi đã huỷ nên bỏ qua truy vấn.
-- Ở cả 4 kịch bản, user, đơn, tổng tiền và số dòng hàng **vẫn đầy đủ**. Với delay 300 ms, dữ liệu product cũng đủ. Với 3 kịch bản còn lại, 19/19 dòng hàng có `product: null` kèm lỗi đúng `path`.
-- **Không có tên hay giá giả**: `verify.json` kiểm tra mọi product hoặc đúng bằng `product.db`, hoặc null kèm lỗi tương ứng.
-- BFF và GraphQL đánh dấu cùng path và cùng mã lỗi.
-- Ảnh chụp: [`results/screenshots/`](results/screenshots/). Waterfall khi Product treo: `results/waterfall/*-hang.svg`.
+## 6. Xử lý lỗi và ranh giới
 
-## 4. Evidence ↔ tiêu chí đạt
+### Chính sách lỗi
 
-| Tiêu chí của đề | Kết quả | Evidence |
+- Mọi call nội bộ timeout sau 1000 ms và không retry.
+- Product lỗi hoặc timeout: giữ User và Order, đặt `product: null`, trả lỗi có `path`; BFF thêm `X-Partial-Response`.
+- User hoặc Order lỗi: thất bại toàn màn hình vì thiếu dữ liệu cốt lõi.
+- Không điền tên, giá hoặc ảnh giả khi Product lỗi.
+
+Partial response được chọn vì thông tin đơn hàng vẫn hữu ích khi Product tạm thời không sẵn sàng. Đổi lại, client phải xử lý `null` và monitoring không thể chỉ dựa vào HTTP status.
+
+| Cách trả partial | BFF | GraphQL |
 |---|---|---|
-| Baseline, BFF, GraphQL trả cùng dữ liệu dashboard cho cùng người dùng | Đạt cho `u_small` và `u_large`. Cả naive và batched đều so với dữ liệu đọc thẳng từ 3 DB | `results/verify.json` mục `web.*` (44/44 đạt) |
-| Response mobile chỉ chứa trường mobile cần | Đạt (whitelist khoá chính xác, BFF = GraphQL = phép chiếu của web) | `verify.json` mục `mobile.*` |
-| Sau khi sửa N+1, call tới Product không tăng theo số đơn | Đạt: 1 call ở cả 10 và 200 đơn (naive: 19 → 399) | `results/traces/graphql-n-plus-1.md`, cột `product_calls` trong `runs.csv` |
-| Số liệu là kết quả chạy thật | 570 lần chạy thô, mỗi dòng có `rid` để tra lại trong log | `results/raw/runs.csv`, `logs/measure-*/` |
-| Waterfall có mốc màn hình hoàn tất | 18 waterfall (7 biến thể × localhost/throttle, cộng 4 waterfall khi Product treo), có vạch `data-start` và `screen-complete` | `results/waterfall/README.md` |
-| Call graph nội bộ BFF | Sequence diagram từ log thật, thấy User ‖ Order song song, mobile không gọi User | `results/traces/bff-call-graph.md` |
+| HTTP | `200` và header `X-Partial-Response` | Thường là `200` theo GraphQL over HTTP |
+| Body | Dữ liệu đã ghép kèm `errors[]` | `data` đi cùng `errors[]` |
+| Vị trí lỗi | `path` tự xây tới item | `path` do GraphQL gắn tới field resolver |
+| Product | `product: null` | Field nullable trả `null` |
 
-Bộ kiểm tra cũng đã được thử ngược: cố ý cho BFF mobile trả thừa trường `lineNo` thì `verify.js` báo 10 kiểm tra FAIL. Sau đó code được hoàn nguyên.
+User hoặc Order vẫn là dữ liệu cốt lõi: lỗi ở hai service này làm hỏng toàn bộ màn hình ở cả hai phương án.
 
-## 5. Trade-off
+### Ranh giới dữ liệu và bảo vệ GraphQL
 
-| | Được | Mất |
-|---|---|---|
-| **Baseline** | Service đơn giản, không thêm hop. Payload chuẩn hoá: product chỉ tải một lần nên gọn khi product lặp nhiều. Mỗi response cache riêng được | Số round-trip tuần tự tăng theo số service: +250 ms khi RTT 100 ms. Over-fetch trường nội bộ. Mọi service phải mở CORS và lộ ra internet. Logic ghép lặp lại ở mỗi client |
-| **BFF** | 1 request, gọi nội bộ song song, payload cắt theo từng client. Policy lỗi và timeout tập trung một chỗ. Nhanh nhất trong các phép đo warm | Thêm một service phải vận hành. Mỗi client một endpoint nên code ghép dễ trùng lặp (web và mobile). Response phi chuẩn hoá, lớn dần theo M. Đổi màn hình là phải sửa và deploy BFF |
-| **GraphQL** | Một endpoint, client tự chọn trường: mobile chỉ là một query khác. Partial error có sẵn trong chuẩn (`data` + `errors[].path`). Schema có kiểu, tự mô tả | Mặc định là N+1 (mỗi field một resolver): 399 call nếu quên DataLoader. Phải nhớ dùng DataLoader **theo request**. `POST` cross-origin tốn thêm preflight. Chậm hơn BFF khoảng 31 ms ở large. Payload lỗi lớn và tăng theo M. Khó cache HTTP. Cần giới hạn độ sâu/độ phức tạp query (chưa làm) |
-| **Policy P2 (partial)** | Product lỗi vẫn xem được trạng thái và tổng tiền đơn. Lỗi 500 trả nhanh (khoảng 40 ms) thay vì cả màn hình hỏng | HTTP 200 che sự cố khỏi monitoring theo status (bù bằng `X-Partial-Response` và log). Client phải xử lý `null`. Batch làm "lỗi một item" thành "lỗi cả chunk". 19 lỗi riêng cho 19 dòng hàng (399 với large) |
-| **Giá lấy từ Product (D05)** | Kịch bản lỗi kiểm tra được đúng quy tắc "không thay tên/giá bằng giá trị giả" | Không đúng nghiệp vụ: giá đơn cũ phải là giá lúc mua |
+Mỗi service sở hữu một file SQLite riêng. Vì vậy BFF và GraphQL không thể join trực tiếp bảng User, Order và Product; chúng bắt buộc ghép qua HTTP. Quyết định này thể hiện đúng ranh giới service, nhưng tăng số lần gọi mạng so với một monolith dùng chung DB.
 
-## 6. Giới hạn của phép đo
+Query GraphQL lồng sâu hoặc lặp nhiều field có thể khuếch đại số resolver, lượng dữ liệu và CPU dù DataLoader đã giảm Product call. Client hiện chỉ dùng query cố định; nếu public API cần bổ sung giới hạn depth/complexity, pagination, rate limit và operation allowlist hoặc persisted query.
 
-- **Localhost, cùng một máy.**
-  - RTT gần 0 nên lợi ích của việc giảm số request bị thu nhỏ.
-  - Client và 5 server tranh CPU: bản naive mở 399 socket song song cùng lúc với browser đang render.
-- **Throttle bằng CDP không phải RTT cộng thêm.**
-  - Độ trễ hoạt động như thời gian tối thiểu cho mỗi request. Đo được: server 92 ms thì fetch 126 ms, server 161 ms thì fetch 168 ms.
-  - Hệ quả: thời gian xử lý ở server bị giấu trong độ trễ giả lập. Đó là lý do naive và batched gần như bằng nhau khi throttle (192.9 so với 173.9 ms), dù không throttle thì chênh gần 3 lần.
-  - Ma trận throttle chỉ dùng để thấy tác động của **số round-trip phía client**.
-- **CDP không throttle preflight**, nên chi phí thêm 1 RTT của GraphQL `POST` cross-origin không hiện ra trong ma trận throttle.
-- **Cold chỉ là cold về process** (JIT, kết nối, statement cache). SQLite vẫn được OS cache trang.
-- **`screen-complete` bị làm tròn theo frame**, cộng thêm khoảng 16–33 ms, giống nhau cho mọi biến thể.
-- **Instrumentation có overhead**: một dòng log cho mỗi sự kiện, khoảng 1600 dòng mỗi lần chạy naive large. Overhead này có ở mọi biến thể nhưng nặng hơn ở naive.
-- **Waterfall ghép thời gian của browser và các process Node theo đồng hồ hệ thống.** Trên một máy, sai số dưới 1 ms, nhưng không dùng được khi chạy trên nhiều máy.
-- **Mẫu nhỏ**: 5 mẫu cold và 25 mẫu warm mỗi ô, chỉ cho thấy xu hướng.
-- **Phạm vi**: không có tải đồng thời, không phân trang, không auth. Trình duyệt là Edge vì chưa cài bản Chromium của Playwright.
+## 7. Phương án không chọn và phạm vi chấp nhận
 
-## 7. Kịch bản trình bày (Problem → Solution → Demo → Evidence → Trade-off)
+| Phương án | Vì sao không chọn cho Block 2 |
+|---|---|
+| PostgreSQL | Tăng chi phí cài đặt; SQLite đã đủ để có DB query thật và tách dữ liệu theo service |
+| JSON hoặc in-memory store | Đơn giản nhưng không thể hiện chi phí truy vấn DB |
+| React hoặc Vue | UI chỉ phục vụ composition; framework có thể làm nhiễu việc so sánh |
+| Cache Product toàn cục | Có nguy cơ dữ liệu cũ, rò phạm vi người dùng và làm sai điều kiện warm |
+| Fail-fast khi Product lỗi | Làm mất toàn bộ đơn hàng dù dữ liệu chính vẫn còn hữu ích |
+| Distributed tracing đầy đủ | Quá nặng cho bài chạy cục bộ; `rid` và JSON Lines đã đáp ứng nhu cầu truy vết |
 
-1. **Problem** (mục 1): sơ đồ 3 biến thể, bảng N/M/K.
-2. **Solution** (mục 2 và `decisions.md`): nhấn vào D11 (song song, mobile không gọi User), D14 (DataLoader theo request), D21 (policy P2).
-3. **Demo** (chạy thật trên `u_small`):
-   1. `npm start`, mở <http://localhost:5173/>, chạy baseline web rồi BFF web. Mở DevTools › Network để thấy 3 request so với 1.
-   2. Chạy `node scripts/parse-logs.js --last` ngay sau mỗi trang để thấy số call và số DB query.
-   3. Tắt server, chạy `npm run start:naive`, mở GraphQL web với `u_large`, rồi `parse-logs --last`: thấy 399 call tới Product. Quay lại `npm start`: còn 1 call.
-   4. Mở mobile BFF và GraphQL, so response trong DevTools: chỉ có `id, status, items[].product{name, thumbnailUrl}`.
-   5. `curl -X POST :4003/__fault … {"mode":"hang"}`, tải lại web BFF và GraphQL: sau khoảng 1 s màn hình hiện dữ liệu một phần có đánh dấu lỗi. Đặt lại `none`.
-4. **Evidence** (mục 3–4): bảng số call, bảng `t_data`, waterfall, trace N+1, call graph, `verify.json`.
-5. **Trade-off** (mục 5–6).
+Các nội dung nằm ngoài phạm vi: authentication, pagination, concurrent load, triển khai nhiều máy và bảo vệ GraphQL bằng depth/complexity limit. Giá Product lấy từ catalog hiện tại để phục vụ thí nghiệm; hệ thống bán hàng thật nên lưu snapshot giá tại thời điểm mua.
+
+## 8. Kết luận
+
+- Chọn **Baseline** khi cần một mốc tham chiếu đơn giản và muốn nhìn rõ chi phí ghép tại browser.
+- Chọn **BFF** khi web/mobile có contract ổn định và cần kiểm soát response chặt.
+- Chọn **GraphQL + DataLoader** khi client cần chọn trường linh hoạt và dữ liệu có quan hệ dễ phát sinh N+1.
+
+Block 2 không cố chứng minh một công nghệ luôn tốt hơn. Quyết định quan trọng nhất là đặt composition đúng chỗ, giữ phép so sánh công bằng và làm rõ trade-off về contract, số call, khả năng quan sát và xử lý lỗi.
+
+Báo cáo này là nguồn giải thích tập trung cho các quyết định của Block 2. Cách chạy project nằm trong [`README.md`](README.md).

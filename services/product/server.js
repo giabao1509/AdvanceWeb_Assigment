@@ -1,4 +1,4 @@
-// Product Service :4003 (decisions.md mục 4.4) và fault injection (mục 7.4).
+// Product Service :4003, gồm batch API và fault injection phục vụ kiểm thử.
 import express from 'express';
 import { PRODUCT_BATCH_LIMIT } from '../../shared/config.js';
 import { log } from '../../shared/context.js';

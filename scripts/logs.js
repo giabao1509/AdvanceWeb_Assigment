@@ -1,4 +1,4 @@
-// Đọc log JSON lines của các server và đếm theo rid (decisions.md mục 5).
+// Đọc log JSON Lines của các server và đếm theo rid.
 import fs from 'node:fs';
 import path from 'node:path';
 import { SERVICES } from './stack.js';

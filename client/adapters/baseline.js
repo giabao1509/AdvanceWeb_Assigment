@@ -1,4 +1,4 @@
-// Baseline B1 (decisions.md mục 4.7): browser gọi tuần tự User -> Order -> Product batch rồi tự ghép.
+// Baseline B1: browser gọi tuần tự User -> Order -> Product batch rồi tự ghép.
 import { URLS, fetchJson, withRid } from './http.js';
 
 const enc = encodeURIComponent;

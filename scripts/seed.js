@@ -1,4 +1,4 @@
-// Seed tất định cho 3 DB và ảnh thumbnail local (decisions.md mục 3.2).
+// Seed tất định cho 3 DB và ảnh thumbnail local.
 // Chạy: npm run seed
 import fs from 'node:fs';
 import path from 'node:path';
@@ -248,6 +248,6 @@ fs.writeFileSync(path.join(DATA_DIR, 'meta.json'), JSON.stringify(meta, null, 2)
 
 console.log(`users=${users.length} orders=${orders.length} order_items=${items.length} products=${products.length}`);
 if (!ok) {
-  console.error('Seed không khớp decisions.md mục 3.2, dừng.');
+  console.error('Seed không khớp bộ dữ liệu chuẩn, dừng.');
   process.exit(1);
 }

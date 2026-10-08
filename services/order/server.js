@@ -1,4 +1,4 @@
-// Order Service :4002 (decisions.md mục 4.3). Đúng 2 DB query mỗi request (1 nếu user không có đơn).
+// Order Service :4002. Đúng 2 DB query mỗi request (1 nếu user không có đơn).
 import { openDb, placeholders } from '../../shared/db.js';
 import { createApp, listen } from '../../shared/server.js';
 

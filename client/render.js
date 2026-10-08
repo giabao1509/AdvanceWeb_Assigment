@@ -1,9 +1,14 @@
-// Render và mốc đo dùng chung cho mọi biến thể (decisions.md mục 6). Biến thể chỉ khác adapter lấy dữ liệu.
+// Render và mốc đo dùng chung cho mọi biến thể. Biến thể chỉ khác adapter lấy dữ liệu.
 import * as baseline from './adapters/baseline.js';
 import * as bff from './adapters/bff.js';
 import * as graphql from './adapters/graphql.js';
 
-const ADAPTERS = { baseline, bff, graphql };
+const ADAPTERS = {
+  baseline,
+  bff,
+  'graphql-naive': { loadWeb: graphql.loadWebNaive, loadMobile: graphql.loadMobileNaive },
+  'graphql-batched': { loadWeb: graphql.loadWebBatched, loadMobile: graphql.loadMobileBatched },
+};
 
 const STATUS_LABEL = {
   PENDING: 'Chờ xử lý',
@@ -104,6 +109,61 @@ function renderScreenError(root, err) {
     </div>`;
 }
 
+// ---------- Metrics của lượt demo ----------
+function metricCard(label, value, note) {
+  return `<div class="metric-card"><span>${esc(label)}</span><strong>${esc(value)}</strong><small>${esc(note)}</small></div>`;
+}
+
+function renderMetrics(root, { counts, browserRequests, tDataMs }) {
+  const serviceCalls = counts.user_calls + counts.order_calls + counts.product_calls;
+  root.innerHTML = `
+    <div class="metrics-head">
+      <div><span class="metrics-kicker">Metrics của lần tải này</span><h2>Request, DB query và response time</h2></div>
+      <code>rid ${esc(counts.rid.slice(0, 8))}</code>
+    </div>
+    <div class="metrics-grid">
+      ${metricCard('Response time', `${tDataMs.toFixed(1)} ms`, 'data-start → screen-complete')}
+      ${metricCard('Browser request', browserRequests, 'request dữ liệu từ client')}
+      ${metricCard('Service call', serviceCalls, `User ${counts.user_calls} · Order ${counts.order_calls} · Product ${counts.product_calls}`)}
+      ${metricCard('User DB', counts.user_db, `${counts.user_calls} service call`)}
+      ${metricCard('Order DB', counts.order_db, `${counts.order_calls} service call`)}
+      ${metricCard('Product DB', counts.product_db, `${counts.product_calls} service call`)}
+    </div>
+    <div class="metrics-foot">
+      <span>Preflight <b>${esc(counts.preflight)}</b></span>
+      <span>DataLoader cache-hit <b>${esc(counts.cache_hits)}</b></span>
+      <span>Timeout <b>${esc(counts.timed_out)}</b></span>
+      <span>Đối chiếu call <b class="${counts.count_check === 'ok' ? 'metric-ok' : 'metric-warn'}">${esc(counts.count_check)}</b></span>
+    </div>`;
+  root.hidden = false;
+}
+
+function renderMetricsError(root, message) {
+  root.innerHTML = `<div class="metrics-error"><b>Chưa đọc được metrics.</b> ${esc(message)}</div>`;
+  root.hidden = false;
+}
+
+async function loadDemoMetrics(rid, result) {
+  const root = document.getElementById('metrics');
+  if (!root) return;
+  root.hidden = false;
+  root.innerHTML = '<p class="metrics-loading">Đang tổng hợp request và DB query…</p>';
+  try {
+    const response = await fetch(`/__metrics/${encodeURIComponent(rid)}`, { cache: 'no-store' });
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.error?.message ?? `HTTP ${response.status}`);
+    const dataStart = performance.getEntriesByName('data-start', 'mark')[0];
+    const screenComplete = performance.getEntriesByName('screen-complete', 'mark')[0];
+    renderMetrics(root, {
+      counts: body,
+      browserRequests: result.raw.length,
+      tDataMs: screenComplete.startTime - dataStart.startTime,
+    });
+  } catch (err) {
+    renderMetricsError(root, err.message);
+  }
+}
+
 // ---------- Mốc đo ----------
 const nextFrame = () => new Promise((r) => requestAnimationFrame(() => r()));
 
@@ -120,6 +180,7 @@ function waitImages(root, timeoutMs) {
 
 export async function runScreen(kind) {
   const params = new URLSearchParams(location.search);
+  const interactiveDemo = !params.has('rid');
   const variant = params.get('variant') || 'bff';
   const userId = params.get('user') || 'u_small';
   const rid = params.get('rid') || crypto.randomUUID();
@@ -156,6 +217,10 @@ export async function runScreen(kind) {
   window.__screenData = result.model;
   window.__screenErrors = result.errors;
   window.__raw = result.raw;
+
+  // Chỉ hiện ở demo thủ công. Các lượt Playwright luôn truyền rid nên request
+  // metrics không làm thay đổi static_requests hay timing của phép đo.
+  if (interactiveDemo) await loadDemoMetrics(rid, result);
 
   await waitImages(root, 10_000);
   performance.mark('images-complete');

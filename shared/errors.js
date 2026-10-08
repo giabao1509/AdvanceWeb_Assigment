@@ -1,4 +1,4 @@
-// Mã lỗi và message dùng chung cho BFF và GraphQL (D21, decisions.md mục 7).
+// Mã lỗi và message dùng chung cho BFF và GraphQL.
 
 export const MESSAGES = {
   PRODUCT_TIMEOUT: 'Product Service không phản hồi trong thời gian cho phép',

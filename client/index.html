@@ -19,16 +19,13 @@
         </thead>
         <tbody id="rows"></tbody>
       </table>
-      <p class="muted">
-        GraphQL chạy ở chế độ <code id="mode">?</code> (đổi bằng <code>npm start</code> / <code>npm run start:naive</code>).
-        GraphiQL: <a href="http://localhost:4020/graphql">http://localhost:4020/graphql</a>
-      </p>
     </main>
     <script type="module">
       const variants = [
         ['baseline', 'Baseline (browser tự ghép)', false],
         ['bff', 'BFF', true],
-        ['graphql', 'GraphQL', true],
+        ['graphql-naive', 'GraphQL N+1 (naive)', true],
+        ['graphql-batched', 'GraphQL đã tối ưu (DataLoader)', true],
       ];
       const cell = (page, v, u, ok) => (ok ? `<td><a href="/${page}.html?variant=${v}&user=${u}">mở</a></td>` : '<td class="muted">—</td>');
       document.getElementById('rows').innerHTML = variants
@@ -37,10 +34,6 @@
             `<tr><th>${label}</th>${cell('web', v, 'u_small', true)}${cell('web', v, 'u_large', true)}${cell('mobile', v, 'u_small', mobile)}${cell('mobile', v, 'u_large', mobile)}</tr>`,
         )
         .join('');
-      fetch('http://localhost:4020/__mode')
-        .then((r) => r.json())
-        .then((m) => (document.getElementById('mode').textContent = m.productLoader))
-        .catch(() => (document.getElementById('mode').textContent = 'không kết nối được'));
     </script>
   </body>
 </html>

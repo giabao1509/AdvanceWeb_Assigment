@@ -1,4 +1,4 @@
-// BFF :4010, một endpoint cho mỗi loại client (decisions.md mục 4.5, policy lỗi mục 7).
+// BFF :4010: một endpoint cho mỗi loại client; Product lỗi được trả partial.
 import { MESSAGES, fatalUpstream } from '../shared/errors.js';
 import { createApp, listen, sendError } from '../shared/server.js';
 import { fetchOrders, fetchProductsBatch, fetchUser } from '../shared/upstream.js';

@@ -3,7 +3,7 @@
 - Phiên đo: 2026-10-08T02:46:33.555Z, trình duyệt msedge 154.0.4258.62, Node v24.10.0, Windows_NT 10.0.26200 x64, CPU 12th Gen Intel(R) Core(TM) i7-1260P
 - Tham số: {"rounds":5,"warm":5,"matrices":["main","throttle","fault"],"datasets":["small","large"],"throttleMs":100}
 - Log thô: `logs/measure-2026-10-08T02-46-33-076Z/*.jsonl` · bảng thô: `results/raw/runs.csv` (570 lần chạy) · tổng hợp: `results/summary.csv`
-- Cách đếm: decisions.md mục 5. Client req lấy từ Playwright (tương đương HAR), preflight/service call/DB query lấy từ log theo `rid`.
+- Cách đếm: client request lấy từ Playwright (tương đương HAR); preflight, service call và DB query lấy từ log theo `rid`.
 - Ô có dạng `median [min–max]`; chỉ có một số nghĩa là mọi lần chạy cho cùng giá trị.
 
 ### Ma trận chính · small · cold

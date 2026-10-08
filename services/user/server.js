@@ -1,4 +1,4 @@
-// User Service :4001 (decisions.md mục 4.2). 1 DB query mỗi request.
+// User Service :4001. Một DB query cho mỗi request.
 import { openDb } from '../../shared/db.js';
 import { createApp, listen, sendError } from '../../shared/server.js';
 

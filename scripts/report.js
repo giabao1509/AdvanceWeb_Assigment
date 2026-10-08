@@ -104,7 +104,7 @@ sections.push(`# Kết quả đo (tự sinh bởi scripts/report.js)
 - Phiên đo: ${session.startedAt}, trình duyệt ${session.browser}, Node ${session.node}, ${session.os}, CPU ${session.cpu}
 - Tham số: ${JSON.stringify(session.params)}
 - Log thô: \`${session.logDir}/*.jsonl\` · bảng thô: \`results/raw/runs.csv\` (${runs.length} lần chạy) · tổng hợp: \`results/summary.csv\`
-- Cách đếm: decisions.md mục 5. Client req lấy từ Playwright (tương đương HAR), preflight/service call/DB query lấy từ log theo \`rid\`.
+- Cách đếm: client request lấy từ Playwright (tương đương HAR); preflight, service call và DB query lấy từ log theo \`rid\`.
 - Ô có dạng \`median [min–max]\`; chỉ có một số nghĩa là mọi lần chạy cho cùng giá trị.
 `);
 

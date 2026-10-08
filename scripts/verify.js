@@ -1,4 +1,4 @@
-// Đối chiếu dữ liệu cho cả hai loại client (decisions.md mục 8). Ghi results/verify.json.
+// Đối chiếu dữ liệu cho cả hai loại client và ghi results/verify.json.
 // Chạy: npm run verify
 import crypto from 'node:crypto';
 import fs from 'node:fs';
@@ -118,7 +118,7 @@ const errorKey = (errors) => errors.map((e) => `${JSON.stringify(e.path)}:${e.ex
 
 // ---------- Chạy ----------
 const client = await ensureClient({ logDir: LOG_DIR });
-const stack = new Stack({ productLoader: 'batched', enableFault: true, logDir: LOG_DIR });
+const stack = new Stack({ enableFault: true, logDir: LOG_DIR });
 const { browser, name: browserName } = await launchBrowser();
 const screen = (page, variant, user) => loadScreen(browser, { page, variant, user, rid: crypto.randomUUID() }).then((r) => r.screen);
 
@@ -128,7 +128,7 @@ try {
   for (const user of USERS) {
     const expected = expectedWeb(user);
     // 8.1 Web: baseline, BFF, GraphQL batched đều bằng ground truth.
-    for (const variant of ['baseline', 'bff', 'graphql']) {
+    for (const variant of ['baseline', 'bff', 'graphql-batched']) {
       const s = await screen('web', variant, user);
       check(`web.${variant}.${user}`, `Web ${variant} (${user}) bằng dữ liệu đọc thẳng từ DB`, s.status === 'ok' && same(s.model, expected), {
         status: s.status,
@@ -138,7 +138,7 @@ try {
 
     // 8.2 + 8.3 Mobile: whitelist khoá, BFF = GraphQL, mobile = phép chiếu của web.
     const mob = {};
-    for (const variant of ['bff', 'graphql']) {
+    for (const variant of ['bff', 'graphql-batched']) {
       const s = await screen('mobile', variant, user);
       const body = s.raw[0]?.body;
       const topKeys = variant === 'bff' ? Object.keys(body ?? {}) : Object.keys(body?.data ?? {});
@@ -152,26 +152,30 @@ try {
       });
       mob[variant] = s.model;
     }
-    check(`mobile.bff=graphql.${user}`, `Mobile BFF và GraphQL (${user}) trả cùng dữ liệu`, same(mob.bff, mob.graphql), { diff: firstDiff(mob.bff, mob.graphql) });
+    check(
+      `mobile.bff=graphql-batched.${user}`,
+      `Mobile BFF và GraphQL batched (${user}) trả cùng dữ liệu`,
+      same(mob.bff, mob['graphql-batched']),
+      { diff: firstDiff(mob.bff, mob['graphql-batched']) },
+    );
     check(`mobile⊂web.${user}`, `Mobile (${user}) bằng phép chiếu của web lên trường mobile`, same(mob.bff, projectMobile(expected)), {
       diff: firstDiff(mob.bff, projectMobile(expected)),
     });
   }
 
   // Thất bại toàn bộ khi user không tồn tại: BFF và GraphQL cùng USER_NOT_FOUND.
-  for (const variant of ['bff', 'graphql']) {
+  for (const variant of ['bff', 'graphql-batched']) {
     const s = await screen('web', variant, 'u_missing');
     const code = s.errors?.[0]?.extensions?.code;
     check(`web.${variant}.u_missing`, `Web ${variant}: user không tồn tại thì màn hình lỗi USER_NOT_FOUND`, s.status === 'error' && code === 'USER_NOT_FOUND', { status: s.status, code });
   }
 
   // GraphQL naive phải trả cùng dữ liệu với bản batched (chỉ khác số call).
-  await stack.restart({ productLoader: 'naive' });
   for (const user of USERS) {
     const expected = expectedWeb(user);
-    const w = await screen('web', 'graphql', user);
+    const w = await screen('web', 'graphql-naive', user);
     check(`web.graphql-naive.${user}`, `Web GraphQL naive (${user}) bằng dữ liệu từ DB`, w.status === 'ok' && same(w.model, expected), { status: w.status, diff: firstDiff(w.model, expected) });
-    const m = await screen('mobile', 'graphql', user);
+    const m = await screen('mobile', 'graphql-naive', user);
     check(`mobile.graphql-naive.${user}`, `Mobile GraphQL naive (${user}) bằng phép chiếu của web`, m.status === 'ok' && same(m.model, projectMobile(expected)), {
       status: m.status,
       diff: firstDiff(m.model, projectMobile(expected)),
@@ -179,7 +183,6 @@ try {
   }
 
   // 8.4 Product chậm/lỗi: policy P2, không có giá trị giả, BFF và GraphQL đánh dấu lỗi giống nhau.
-  await stack.restart({ productLoader: 'batched' });
   const user = 'u_small';
   const expected = expectedWeb(user);
   const scenarios = [
@@ -192,7 +195,7 @@ try {
     await setFault(sc.mode, sc.delayMs ?? 0);
     for (const page of ['web', 'mobile']) {
       const got = {};
-      for (const variant of ['bff', 'graphql']) {
+      for (const variant of ['bff', 'graphql-batched']) {
         const s = await screen(page, variant, user);
         got[variant] = s;
         const truth = page === 'web' ? expected : projectMobile(expected);
@@ -212,10 +215,11 @@ try {
         );
       }
       check(
-        `fault.${sc.id}.${page}.bff=graphql`,
-        `${sc.id}: ${page} BFF và GraphQL đánh dấu lỗi cùng path và mã`,
-        same(errorKey(got.bff.errors ?? []), errorKey(got.graphql.errors ?? [])) && same(got.bff.model, got.graphql.model),
-        { bffErrors: (got.bff.errors ?? []).length, graphqlErrors: (got.graphql.errors ?? []).length },
+        `fault.${sc.id}.${page}.bff=graphql-batched`,
+        `${sc.id}: ${page} BFF và GraphQL batched đánh dấu lỗi cùng path và mã`,
+        same(errorKey(got.bff.errors ?? []), errorKey(got['graphql-batched'].errors ?? [])) &&
+          same(got.bff.model, got['graphql-batched'].model),
+        { bffErrors: (got.bff.errors ?? []).length, graphqlErrors: (got['graphql-batched'].errors ?? []).length },
       );
     }
   }

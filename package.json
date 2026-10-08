@@ -10,7 +10,6 @@
   "scripts": {
     "seed": "node scripts/seed.js",
     "start": "node scripts/start.js --fault",
-    "start:naive": "node scripts/start.js --naive --fault",
     "verify": "node scripts/verify.js",
     "measure": "node scripts/measure.js",
     "measure:quick": "node scripts/measure.js --quick --datasets small",
@@ -19,7 +18,7 @@
     "all": "npm run seed && npm run verify && npm run measure && npm run report && npm run waterfall"
   },
   "dependencies": {
-    "better-sqlite3": "^13.0.3",
+    "better-sqlite3": "12.11.1",
     "dataloader": "^2.2.3",
     "express": "^5.2.1",
     "graphql": "^16.14.2",

@@ -1,4 +1,4 @@
-// In số đếm và timeline của một lần tải màn hình theo rid (decisions.md mục 5.2).
+// In số đếm và timeline của một lần tải màn hình theo rid.
 //   node scripts/parse-logs.js <rid hoặc 8 ký tự đầu> [thư mục log, mặc định logs/dev]
 //   node scripts/parse-logs.js --last [thư mục log]   -> rid mới nhất có http-in ở BFF/GraphQL/User
 import path from 'node:path';

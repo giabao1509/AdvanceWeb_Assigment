@@ -1,4 +1,4 @@
-// GraphQL (decisions.md mục 4.6): một endpoint, hai query cố định.
+// GraphQL: hai endpoint tường minh, dùng chung hai query cố định.
 import { ScreenError, URLS, fetchJson, withRid } from './http.js';
 
 export const WEB_DASHBOARD = /* GraphQL */ `
@@ -37,8 +37,8 @@ export const MOBILE_ORDERS = /* GraphQL */ `
   }
 `;
 
-async function post(rid, query, operationName, variables, raw) {
-  return fetchJson(withRid(`${URLS.graphql}/graphql`, rid), raw, {
+async function post(endpoint, rid, query, operationName, variables, raw) {
+  return fetchJson(withRid(`${URLS.graphql}${endpoint}`, rid), raw, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify({ query, operationName, variables }),
@@ -54,19 +54,24 @@ function fatal(json) {
   return new ScreenError(first?.extensions?.code || 'GRAPHQL_ERROR', first?.message);
 }
 
-export async function loadWeb(userId, rid) {
+async function loadWebFrom(endpoint, userId, rid) {
   const raw = [];
-  const json = await post(rid, WEB_DASHBOARD, 'WebDashboard', { id: userId }, raw);
+  const json = await post(endpoint, rid, WEB_DASHBOARD, 'WebDashboard', { id: userId }, raw);
   const user = json.data?.user;
   if (!user) throw fatal(json);
   const { orders, ...profile } = user;
   return { model: { user: profile, orders }, errors: normalizeErrors(json.errors, (p) => p.slice(1)), raw };
 }
 
-export async function loadMobile(userId, rid) {
+async function loadMobileFrom(endpoint, userId, rid) {
   const raw = [];
-  const json = await post(rid, MOBILE_ORDERS, 'MobileOrders', { id: userId }, raw);
+  const json = await post(endpoint, rid, MOBILE_ORDERS, 'MobileOrders', { id: userId }, raw);
   const orders = json.data?.ordersByUser;
   if (!orders) throw fatal(json);
   return { model: { orders }, errors: normalizeErrors(json.errors, (p) => ['orders', ...p.slice(1)]), raw };
 }
+
+export const loadWebNaive = (userId, rid) => loadWebFrom('/graphql-naive', userId, rid);
+export const loadMobileNaive = (userId, rid) => loadMobileFrom('/graphql-naive', userId, rid);
+export const loadWebBatched = (userId, rid) => loadWebFrom('/graphql-batched', userId, rid);
+export const loadMobileBatched = (userId, rid) => loadMobileFrom('/graphql-batched', userId, rid);

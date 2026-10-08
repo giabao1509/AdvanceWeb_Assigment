@@ -48,18 +48,18 @@ async function killChild(child) {
 }
 
 export class Stack {
-  constructor({ productLoader = 'batched', enableFault = true, logDir = 'logs/dev', inherit = false } = {}) {
-    this.opts = { productLoader, enableFault, logDir: path.resolve(ROOT, logDir), inherit };
+  constructor({ enableFault = true, logDir = 'logs/dev', inherit = false } = {}) {
+    this.opts = { enableFault, logDir: path.resolve(ROOT, logDir), inherit };
     this.children = [];
   }
 
   async start(overrides = {}) {
     Object.assign(this.opts, overrides);
-    const { productLoader, enableFault, logDir, inherit } = this.opts;
+    const { enableFault, logDir, inherit } = this.opts;
     for (const s of SERVICES) {
       if (await isUp(s.name)) throw new Error(`Cổng ${PORTS[s.name]} (${s.name}) đang bận. Hãy tắt npm start trước.`);
     }
-    const env = { PRODUCT_LOADER: productLoader, ENABLE_FAULT: enableFault ? '1' : '0', LOG_DIR: logDir };
+    const env = { ENABLE_FAULT: enableFault ? '1' : '0', LOG_DIR: logDir };
     this.children = SERVICES.map((s) => spawnServer(s, env, logDir, inherit));
     try {
       // Lần khởi động đầu tiên trên Windows có thể chậm (antivirus quét node_modules), nên chờ tới 30 s.
@@ -86,7 +86,8 @@ export class Stack {
 // Client tĩnh :5173 không thuộc phép đo cold/warm nên chỉ khởi động một lần.
 export async function ensureClient({ logDir = 'logs/dev', inherit = false } = {}) {
   if (await isUp('client')) return null;
-  const child = spawnServer(CLIENT, {}, path.resolve(ROOT, logDir), inherit);
+  const resolvedLogDir = path.resolve(ROOT, logDir);
+  const child = spawnServer(CLIENT, { LOG_DIR: resolvedLogDir }, resolvedLogDir, inherit);
   await waitUntil(() => isUp('client'), 10_000, 'client /health');
   return { stop: () => killChild(child) };
 }

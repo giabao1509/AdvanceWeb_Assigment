@@ -1,4 +1,4 @@
-// Waterfall (SVG), trace N+1 (GraphQL) và call graph nội bộ (BFF) từ một phiên đo (decisions.md mục 6.3).
+// Tạo waterfall (SVG), trace N+1 và call graph BFF từ một phiên đo.
 // Chạy sau measure.js: npm run waterfall
 import fs from 'node:fs';
 import path from 'node:path';

@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Báo cáo quyết định kỹ thuật — Block 02</title>
+  <style>
+    :root { --ink:#18212f; --muted:#647084; --paper:#fff; --bg:#f2f5f9; --line:#dce3ec; --blue:#2357d9; --cyan:#0a8799; --orange:#b55a13; --green:#198754; --soft:#eef4ff; }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body { margin:0; font:16px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif; color:var(--ink); background:var(--bg); }
+    a { color:var(--blue); }
+    .hero { color:#fff; background:linear-gradient(125deg,#10264f 0%,#1748a0 58%,#087f91 100%); padding:64px 24px 54px; }
+    .hero-inner, .layout { max-width:1120px; margin:auto; }
+    .eyebrow { margin:0 0 10px; font-size:.78rem; font-weight:800; letter-spacing:.16em; text-transform:uppercase; color:#a9dff0; }
+    h1 { max-width:800px; margin:0; font-size:clamp(2.1rem,5vw,4rem); line-height:1.08; letter-spacing:-.04em; }
+    .lead { max-width:760px; margin:20px 0 0; font-size:1.15rem; color:#dce9ff; }
+    .hero-meta { display:flex; gap:10px; flex-wrap:wrap; margin-top:28px; }
+    .pill { border:1px solid #ffffff42; border-radius:999px; padding:6px 12px; background:#ffffff12; font-size:.86rem; }
+    .layout { display:grid; grid-template-columns:240px minmax(0,1fr); gap:32px; padding:34px 20px 72px; }
+    nav { position:sticky; top:18px; align-self:start; background:var(--paper); border:1px solid var(--line); border-radius:14px; padding:18px; box-shadow:0 8px 24px #15305d0d; }
+    nav strong { display:block; margin-bottom:8px; font-size:.82rem; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); }
+    nav a { display:block; padding:7px 8px; border-radius:7px; color:#344154; text-decoration:none; font-size:.92rem; }
+    nav a:hover { color:var(--blue); background:var(--soft); }
+    main { min-width:0; }
+    section { scroll-margin-top:24px; margin-bottom:24px; padding:30px; background:var(--paper); border:1px solid var(--line); border-radius:16px; box-shadow:0 8px 24px #15305d0b; }
+    h2 { margin:0 0 18px; font-size:1.55rem; line-height:1.25; letter-spacing:-.02em; }
+    h3 { margin:26px 0 8px; font-size:1.12rem; }
+    p { margin:8px 0 14px; }
+    .muted { color:var(--muted); }
+    .cards { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+    .card { padding:18px; border:1px solid var(--line); border-radius:12px; background:#fbfcfe; }
+    .card b { display:block; margin-bottom:5px; color:var(--blue); }
+    .flow { overflow:auto; padding:22px; border-radius:12px; background:#0f1d33; color:#eef5ff; font:600 .92rem/1.8 ui-monospace,SFMono-Regular,Consolas,monospace; white-space:pre; }
+    .diagram { overflow:auto; padding:18px; border:1px solid var(--line); border-radius:14px; background:#f8fafc; }
+    .diagram svg { display:block; min-width:760px; width:100%; height:auto; }
+    .diagram .node { fill:#fff; stroke:#7b8aa0; stroke-width:2; }
+    .diagram .chosen { fill:#e7f7ec; stroke:#38a169; }
+    .diagram .warn { fill:#fff6dc; stroke:#d69e2e; }
+    .diagram .fail { fill:#fff0ed; stroke:#e35d45; }
+    .diagram .edge { fill:none; stroke:#7b8aa0; stroke-width:2; marker-end:url(#arrow); }
+    .diagram text { fill:#18212f; font:600 15px system-ui,-apple-system,"Segoe UI",sans-serif; text-anchor:middle; dominant-baseline:middle; }
+    .diagram .edge-label { fill:#566276; font-size:13px; }
+    .diagram .subtext { fill:#566276; font-size:13px; font-weight:500; }
+    .decision-map { padding:22px; border:1px solid var(--line); border-radius:14px; background:#f8fafc; text-align:center; }
+    .decision-root { max-width:430px; margin:auto; padding:14px 18px; border:2px solid #7b8aa0; border-radius:14px; background:#fff; font-weight:800; }
+    .down { padding:8px 0; color:var(--muted); font-size:1.4rem; line-height:1; }
+    .choice-row,.request-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+    .choice { padding:16px; border:2px solid #b7c2d1; border-radius:12px; background:#fff; }
+    .choice b { display:block; color:var(--blue); }
+    .choice small { display:block; margin-top:7px; color:var(--muted); }
+    .request-flow { padding:18px; border:1px solid var(--line); border-radius:12px; background:#fbfcfe; }
+    .request-flow h3 { margin:0 0 12px; color:var(--blue); }
+    .step { padding:9px 10px; border-radius:8px; background:#eef4ff; text-align:center; font-size:.9rem; }
+    .step-arrow { padding:3px; text-align:center; color:var(--cyan); font-weight:900; }
+    table { width:100%; margin:14px 0 8px; border-collapse:collapse; font-size:.93rem; }
+    th,td { padding:11px 12px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+    th { background:#f4f7fb; color:#3d4b60; }
+    td.num, th.num { text-align:right; white-space:nowrap; }
+    .decision { margin:16px 0; padding:18px 20px; border-left:4px solid var(--blue); border-radius:4px 10px 10px 4px; background:#f7faff; }
+    .decision h3 { margin:0 0 5px; }
+    .trade { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px; }
+    .good,.cost { padding:14px 16px; border-radius:10px; }
+    .good { background:#edf9f3; border:1px solid #cbead9; }
+    .cost { background:#fff5eb; border:1px solid #f0d8bd; }
+    .good strong { color:var(--green); } .cost strong { color:var(--orange); }
+    ul { padding-left:21px; }
+    code { padding:.12em .38em; border-radius:5px; background:#eef1f5; font:90% ui-monospace,SFMono-Regular,Consolas,monospace; }
+    .metric { font-size:1.55rem; font-weight:800; color:var(--blue); }
+    .evidence { border-color:#b9dfe6; background:linear-gradient(135deg,#f4fcfd,#f7faff); }
+    .footer { text-align:center; color:var(--muted); padding:0 20px 42px; font-size:.9rem; }
+    @media (max-width:850px) { .layout { grid-template-columns:1fr; } nav { position:static; } .cards,.trade,.choice-row,.request-grid { grid-template-columns:1fr; } section { padding:22px; } }
+    @media print { body { background:#fff; font-size:11pt; } .hero { padding:30px 0; print-color-adjust:exact; } .layout { display:block; padding:20px 0; } nav { display:none; } section { box-shadow:none; break-inside:avoid; margin:0 0 14px; } a { color:inherit; text-decoration:none; } .footer { padding:10px 0; } }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-inner">
+      <p class="eyebrow">Advance Web · Block 02</p>
+      <h1>Quyết định kỹ thuật cho API Composition</h1>
+      <p class="lead">Tóm tắt những quyết định quan trọng khi thiết kế Baseline, BFF và GraphQL, kèm lý do và trade-off.</p>
+      <div class="hero-meta"><span class="pill">Node.js + Express</span><span class="pill">SQLite</span><span class="pill">GraphQL Yoga + DataLoader</span><span class="pill">Playwright</span></div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav aria-label="Mục lục">
+      <strong>Nội dung</strong>
+      <a href="#problem">1. Bối cảnh</a><a href="#architecture">2. Sơ đồ quyết định</a><a href="#request-flow">3. Luồng request</a><a href="#stack">4. Ma trận quyết định</a><a href="#composition">5. API composition</a><a href="#shared">6. Lỗi và ranh giới</a><a href="#limits">7. Phạm vi</a><a href="#conclusion">8. Kết luận</a>
+    </nav>
+
+    <main>
+      <section id="problem">
+        <h2>1. Bối cảnh</h2>
+        <p>Màn hình đơn hàng cần dữ liệu từ ba service độc lập: <b>User</b>, <b>Order</b> và <b>Product</b>. Block 2 giữ nguyên dữ liệu và giao diện, chỉ thay đổi nơi thực hiện API composition.</p>
+        <div class="cards">
+          <div class="card"><b>Baseline</b>Mốc tham chiếu đơn giản, thể hiện chi phí khi browser tự ghép.</div>
+          <div class="card"><b>BFF</b>Contract riêng cho web/mobile, logic ghép đặt ở server.</div>
+          <div class="card"><b>GraphQL</b>Client chọn trường; resolver ghép dữ liệu và xử lý N+1.</div>
+        </div>
+      </section>
+
+      <section id="architecture">
+        <h2>2. Sơ đồ quyết định</h2>
+        <div class="decision-map" role="img" aria-label="Ba lựa chọn API composition theo mục tiêu">
+          <div class="decision-root">Cần ghép User + Order + Product</div>
+          <div class="down">↓</div>
+          <div class="choice-row">
+            <div class="choice"><b>Baseline</b>Mốc tham chiếu<small>Browser gọi tuần tự và tự ghép</small></div>
+            <div class="choice"><b>BFF</b>Contract ổn định theo client<small>Web gọi song song; mobile bỏ User</small></div>
+            <div class="choice"><b>GraphQL</b>Client chọn trường<small>Naive đối chứng; DataLoader là chính</small></div>
+          </div>
+        </div>
+        <p class="muted">Không có phương án thắng tuyệt đối. Mỗi nhánh phục vụ một mục tiêu; dữ liệu, renderer, logging và policy lỗi được giữ thống nhất.</p>
+      </section>
+
+      <section id="request-flow">
+        <h2>3. Luồng request và response</h2>
+        <div class="request-grid">
+          <div class="request-flow"><h3>Baseline</h3><div class="step">Browser → User</div><div class="step-arrow">↓ response</div><div class="step">Browser → Order</div><div class="step-arrow">↓ response</div><div class="step">Browser → Product batch</div><div class="step-arrow">↓</div><div class="step">Browser ghép + render</div></div>
+          <div class="request-flow"><h3>BFF</h3><div class="step">Browser → BFF</div><div class="step-arrow">↓</div><div class="step">BFF → User ∥ Order</div><div class="step-arrow">↓ hai response</div><div class="step">BFF → Product batch</div><div class="step-arrow">↓</div><div class="step">Một response đã ghép</div></div>
+          <div class="request-flow"><h3>GraphQL batched</h3><div class="step">Browser → GraphQL</div><div class="step-arrow">↓ resolver</div><div class="step">User → Orders</div><div class="step-arrow">↓</div><div class="step">DataLoader → Product batch</div><div class="step-arrow">↓</div><div class="step">data + errors</div></div>
+        </div>
+        <p class="muted">Ở mobile, BFF và GraphQL đi thẳng tới Orders nên không gọi User Service.</p>
+      </section>
+
+      <section id="stack">
+        <h2>4. Ma trận quyết định chính</h2>
+        <table><thead><tr><th>Chủ đề</th><th>Quyết định</th><th>Lý do</th><th>Đánh đổi</th></tr></thead><tbody>
+          <tr><td>Nền tảng</td><td>Node.js 20+, Express 5, GraphQL Yoga</td><td>Một ngôn ngữ, phù hợp I/O</td><td>Không so sánh runtime</td></tr>
+          <tr><td>Dữ liệu</td><td>Mỗi service một SQLite DB</td><td>Ranh giới rõ, seed nhanh, có SQL thật</td><td>Không đại diện production</td></tr>
+          <tr><td>Product API</td><td>Batch tối đa 100 ID</td><td>Deduplicate và gom request</td><td>Phía gọi phải chunk và map ID</td></tr>
+          <tr><td>BFF</td><td>Endpoint riêng cho web/mobile</td><td>Mỗi client nhận đúng shape</td><td>Tăng contract cần duy trì</td></tr>
+          <tr><td>GraphQL</td><td>DataLoader mới mỗi request</td><td>Batch, cache không rò request</td><td>Cần bảo vệ query</td></tr>
+          <tr><td>Client</td><td>HTML, CSS, JavaScript thuần</td><td>Dùng chung renderer</td><td>Tự quản lý DOM</td></tr>
+          <tr><td>Quan sát</td><td><code>rid</code>, JSON Lines, AsyncLocalStorage</td><td>Nối HTTP và DB theo một luồng</td><td>Chỉ phù hợp phạm vi bài</td></tr>
+          <tr><td>Đo lường</td><td>Playwright và <code>screen-complete</code></td><td>Cùng điều kiện browser</td><td>Không mô phỏng concurrent load</td></tr>
+          <tr><td>Lỗi</td><td>Product partial; User/Order fail</td><td>Giữ phần dữ liệu còn hữu ích</td><td>Client phải xử lý null</td></tr>
+        </tbody></table>
+      </section>
+
+      <section id="composition">
+        <h2>5. Quyết định cho từng phương án</h2>
+        <div class="decision"><h3>Baseline</h3><p>Browser gọi tuần tự User → Order → Product batch rồi tự ghép. Luồng tuần tự được giữ có chủ đích để làm mốc so sánh chi phí composition tại client.</p></div>
+        <div class="decision"><h3>BFF</h3><p>Web gọi User và Order song song rồi batch Product. Mobile không gọi User và chỉ nhận các trường cần hiển thị. Contract rõ ràng hơn nhưng số endpoint tăng theo loại client.</p></div>
+        <div class="decision"><h3>GraphQL</h3><p><code>Query.user</code> gọi User Service; <code>User.orders</code> và <code>Query.ordersByUser</code> gọi Order Service; <code>OrderItem.product</code> gọi Product Service. Bản naive gọi Product cho từng item nên tạo N+1. Bản batched gom các <code>load(productId)</code> trong cùng request, deduplicate và cache theo request.</p><p>Mỗi batch được chia tối đa 100 ID rồi map kết quả lại theo ID, vì thứ tự response không được giả định giống input. Cache không dùng chung giữa các HTTP request.</p></div>
+      </section>
+
+      <section id="shared" class="evidence">
+        <h2>6. Xử lý lỗi và ranh giới</h2>
+        <h3>Chính sách lỗi</h3>
+        <ul><li>Call nội bộ timeout sau 1000 ms và không retry.</li><li>Product lỗi: giữ đơn hàng, đặt <code>product: null</code>, trả lỗi có path.</li><li>User hoặc Order lỗi: thất bại toàn màn hình.</li><li>Không tạo tên, giá hoặc ảnh giả để che lỗi Product.</li></ul>
+        <table><thead><tr><th>Partial response</th><th>BFF</th><th>GraphQL</th></tr></thead><tbody><tr><td>HTTP</td><td><code>200</code> + <code>X-Partial-Response</code></td><td>Thường là <code>200</code></td></tr><tr><td>Body</td><td>Dữ liệu + <code>errors[]</code></td><td><code>data</code> + <code>errors[]</code></td></tr><tr><td>Product lỗi</td><td><code>product: null</code>, path tự xây</td><td>Field nullable <code>null</code>, path từ resolver</td></tr></tbody></table>
+        <h3>SQLite riêng và bảo vệ GraphQL</h3>
+        <p>Mỗi service sở hữu một SQLite DB, nên không có join hoặc khóa ngoại xuyên service; composition bắt buộc đi qua HTTP. Ranh giới rõ hơn nhưng có thêm chi phí mạng.</p>
+        <p>Query lồng sâu có thể khuếch đại số resolver, payload và CPU dù DataLoader đã giảm Product call. Nếu public API cần giới hạn depth/complexity, pagination, rate limit và allowlist hoặc persisted query.</p>
+      </section>
+
+      <section id="limits"><h2>7. Phương án không chọn và phạm vi</h2><table><thead><tr><th>Phương án</th><th>Vì sao không chọn</th></tr></thead><tbody>
+        <tr><td>PostgreSQL</td><td>Tăng chi phí cài đặt; SQLite đã đủ cho phạm vi bài</td></tr>
+        <tr><td>JSON hoặc in-memory</td><td>Không thể hiện chi phí DB query</td></tr>
+        <tr><td>React hoặc Vue</td><td>Framework UI có thể làm nhiễu phép so sánh composition</td></tr>
+        <tr><td>Cache Product toàn cục</td><td>Có thể cũ dữ liệu và rò phạm vi request</td></tr>
+        <tr><td>Fail-fast khi Product lỗi</td><td>Làm mất toàn bộ đơn hàng dù dữ liệu chính vẫn hữu ích</td></tr>
+        <tr><td>ELK hoặc Jaeger</td><td>Quá nặng cho bài chạy cục bộ</td></tr>
+      </tbody></table><p class="muted">Ngoài phạm vi: authentication, pagination, concurrent load, triển khai nhiều máy và GraphQL depth/complexity limit. Hệ thống bán hàng thật cũng nên snapshot giá tại thời điểm mua.</p></section>
+
+      <section id="conclusion"><h2>8. Kết luận</h2><div class="cards"><div class="card"><b>Baseline</b>Dùng làm mốc tham chiếu và quan sát chi phí ghép tại browser.</div><div class="card"><b>BFF</b>Phù hợp khi web/mobile có contract ổn định.</div><div class="card"><b>GraphQL + DataLoader</b>Phù hợp khi client cần chọn trường và quan hệ dễ phát sinh N+1.</div></div><p>Block 2 không cố chứng minh một công nghệ luôn tốt hơn. Quyết định quan trọng là đặt composition đúng chỗ, giữ phép so sánh công bằng và làm rõ trade-off về contract, số call, quan sát và xử lý lỗi.</p><p>Báo cáo này là nguồn giải thích tập trung; cách chạy project nằm trong <code>README.md</code>.</p></section>
+    </main>
+  </div>
+  <footer class="footer">Báo cáo quyết định kỹ thuật Block 02 · Đối chiếu với mã nguồn hiện tại</footer>
+</body>
+</html>
