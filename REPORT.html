@@ -49,10 +49,22 @@
     .choice { padding:16px; border:2px solid #b7c2d1; border-radius:12px; background:#fff; }
     .choice b { display:block; color:var(--blue); }
     .choice small { display:block; margin-top:7px; color:var(--muted); }
-    .request-flow { padding:18px; border:1px solid var(--line); border-radius:12px; background:#fbfcfe; }
-    .request-flow h3 { margin:0 0 12px; color:var(--blue); }
-    .step { padding:9px 10px; border-radius:8px; background:#eef4ff; text-align:center; font-size:.9rem; }
-    .step-arrow { padding:3px; text-align:center; color:var(--cyan); font-weight:900; }
+    .request-flow { padding:18px 14px 16px; border:1px solid var(--line); border-radius:12px; background:#fbfcfe; }
+    .request-flow h3 { display:flex; align-items:center; gap:8px; margin:0 4px 8px; color:var(--blue); }
+    .request-flow h3::before { content:""; width:9px; height:9px; border-radius:50%; background:var(--blue); }
+    .request-flow svg { display:block; width:100%; height:auto; }
+    .request-flow .rf-node { fill:#fff; stroke:#718097; stroke-width:1.8; }
+    .request-flow .rf-compose { fill:#eaf1ff; stroke:#2357d9; }
+    .request-flow .rf-service { fill:#f3f6fa; stroke:#9aa8ba; stroke-width:1.5; }
+    .request-flow .rf-edge { fill:none; stroke:#718097; stroke-width:1.8; }
+    .request-flow .rf-edge.parallel { stroke:var(--cyan); }
+    .request-flow .rf-label { fill:#18212f; font:700 13px system-ui,-apple-system,"Segoe UI",sans-serif; text-anchor:middle; }
+    .request-flow .rf-note { fill:#566276; font:600 11px system-ui,-apple-system,"Segoe UI",sans-serif; text-anchor:middle; }
+    .request-flow .rf-badge { fill:#2357d9; stroke:#fff; stroke-width:2; }
+    .request-flow .rf-badge-text { fill:#fff; font:800 11px system-ui,-apple-system,"Segoe UI",sans-serif; text-anchor:middle; dominant-baseline:middle; }
+    .request-flow p { min-height:68px; margin:8px 4px 0; color:var(--muted); font-size:.86rem; line-height:1.5; }
+    .phase-legend { display:flex; gap:10px 18px; flex-wrap:wrap; margin:14px 0 0; padding:11px 13px; border-radius:9px; background:#eef4ff; color:#42516a; font-size:.86rem; }
+    .phase-legend b { color:var(--blue); }
     table { width:100%; margin:14px 0 8px; border-collapse:collapse; font-size:.93rem; }
     th,td { padding:11px 12px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
     th { background:#f4f7fb; color:#3d4b60; }
@@ -116,11 +128,69 @@
 
       <section id="request-flow">
         <h2>3. Luồng request và response</h2>
+        <p>Đọc các số trên mũi tên từ nhỏ đến lớn. Hai nhánh mang cùng một số được chạy song song; bước mang số tiếp theo phải chờ dữ liệu từ bước trước.</p>
         <div class="request-grid">
-          <div class="request-flow"><h3>Baseline</h3><div class="step">Browser → User</div><div class="step-arrow">↓ response</div><div class="step">Browser → Order</div><div class="step-arrow">↓ response</div><div class="step">Browser → Product batch</div><div class="step-arrow">↓</div><div class="step">Browser ghép + render</div></div>
-          <div class="request-flow"><h3>BFF</h3><div class="step">Browser → BFF</div><div class="step-arrow">↓</div><div class="step">BFF → User ∥ Order</div><div class="step-arrow">↓ hai response</div><div class="step">BFF → Product batch</div><div class="step-arrow">↓</div><div class="step">Một response đã ghép</div></div>
-          <div class="request-flow"><h3>GraphQL batched</h3><div class="step">Browser → GraphQL</div><div class="step-arrow">↓ resolver</div><div class="step">User → Orders</div><div class="step-arrow">↓</div><div class="step">DataLoader → Product batch</div><div class="step-arrow">↓</div><div class="step">data + errors</div></div>
+          <div class="request-flow">
+            <h3>Baseline</h3>
+            <svg viewBox="0 0 300 270" role="img" aria-label="Baseline: Browser gọi User bước 1, Order bước 2, Product batch bước 3 rồi tự ghép kết quả">
+              <defs><marker id="rf-arrow-base" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#718097"/></marker></defs>
+              <rect class="rf-node rf-compose" x="88" y="8" width="124" height="38" rx="7"/><text class="rf-label" x="150" y="32">Browser</text>
+              <path class="rf-edge" d="M115,46 L51,198" marker-end="url(#rf-arrow-base)"/>
+              <path class="rf-edge" d="M150,46 L150,198" marker-end="url(#rf-arrow-base)"/>
+              <path class="rf-edge" d="M185,46 L249,198" marker-end="url(#rf-arrow-base)"/>
+              <circle class="rf-badge" cx="91" cy="105" r="11"/><text class="rf-badge-text" x="91" y="105">1</text>
+              <circle class="rf-badge" cx="150" cy="130" r="11"/><text class="rf-badge-text" x="150" y="130">2</text>
+              <circle class="rf-badge" cx="209" cy="105" r="11"/><text class="rf-badge-text" x="209" y="105">3</text>
+              <text class="rf-note" x="150" y="171">browser giữ kết quả rồi gọi bước kế</text>
+              <rect class="rf-service" x="7" y="202" width="88" height="38" rx="7"/><text class="rf-label" x="51" y="226">User</text>
+              <rect class="rf-service" x="106" y="202" width="88" height="38" rx="7"/><text class="rf-label" x="150" y="226">Order</text>
+              <rect class="rf-service" x="205" y="202" width="88" height="38" rx="7"/><text class="rf-label" x="249" y="226">Product</text>
+              <text class="rf-note" x="150" y="260">Ghép và render tại Browser</text>
+            </svg>
+            <p>Ba request từ browser chạy <b>tuần tự</b>: phải có user trước khi lấy order, rồi mới có product id để gọi Product batch.</p>
+          </div>
+          <div class="request-flow">
+            <h3>BFF</h3>
+            <svg viewBox="0 0 300 270" role="img" aria-label="BFF: Browser gửi một request; BFF gọi User và Order song song ở bước 1, sau đó gọi Product batch ở bước 2">
+              <defs><marker id="rf-arrow-bff" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#718097"/></marker><marker id="rf-arrow-bff-par" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#0a8799"/></marker></defs>
+              <rect class="rf-node" x="88" y="8" width="124" height="38" rx="7"/><text class="rf-label" x="150" y="32">Browser</text>
+              <path class="rf-edge" d="M150,46 L150,82" marker-end="url(#rf-arrow-bff)"/><text class="rf-note" x="196" y="68">1 client request</text>
+              <rect class="rf-node rf-compose" x="88" y="86" width="124" height="38" rx="7"/><text class="rf-label" x="150" y="110">BFF ghép dữ liệu</text>
+              <path class="rf-edge parallel" d="M120,124 L51,198" marker-end="url(#rf-arrow-bff-par)"/>
+              <path class="rf-edge parallel" d="M145,124 L150,198" marker-end="url(#rf-arrow-bff-par)"/>
+              <path class="rf-edge" d="M180,124 L249,198" marker-end="url(#rf-arrow-bff)"/>
+              <circle class="rf-badge" cx="91" cy="156" r="11"/><text class="rf-badge-text" x="91" y="156">1</text>
+              <circle class="rf-badge" cx="150" cy="156" r="11"/><text class="rf-badge-text" x="150" y="156">1</text>
+              <circle class="rf-badge" cx="209" cy="156" r="11"/><text class="rf-badge-text" x="209" y="156">2</text>
+              <rect class="rf-service" x="7" y="202" width="88" height="38" rx="7"/><text class="rf-label" x="51" y="226">User</text>
+              <rect class="rf-service" x="106" y="202" width="88" height="38" rx="7"/><text class="rf-label" x="150" y="226">Order</text>
+              <rect class="rf-service" x="205" y="202" width="88" height="38" rx="7"/><text class="rf-label" x="249" y="226">Product</text>
+              <text class="rf-note" x="150" y="260">BFF trả một response đã ghép</text>
+            </svg>
+            <p>User và Order cùng mang số <b>1</b> nên chạy <b>song song</b>. Product batch là bước <b>2</b>, sau khi BFF có danh sách product id.</p>
+          </div>
+          <div class="request-flow">
+            <h3>GraphQL batched</h3>
+            <svg viewBox="0 0 300 270" role="img" aria-label="GraphQL: Browser gửi request tới GraphQL; resolver lấy User bước 1, Orders bước 2 và Product bằng DataLoader batch ở bước 3">
+              <defs><marker id="rf-arrow-gql" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#718097"/></marker></defs>
+              <rect class="rf-node" x="88" y="8" width="124" height="38" rx="7"/><text class="rf-label" x="150" y="32">Browser</text>
+              <path class="rf-edge" d="M150,46 L150,82" marker-end="url(#rf-arrow-gql)"/><text class="rf-note" x="202" y="63">OPTIONS + POST</text>
+              <rect class="rf-node rf-compose" x="88" y="86" width="124" height="38" rx="7"/><text class="rf-label" x="150" y="110">GraphQL resolvers</text>
+              <path class="rf-edge" d="M120,124 L51,198" marker-end="url(#rf-arrow-gql)"/>
+              <path class="rf-edge" d="M150,124 L150,198" marker-end="url(#rf-arrow-gql)"/>
+              <path class="rf-edge" d="M180,124 L249,198" marker-end="url(#rf-arrow-gql)"/>
+              <circle class="rf-badge" cx="91" cy="156" r="11"/><text class="rf-badge-text" x="91" y="156">1</text>
+              <circle class="rf-badge" cx="150" cy="156" r="11"/><text class="rf-badge-text" x="150" y="156">2</text>
+              <circle class="rf-badge" cx="209" cy="156" r="11"/><text class="rf-badge-text" x="209" y="156">3</text>
+              <rect class="rf-service" x="7" y="202" width="88" height="38" rx="7"/><text class="rf-label" x="51" y="226">User</text>
+              <rect class="rf-service" x="106" y="202" width="88" height="38" rx="7"/><text class="rf-label" x="150" y="226">Order</text>
+              <rect class="rf-service" x="205" y="202" width="88" height="38" rx="7"/><text class="rf-label" x="249" y="226">Product</text>
+              <text class="rf-note" x="150" y="260">DataLoader gom Product ở bước 3</text>
+            </svg>
+            <p>Resolver đi theo quan hệ User → Orders → Product. Ở bước <b>3</b>, DataLoader gom và bỏ trùng product id trước khi gọi batch.</p>
+          </div>
         </div>
+        <div class="phase-legend"><span><b>1 → 2 → 3</b> = chạy tuần tự</span><span><b>1 + 1</b> = chạy song song</span><span>Mũi tên từ Browser tới BFF/GraphQL = một request từ client</span></div>
         <p class="muted">Ở mobile, BFF và GraphQL đi thẳng tới Orders nên không gọi User Service.</p>
       </section>
 
@@ -165,7 +235,16 @@
         <tr><td>ELK hoặc Jaeger</td><td>Quá nặng cho bài chạy cục bộ</td></tr>
       </tbody></table><p class="muted">Ngoài phạm vi: authentication, pagination, concurrent load, triển khai nhiều máy và GraphQL depth/complexity limit. Hệ thống bán hàng thật cũng nên snapshot giá tại thời điểm mua.</p></section>
 
-      <section id="conclusion"><h2>8. Kết luận</h2><div class="cards"><div class="card"><b>Baseline</b>Dùng làm mốc tham chiếu và quan sát chi phí ghép tại browser.</div><div class="card"><b>BFF</b>Phù hợp khi web/mobile có contract ổn định.</div><div class="card"><b>GraphQL + DataLoader</b>Phù hợp khi client cần chọn trường và quan hệ dễ phát sinh N+1.</div></div><p>Block 2 không cố chứng minh một công nghệ luôn tốt hơn. Quyết định quan trọng là đặt composition đúng chỗ, giữ phép so sánh công bằng và làm rõ trade-off về contract, số call, quan sát và xử lý lỗi.</p><p>Báo cáo này là nguồn giải thích tập trung; cách chạy project nằm trong <code>README.md</code>.</p></section>
+      <section id="conclusion">
+        <h2>8. Kết luận</h2>
+        <div class="cards">
+          <div class="card"><b>Baseline</b>Dễ triển khai nhất, nhưng browser phải tự gọi và ghép dữ liệu qua nhiều bước.</div>
+          <div class="card"><b>BFF</b>Giảm phần việc ở client và cho phép web, mobile nhận response phù hợp với từng giao diện.</div>
+          <div class="card"><b>GraphQL + DataLoader</b>Linh hoạt khi chọn dữ liệu, nhưng cần xử lý batching và giới hạn query cẩn thận.</div>
+        </div>
+        <p>Sau khi triển khai cả ba cách, nhóm nhận thấy BFF dễ kiểm soát hơn khi cấu trúc màn hình đã rõ, còn GraphQL phù hợp hơn khi nhu cầu lấy dữ liệu thay đổi nhiều. Baseline vẫn cần thiết để nhìn thấy sự khác biệt về số request và nơi ghép dữ liệu.</p>
+        <p>Trong phạm vi bài này, nhóm giữ chung dữ liệu, giao diện và cách đo để kết quả giữa ba cách có thể đối chiếu trực tiếp. Hướng dẫn chạy và kiểm tra project được ghi trong <code>README.md</code>.</p>
+      </section>
     </main>
   </div>
   <footer class="footer">Báo cáo quyết định kỹ thuật Block 02 · Đối chiếu với mã nguồn hiện tại</footer>

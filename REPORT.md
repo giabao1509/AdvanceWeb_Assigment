@@ -186,10 +186,10 @@ Các nội dung nằm ngoài phạm vi: authentication, pagination, concurrent l
 
 ## 8. Kết luận
 
-- Chọn **Baseline** khi cần một mốc tham chiếu đơn giản và muốn nhìn rõ chi phí ghép tại browser.
-- Chọn **BFF** khi web/mobile có contract ổn định và cần kiểm soát response chặt.
-- Chọn **GraphQL + DataLoader** khi client cần chọn trường linh hoạt và dữ liệu có quan hệ dễ phát sinh N+1.
+- **Baseline** dễ triển khai nhất, nhưng browser phải tự gọi và ghép dữ liệu qua nhiều bước.
+- **BFF** giảm phần việc ở client và cho phép web, mobile nhận response phù hợp với từng giao diện.
+- **GraphQL + DataLoader** linh hoạt khi chọn dữ liệu, nhưng cần xử lý batching và giới hạn query cẩn thận.
 
-Block 2 không cố chứng minh một công nghệ luôn tốt hơn. Quyết định quan trọng nhất là đặt composition đúng chỗ, giữ phép so sánh công bằng và làm rõ trade-off về contract, số call, khả năng quan sát và xử lý lỗi.
+Sau khi triển khai cả ba cách, nhóm nhận thấy BFF dễ kiểm soát hơn khi cấu trúc màn hình đã rõ, còn GraphQL phù hợp hơn khi nhu cầu lấy dữ liệu thay đổi nhiều. Baseline vẫn cần thiết để nhìn thấy sự khác biệt về số request và nơi ghép dữ liệu.
 
-Báo cáo này là nguồn giải thích tập trung cho các quyết định của Block 2. Cách chạy project nằm trong [`README.md`](README.md).
+Trong phạm vi bài này, nhóm giữ chung dữ liệu, giao diện và cách đo để kết quả giữa ba cách có thể đối chiếu trực tiếp. Hướng dẫn chạy và kiểm tra project được ghi trong [`README.md`](README.md).

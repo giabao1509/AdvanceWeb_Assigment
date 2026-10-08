@@ -21,8 +21,6 @@ Sẵn sàng (fault ${enableFault ? 'BẬT' : 'tắt'}). Log: logs/dev/*.jsonl
   Mobile BFF          : ${c}/mobile.html?variant=bff&user=u_small
   Mobile GraphQL naive: ${c}/mobile.html?variant=graphql-naive&user=u_small
   Mobile GraphQL batch: ${c}/mobile.html?variant=graphql-batched&user=u_small
-  GraphiQL naive      : http://localhost:${PORTS.graphql}/graphql-naive
-  GraphiQL batched    : http://localhost:${PORTS.graphql}/graphql-batched
 Ctrl+C để dừng.`);
 
 const shutdown = async () => {
