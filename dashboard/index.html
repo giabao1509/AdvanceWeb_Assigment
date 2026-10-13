@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>REST → gRPC · Order ↔ Inventory</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230f766e'/%3E%3Cpath d='M9 12h14l-4-4M23 20H9l4 4' stroke='white' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" data-icon="arrows"></div>
+      <div style="min-width:0">
+        <div class="brand-title">Order API ↔ Inventory: REST → gRPC</div>
+        <div class="brand-sub">Web nâng cao · Tuần 2 · Block 3 · Giao tiếp giữa các service</div>
+      </div>
+    </div>
+    <nav class="tabs" id="tabs">
+      <button class="tab-btn" data-tab="problem"><span class="k">1</span>Problem</button>
+      <button class="tab-btn" data-tab="solution"><span class="k">2</span>Solution</button>
+      <button class="tab-btn" data-tab="demo"><span class="k">3</span>Demo</button>
+      <button class="tab-btn" data-tab="evidence"><span class="k">4</span>Evidence</button>
+      <button class="tab-btn" data-tab="tradeoff"><span class="k">5</span>Trade-off</button>
+    </nav>
+    <div class="sys">
+      <span class="pill" id="sysPill"><span class="dot"></span>đang kết nối…</span>
+      <span class="mono" id="clock"></span>
+    </div>
+  </header>
+
+  <main>
+    <!-- ======================= 1. PROBLEM ======================= -->
+    <section class="tab" id="tab-problem">
+      <div class="story">
+        <div class="story-head">
+          <div class="eyebrow">1 · Problem</div>
+          <h1>Một luồng đặt hàng, hai boundary, hai nhóm consumer khác nhau</h1>
+          <p class="lead">Người dùng gọi <code>POST /orders</code> với <code>sku</code> và <code>quantity</code>. Order API xin Inventory giữ hàng: đủ hàng thì tạo order, thiếu hàng thì trả lỗi nghiệp vụ. Bài toán: chuyển chặng nội bộ từ REST sang gRPC <b>mà không ai bên ngoài nhận ra</b>.</p>
+        </div>
+
+        <div class="card flow">
+          <div class="flow-node"><b>Browser · bên thứ ba</b><span>không kiểm soát lịch cập nhật</span></div>
+          <div class="flow-arrow rest"><div>REST/JSON</div><div class="ln"></div><div>giữ nguyên</div></div>
+          <div class="flow-node"><b>Order API</b><span>client của Inventory</span></div>
+          <div class="flow-arrow grpc"><div>REST → gRPC</div><div class="ln"></div><div>chặng chuyển đổi</div></div>
+          <div class="flow-node"><b>Inventory Service</b><span>deploy riêng</span></div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card point">
+            <h3><span class="tag rest">BOUNDARY NGOÀI</span> Browser → Order API</h3>
+            <ul>
+              <li>Consumer là browser và bên thứ ba. Nhóm <b>không quyết định</b> khi nào họ cập nhật.</li>
+              <li>URL, status code và body phải <b>giữ nguyên</b> trước và sau khi đổi transport, ở cả đường đủ hàng lẫn thiếu hàng.</li>
+              <li>Lỗi nghiệp vụ không được biến thành HTTP 500 tùy tiện.</li>
+            </ul>
+          </div>
+          <div class="card point">
+            <h3><span class="tag grpc">BOUNDARY TRONG</span> Order API → Inventory</h3>
+            <ul>
+              <li>Nhóm viết cả hai đầu nhưng <b>deploy từng service riêng</b>.</li>
+              <li>Vì vậy <b>client cũ có thể chạy với server mới</b>, và ngược lại.</li>
+              <li>Khi Inventory chậm hoặc chết, Order API phải trả lời trong thời gian hữu hạn.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="grid-3" style="margin-top:16px">
+          <div class="card point">
+            <h3>Fixture xác định</h3>
+            <p><code>SKU-001</code> tồn <span class="big-num">5</span></p>
+            <p class="muted small">Đủ hàng: ×2 → 201 · Thiếu hàng: ×10 → 409. Reset trước mỗi lần chụp snapshot.</p>
+          </div>
+          <div class="card point">
+            <h3>Cần chứng minh</h3>
+            <ul class="small">
+              <li>Body ngoài giống nhau trước và sau khi đổi</li>
+              <li>Log nội bộ cho thấy lời gọi là gRPC</li>
+              <li>Thêm field bằng tag mới, client cũ chưa build lại vẫn chạy</li>
+              <li>Chậm hoặc tắt thì request kết thúc trong thời gian hữu hạn</li>
+            </ul>
+          </div>
+          <div class="card point">
+            <h3>Ngoài phạm vi</h3>
+            <ul class="small">
+              <li>Streaming</li>
+              <li>gRPC-Web (browser vẫn dùng REST/JSON)</li>
+              <li>TLS, xác thực</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= 2. SOLUTION ======================= -->
+    <section class="tab" id="tab-solution">
+      <div class="story">
+        <div class="story-head">
+          <div class="eyebrow">2 · Solution</div>
+          <h1>Các quyết định đã chốt trước khi viết gRPC</h1>
+          <p class="lead">Ghi trong <code>PLAN.md</code>. Stack: Node 24 + TypeScript, Express 5, <code>@grpc/grpc-js</code>, sinh code bằng <code>protoc</code> + <code>ts-proto</code>.</p>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-h"><h3>Contract API ngoài · không đổi</h3></div>
+            <table>
+              <thead><tr><th>Tình huống</th><th class="num">HTTP</th><th>error.code</th></tr></thead>
+              <tbody>
+                <tr><td>Đủ hàng</td><td class="num"><span class="tag ok">201</span></td><td class="mono small">{orderId, sku, quantity, status, createdAt}</td></tr>
+                <tr><td>Input sai</td><td class="num"><span class="tag warn">400</span></td><td class="mono small">VALIDATION_ERROR</td></tr>
+                <tr><td>SKU không tồn tại</td><td class="num"><span class="tag warn">404</span></td><td class="mono small">SKU_NOT_FOUND</td></tr>
+                <tr><td>Thiếu hàng</td><td class="num"><span class="tag warn">409</span></td><td class="mono small">OUT_OF_STOCK + details</td></tr>
+                <tr><td>Inventory tắt</td><td class="num"><span class="tag err">503</span></td><td class="mono small">INVENTORY_UNAVAILABLE</td></tr>
+                <tr><td>Inventory chậm &gt; deadline</td><td class="num"><span class="tag err">504</span></td><td class="mono small">INVENTORY_TIMEOUT</td></tr>
+                <tr><td>Lỗi khác</td><td class="num"><span class="tag err">500</span></td><td class="mono small">INTERNAL_ERROR</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="card">
+            <div class="card-h"><h3>Proto · v2 thêm tag 4</h3><span class="src">proto/inventory.proto</span></div>
+            <div class="card-b">
+<pre class="code">service InventoryService {
+  rpc Reserve(ReserveRequest) returns (ReserveResponse);
+}
+message ReserveRequest {
+  string sku = 1;
+  int32 quantity = 2;
+}
+message ReserveResponse {
+  string reservation_id = 1;
+  string sku = 2;
+  int32 quantity = 3;
+  <span class="j-new">google.protobuf.Timestamp reservation_expires_at = 4;</span> // MỚI
+}</pre>
+              <p class="small muted" style="margin:10px 0 0">Package <code>inventory</code>, tên service và tag 1–3 giữ nguyên, vì đổi bất kỳ thứ nào trong số đó là phá wire contract với client cũ.</p>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-h"><h3>Thiếu hàng &amp; ánh xạ lỗi</h3></div>
+            <table>
+              <thead><tr><th>Tình huống</th><th>gRPC (Inventory)</th><th>REST baseline</th><th class="num">Ra ngoài</th></tr></thead>
+              <tbody>
+                <tr><td>Thiếu hàng</td><td class="mono small">FAILED_PRECONDITION<br><span class="muted">trailer x-available-stock</span></td><td class="mono small">409</td><td class="num">409</td></tr>
+                <tr><td>SKU lạ</td><td class="mono small">NOT_FOUND</td><td class="mono small">404</td><td class="num">404</td></tr>
+                <tr><td>Quá deadline</td><td class="mono small">DEADLINE_EXCEEDED</td><td class="mono small">TimeoutError</td><td class="num">504</td></tr>
+                <tr><td>Server tắt</td><td class="mono small">UNAVAILABLE</td><td class="mono small">ECONNREFUSED</td><td class="num">503</td></tr>
+                <tr><td>Khác</td><td class="mono small">INTERNAL / UNKNOWN…</td><td class="mono small">5xx</td><td class="num">500</td></tr>
+              </tbody>
+            </table>
+            <div class="card-b small muted">Order API chuẩn hoá lỗi về một kiểu chung rồi tự tạo <code>message</code>, nên body ngoài không phụ thuộc transport.</div>
+          </div>
+
+          <div class="card">
+            <div class="card-h"><h3>Deadline · field vắng · client cũ</h3></div>
+            <div class="card-b">
+              <ul class="checklist">
+                <li><span class="ck ok">⏱</span><div><b>Deadline 2000 ms</b> cho cả REST (<code>AbortSignal.timeout</code>) lẫn gRPC (<code>deadline</code>). Khi bật chế độ chậm, Inventory ngủ 5 s.</div></li>
+                <li><span class="ck ok">∅</span><div><b>Không giữ hàng ma:</b> Inventory kiểm tra <code>call.cancelled</code> hoặc socket đã đóng trước khi trừ tồn.</div></li>
+                <li><span class="ck ok">?</span><div><b>Field vắng:</b> <code>Timestamp</code> là message nên có presence. Khi vắng, Order API v2 <b>bỏ key</b> <code>reservationExpiresAt</code>, không suy ra 1970-01-01.</div></li>
+                <li><span class="ck ok">#</span><div><b>Client cũ:</b> bundle esbuild được đóng băng trước khi thêm field. Lúc chạy, client log sha256 và gửi metadata <code>x-client-version</code> để Inventory log lại.</div></li>
+                <li><span class="ck ok">⚖</span><div><b>Đo payload</b> bằng 2 đại lượng tách riêng: message đã serialize và wire bytes (qua TCP proxy).</div></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:16px">
+          <div class="card-h"><h3>Topology chạy song song (cờ cấu hình)</h3><span class="src">npm start → supervisor :4000</span></div>
+          <table>
+            <thead><tr><th>Instance</th><th>Vai trò</th><th>Code</th><th>Gọi tới</th></tr></thead>
+            <tbody>
+              <tr><td class="mono inst-inventory-v2">inventory-v2</td><td>Server mới (proto v2)</td><td>source</td><td class="mono small">REST :5001 · gRPC :50051</td></tr>
+              <tr><td class="mono inst-inventory-v1">inventory-v1</td><td>Server cũ (proto v1)</td><td><span class="tag v1">bundle đóng băng</span></td><td class="mono small">REST :5002 · gRPC :50052</td></tr>
+              <tr><td class="mono inst-order-rest">order-rest</td><td>Baseline</td><td>source, TRANSPORT=rest</td><td class="mono small">:3001 → REST :5001</td></tr>
+              <tr><td class="mono inst-order-grpc-v1">order-grpc-v1</td><td><b>Client cũ</b></td><td><span class="tag v1">bundle đóng băng</span></td><td class="mono small">:3002 → gRPC :50051</td></tr>
+              <tr><td class="mono inst-order-grpc-v2">order-grpc-v2</td><td>Client mới</td><td>source, proto v2</td><td class="mono small">:3003 → gRPC :50051</td></tr>
+              <tr><td class="mono inst-order-grpc-v2-oldsrv">order-grpc-v2-oldsrv</td><td>Client mới → server cũ</td><td>source, proto v2</td><td class="mono small">:3004 → gRPC :50052</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= 3. DEMO ======================= -->
+    <section class="tab" id="tab-demo">
+      <div class="card topo-card">
+        <div class="card-h">
+          <h3>Topology · live</h3>
+          <div class="row">
+            <span class="small muted">Bấm một Order API để chọn đích gửi request</span>
+            <button class="btn" id="btnReset"><span data-icon="reset"></span>Reset fixture</button>
+          </div>
+        </div>
+        <div class="topo" id="topo">
+          <svg class="wires" id="wires"></svg>
+          <div class="col">
+            <div class="col-label">Browser</div>
+            <div class="node browser" id="node-browser">
+              <span data-icon="globe"></span>
+              <div class="node-title" style="margin-top:6px">Dashboard này</div>
+              <div class="node-sub">fetch() như browser thật</div>
+            </div>
+          </div>
+          <div class="col" id="col-order"><div class="col-label">Order API (client của Inventory)</div></div>
+          <div class="col" id="col-inv"><div class="col-label">Inventory Service</div></div>
+        </div>
+      </div>
+
+      <div class="demo-grid">
+        <!-- request -->
+        <div class="card">
+          <div class="card-h"><h3>Gửi request</h3></div>
+          <div class="card-b" style="display:grid;gap:12px">
+            <div class="target-box" id="targetBox"></div>
+            <div class="field">
+              <label>Kịch bản</label>
+              <div class="row" id="presets">
+                <button class="chip" data-sku="SKU-001" data-qty="2">Đủ hàng ×2</button>
+                <button class="chip" data-sku="SKU-001" data-qty="10">Thiếu hàng ×10</button>
+                <button class="chip" data-sku="SKU-404" data-qty="1">SKU lạ</button>
+                <button class="chip" data-sku="SKU-001" data-qty="0">Input sai</button>
+              </div>
+            </div>
+            <div class="row" style="flex-wrap:nowrap">
+              <div class="field grow"><label for="inSku">sku</label><input class="input" id="inSku" value="SKU-001" /></div>
+              <div class="field" style="width:110px"><label for="inQty">quantity</label><input class="input" id="inQty" value="2" /></div>
+            </div>
+            <label class="toggle"><input type="checkbox" id="autoReset" /> Reset fixture trước khi gửi</label>
+            <button class="btn primary big" id="btnSend"><span data-icon="send"></span>POST /orders</button>
+            <button class="btn" id="btnSendAll"><span data-icon="layers"></span>Gửi cùng request tới cả 4 client &amp; so sánh</button>
+            <div>
+              <div class="sub-h" style="margin-top:4px">Lịch sử</div>
+              <div class="history"><table><tbody id="history"><tr><td class="muted small">Chưa có request.</td></tr></tbody></table></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- response -->
+        <div class="card">
+          <div class="card-h"><h3>Response browser nhận</h3><span class="src" id="respSrc"></span></div>
+          <div class="card-b" id="respBox"><div class="empty">Chọn kịch bản và bấm <b>POST /orders</b>.</div></div>
+        </div>
+
+        <!-- internal -->
+        <div class="card">
+          <div class="card-h"><h3>Lời gọi nội bộ (từ log)</h3><span class="src" id="internalSrc"></span></div>
+          <div class="card-b" id="internalBox"><div class="empty">Log của Order API &amp; Inventory cho request vừa gửi sẽ hiện ở đây.</div></div>
+        </div>
+      </div>
+
+      <div class="logs-grid">
+        <div class="card">
+          <div class="card-h"><h3>Log · Order API</h3><div class="filters" id="filterOrder"></div></div>
+          <div class="log-box" id="logOrder"></div>
+        </div>
+        <div class="card">
+          <div class="card-h"><h3>Log · Inventory</h3><div class="filters" id="filterInv"></div></div>
+          <div class="log-box" id="logInv"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= 4. EVIDENCE ======================= -->
+    <section class="tab" id="tab-evidence">
+      <div class="ev-layout">
+        <nav class="toc">
+          <a href="#ev-snap"><span>E1</span>Snapshot API ngoài</a>
+          <a href="#ev-logs"><span>E2</span>Log trước / sau</a>
+          <a href="#ev-proto"><span>E3</span>Diff proto &amp; codegen</a>
+          <a href="#ev-old"><span>E4</span>Client cũ</a>
+          <a href="#ev-err"><span>E5</span>Thiếu hàng · chậm · tắt</a>
+          <a href="#ev-payload"><span>E6</span>Payload &amp; thời gian</a>
+          <a href="#ev-dx"><span>E7</span>Developer experience</a>
+          <div style="margin-top:12px;padding:0 10px" class="small muted">Mọi số liệu đọc từ <code>evidence/*.json</code>, là output của script chạy thật.</div>
+        </nav>
+        <div id="evidence"><div class="empty">Đang tải evidence…</div></div>
+      </div>
+    </section>
+
+    <!-- ======================= 5. TRADE-OFF ======================= -->
+    <section class="tab" id="tab-tradeoff">
+      <div class="story">
+        <div class="story-head">
+          <div class="eyebrow">5 · Trade-off</div>
+          <h1>Được gì, mất gì, và phép đo nói được tới đâu</h1>
+          <p class="lead">Các con số dưới đây lấy trực tiếp từ <code>evidence/payload.json</code> (đo lúc <span class="mono" data-ev="payload.takenAt">…</span>).</p>
+        </div>
+        <div class="grid-3">
+          <div class="card point">
+            <h3><span class="tag grpc">gRPC</span> được</h3>
+            <ul>
+              <li>Message request <b><span data-ev="payload.grpcV2.du-hang.message.request.median"></span> B</b> so với JSON <b><span data-ev="payload.rest.du-hang.message.request.median"></span> B</b>.</li>
+              <li>Wire bytes mỗi lời gọi ấm (đủ hàng): <b><span data-ev="payload.grpcV2.du-hang.wire.warmTotal.median"></span> B</b> so với REST <b><span data-ev="payload.rest.du-hang.wire.warmTotal.median"></span> B</b>. HPACK nén các header lặp lại.</li>
+              <li>Contract có kiểu. Thay đổi schema hiện ra thành <b>lỗi compile</b> (TS2741) chứ không phải lỗi runtime.</li>
+              <li>Deadline <b>truyền sang server</b> (<code>grpc-timeout</code>), server biết caller đã bỏ đi.</li>
+              <li>Thêm field tương thích hai chiều: client cũ bỏ qua tag lạ, client mới thấy field vắng.</li>
+            </ul>
+          </div>
+          <div class="card point">
+            <h3><span class="tag err">chi phí</span> mất</h3>
+            <ul>
+              <li>Toolchain sinh code: gặp <b>3 lỗi</b> trên Windows (đường dẫn có dấu cách, plugin <code>.cmd</code>, thiếu well-known types).</li>
+              <li>Payload nhị phân: không curl hay DevTools được, phải tự log grpcCode, details và trailer.</li>
+              <li>Chi tiết thiếu hàng nằm trong <b>trailer</b>, dễ bị bỏ sót nếu không chủ động đọc.</li>
+              <li>Mỗi thay đổi schema phải sinh lại code ở cả hai repo và giữ kỷ luật về tag và package.</li>
+              <li>Client cũ bỏ qua field mới <b>trong im lặng</b>, không có cảnh báo nào.</li>
+              <li>Browser vẫn cần REST/JSON (không làm gRPC-Web), nên Order API phải duy trì hai kiểu contract.</li>
+            </ul>
+          </div>
+          <div class="card point">
+            <h3><span class="tag warn">giới hạn</span> của phép đo</h3>
+            <ul>
+              <li>Loopback, cùng một máy, không TLS, N = <span data-ev="payload.runsPerCase"></span> lần mỗi case.</li>
+              <li>Latency nội bộ: REST <b><span data-ev="payload.latency.internal.rest.median"></span> ms</b> và gRPC <b><span data-ev="payload.latency.internal.grpc.median"></span> ms</b> (median). End-to-end: <span data-ev="payload.latency.endToEnd.rest.median"></span> và <span data-ev="payload.latency.endToEnd.grpc.median"></span> ms. Trên loopback cả hai đều chỉ vài ms; với N nhỏ như vậy, phép đo không đủ để kết luận transport nào nhanh hơn trong môi trường thật.</li>
+              <li>Wire bytes không gồm TCP/IP header hay bắt tay TCP. HPACK phụ thuộc trạng thái kết nối.</li>
+              <li>Lỗi gRPC có message 0 B (thông tin nằm trong trailer), nên bảng message không phản ánh đúng kích thước lỗi; phải xem thêm bảng wire.</li>
+              <li>REST bị phình vì header mặc định của Express (<code>X-Powered-By</code>, <code>ETag</code>…). Có thể cắt bớt, nhưng nhóm giữ nguyên để đo trung thực.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="card" style="margin-top:16px">
+          <div class="card-h"><h3>Tiêu chí đạt · kiểm tra từ evidence</h3></div>
+          <div class="card-b"><ul class="checklist" id="criteria"></ul></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

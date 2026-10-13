@@ -1,0 +1,9 @@
+# codegen v1
+at: 2026-10-13T04:57:40.925Z
+proto: proto/inventory.proto  sha256=c0dc847181f3c94c312ed9031cd429d47c9d56a8af955163b41e6d25cc5cd468
+$ node_modules/grpc-tools/bin/protoc --plugin=protoc-gen-ts_proto=node_modules\.bin\protoc-gen-ts_proto.cmd --ts_proto_out=src/gen --ts_proto_opt=outputServices=grpc-js,esModuleInterop=true,useDate=true,env=node -I proto proto/inventory.proto
+exit: 0  (3333 ms)
+stdout: (empty)
+stderr: (empty)
+generated:
+  src/gen/inventory.ts  10079 B  sha256=4452efb194ebcaf9

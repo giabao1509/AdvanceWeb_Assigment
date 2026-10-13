@@ -1,0 +1,11 @@
+# codegen v2
+at: 2026-10-13T04:59:42.612Z
+proto: proto/inventory.proto  sha256=57354a93814368f955f01493e1086bd9e6e24bb62a900fd7c82334af9f279d76
+$ node_modules/grpc-tools/bin/protoc --plugin=protoc-gen-ts_proto=node_modules\.bin\protoc-gen-ts_proto.cmd --ts_proto_out=src/gen --ts_proto_opt=outputServices=grpc-js,esModuleInterop=true,useDate=true,env=node -I proto proto/inventory.proto
+exit: 1  (31 ms)
+stdout: (empty)
+stderr: google/protobuf/timestamp.proto: File not found.
+inventory.proto:6:1: Import "google/protobuf/timestamp.proto" was not found or had errors.
+inventory.proto:29:3: "google.protobuf.Timestamp" is not defined.
+generated:
+  src/gen/inventory.ts  10079 B  sha256=4452efb194ebcaf9

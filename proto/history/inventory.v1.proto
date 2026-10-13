@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+// Package giữ nguyên qua mọi revision: đổi package = đổi tên service trên wire = phá client cũ.
+package inventory;
+
+service InventoryService {
+  // Giữ hàng cho một order.
+  // Lỗi nghiệp vụ trả bằng gRPC status:
+  //   NOT_FOUND           – SKU không tồn tại
+  //   FAILED_PRECONDITION – thiếu hàng; trailer x-available-stock, x-requested
+  //   INVALID_ARGUMENT    – sku rỗng / quantity <= 0
+  rpc Reserve(ReserveRequest) returns (ReserveResponse);
+}
+
+message ReserveRequest {
+  string sku = 1;
+  int32 quantity = 2;
+}
+
+message ReserveResponse {
+  string reservation_id = 1;
+  string sku = 2;
+  int32 quantity = 3;
+}

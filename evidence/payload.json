@@ -1,0 +1,319 @@
+{
+  "takenAt": "2026-10-13T05:11:59.108Z",
+  "runsPerCase": 7,
+  "environment": {
+    "node": "v24.10.0",
+    "platform": "win32 x64",
+    "host": "127.0.0.1 (loopback, cùng máy)"
+  },
+  "method": {
+    "message": "REST: Buffer.byteLength của HTTP request/response body JSON. gRPC: độ dài Buffer trong requestSerialize/responseDeserialize (protobuf message, không gồm 5 byte length-prefix, frame HTTP/2, header).",
+    "wire": "TCP proxy (node:net) chen giữa client và Inventory, cộng byte đọc được trên socket mỗi chiều cho từng lời gọi. Gồm header HTTP/1.1 hoặc frame HTTP/2 + HPACK + trailers; không gồm TCP/IP header, không gồm bắt tay TCP. Cold = lời gọi đầu trên kết nối mới.",
+    "latency": "Loopback cùng máy. Nội bộ = durationMs client tự đo quanh lời gọi Inventory. End-to-end = fetch POST /orders tới Order API. 2 lần warm-up bỏ đi, sau đó N lần; reset fixture trước mỗi lần (không tính giờ)."
+  },
+  "rest": {
+    "du-hang": {
+      "outcome": "RESERVED",
+      "message": {
+        "request": {
+          "n": 7,
+          "median": 30,
+          "min": 30,
+          "max": 30
+        },
+        "response": {
+          "n": 7,
+          "median": 89,
+          "min": 89,
+          "max": 89
+        },
+        "unknownFieldBytes": null
+      },
+      "wire": {
+        "cold": {
+          "up": 298,
+          "down": 329,
+          "total": 627
+        },
+        "warmUp": {
+          "n": 7,
+          "median": 298,
+          "min": 298,
+          "max": 298
+        },
+        "warmDown": {
+          "n": 7,
+          "median": 329,
+          "min": 329,
+          "max": 329
+        },
+        "warmTotal": {
+          "n": 7,
+          "median": 627,
+          "min": 627,
+          "max": 627
+        }
+      }
+    },
+    "thieu-hang": {
+      "outcome": "OUT_OF_STOCK",
+      "message": {
+        "request": {
+          "n": 7,
+          "median": 31,
+          "min": 31,
+          "max": 31
+        },
+        "response": {
+          "n": 7,
+          "median": 53,
+          "min": 53,
+          "max": 53
+        },
+        "unknownFieldBytes": null
+      },
+      "wire": {
+        "cold": null,
+        "warmUp": {
+          "n": 7,
+          "median": 299,
+          "min": 299,
+          "max": 299
+        },
+        "warmDown": {
+          "n": 7,
+          "median": 294,
+          "min": 294,
+          "max": 294
+        },
+        "warmTotal": {
+          "n": 7,
+          "median": 593,
+          "min": 593,
+          "max": 593
+        }
+      }
+    },
+    "connections": 1
+  },
+  "grpcV2": {
+    "du-hang": {
+      "outcome": "RESERVED",
+      "message": {
+        "request": {
+          "n": 7,
+          "median": 11,
+          "min": 11,
+          "max": 11
+        },
+        "response": {
+          "n": 7,
+          "median": 67,
+          "min": 67,
+          "max": 67
+        },
+        "unknownFieldBytes": {
+          "n": 7,
+          "median": 0,
+          "min": 0,
+          "max": 0
+        }
+      },
+      "wire": {
+        "cold": {
+          "up": 246,
+          "down": 238,
+          "total": 484
+        },
+        "warmUp": {
+          "n": 7,
+          "median": 72,
+          "min": 72,
+          "max": 78
+        },
+        "warmDown": {
+          "n": 7,
+          "median": 106,
+          "min": 106,
+          "max": 106
+        },
+        "warmTotal": {
+          "n": 7,
+          "median": 178,
+          "min": 178,
+          "max": 184
+        }
+      }
+    },
+    "thieu-hang": {
+      "outcome": "OUT_OF_STOCK",
+      "message": {
+        "request": {
+          "n": 7,
+          "median": 11,
+          "min": 11,
+          "max": 11
+        },
+        "response": {
+          "n": 7,
+          "median": 0,
+          "min": 0,
+          "max": 0
+        },
+        "unknownFieldBytes": {
+          "n": 7,
+          "median": 0,
+          "min": 0,
+          "max": 0
+        }
+      },
+      "wire": {
+        "cold": null,
+        "warmUp": {
+          "n": 7,
+          "median": 72,
+          "min": 72,
+          "max": 72
+        },
+        "warmDown": {
+          "n": 7,
+          "median": 16,
+          "min": 16,
+          "max": 16
+        },
+        "warmTotal": {
+          "n": 7,
+          "median": 88,
+          "min": 88,
+          "max": 88
+        }
+      }
+    },
+    "connections": 1
+  },
+  "grpcV1": {
+    "du-hang": {
+      "outcome": "RESERVED",
+      "message": {
+        "request": {
+          "n": 7,
+          "median": 11,
+          "min": 11,
+          "max": 11
+        },
+        "response": {
+          "n": 7,
+          "median": 66,
+          "min": 66,
+          "max": 67
+        },
+        "unknownFieldBytes": {
+          "n": 7,
+          "median": 13,
+          "min": 13,
+          "max": 14
+        }
+      },
+      "wire": {
+        "cold": {
+          "up": 246,
+          "down": 238,
+          "total": 484
+        },
+        "warmUp": {
+          "n": 7,
+          "median": 72,
+          "min": 72,
+          "max": 78
+        },
+        "warmDown": {
+          "n": 7,
+          "median": 106,
+          "min": 105,
+          "max": 128
+        },
+        "warmTotal": {
+          "n": 7,
+          "median": 178,
+          "min": 177,
+          "max": 200
+        }
+      }
+    },
+    "thieu-hang": {
+      "outcome": "OUT_OF_STOCK",
+      "message": {
+        "request": {
+          "n": 7,
+          "median": 11,
+          "min": 11,
+          "max": 11
+        },
+        "response": {
+          "n": 7,
+          "median": 0,
+          "min": 0,
+          "max": 0
+        },
+        "unknownFieldBytes": {
+          "n": 7,
+          "median": 0,
+          "min": 0,
+          "max": 0
+        }
+      },
+      "wire": {
+        "cold": null,
+        "warmUp": {
+          "n": 7,
+          "median": 72,
+          "min": 72,
+          "max": 72
+        },
+        "warmDown": {
+          "n": 7,
+          "median": 16,
+          "min": 16,
+          "max": 16
+        },
+        "warmTotal": {
+          "n": 7,
+          "median": 88,
+          "min": 88,
+          "max": 88
+        }
+      }
+    },
+    "connections": 1
+  },
+  "latency": {
+    "internal": {
+      "rest": {
+        "n": 7,
+        "median": 1.7,
+        "min": 1,
+        "max": 2.3
+      },
+      "grpc": {
+        "n": 7,
+        "median": 2.4,
+        "min": 1.9,
+        "max": 3.1
+      }
+    },
+    "endToEnd": {
+      "rest": {
+        "n": 7,
+        "median": 4.09,
+        "min": 3.47,
+        "max": 6.01
+      },
+      "grpc": {
+        "n": 7,
+        "median": 3.22,
+        "min": 2.53,
+        "max": 4.02
+      }
+    }
+  }
+}

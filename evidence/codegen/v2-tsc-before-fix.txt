@@ -1,0 +1,4 @@
+# tsc sau khi sinh lại code v2, trước khi sửa source (2026-10-13T12:00:10+07:00)
+$ npx tsc -p .
+src/inventory/grpc-server.ts(59,22): error TS2741: Property 'reservationExpiresAt' is missing in type '{ reservationId: string; sku: string; quantity: number; }' but required in type 'ReserveResponse'.
+exit: 1

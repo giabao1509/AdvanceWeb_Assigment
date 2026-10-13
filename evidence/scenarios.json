@@ -1,0 +1,275 @@
+{
+  "takenAt": "2026-10-13T05:12:07.019Z",
+  "deadlineMs": 2000,
+  "slowMs": 5000,
+  "rows": [
+    {
+      "scenario": "thieu-hang",
+      "instance": "order-rest",
+      "transport": "REST",
+      "request": {
+        "sku": "SKU-001",
+        "quantity": 10
+      },
+      "sentAt": "2026-10-13T05:11:59.486Z",
+      "receivedAt": "2026-10-13T05:11:59.491Z",
+      "elapsedMs": 5,
+      "status": 409,
+      "body": {
+        "error": {
+          "code": "OUT_OF_STOCK",
+          "message": "Not enough stock to fulfil the order.",
+          "details": {
+            "sku": "SKU-001",
+            "requested": 10,
+            "available": 5
+          }
+        }
+      },
+      "internal": {
+        "outcome": "OUT_OF_STOCK",
+        "httpStatus": 409,
+        "durationMs": 1.2
+      }
+    },
+    {
+      "scenario": "thieu-hang",
+      "instance": "order-grpc-v1",
+      "transport": "gRPC (client cũ v1)",
+      "request": {
+        "sku": "SKU-001",
+        "quantity": 10
+      },
+      "sentAt": "2026-10-13T05:11:59.625Z",
+      "receivedAt": "2026-10-13T05:11:59.634Z",
+      "elapsedMs": 10,
+      "status": 409,
+      "body": {
+        "error": {
+          "code": "OUT_OF_STOCK",
+          "message": "Not enough stock to fulfil the order.",
+          "details": {
+            "sku": "SKU-001",
+            "requested": 10,
+            "available": 5
+          }
+        }
+      },
+      "internal": {
+        "outcome": "OUT_OF_STOCK",
+        "grpcCode": "FAILED_PRECONDITION",
+        "grpcDetails": "insufficient stock",
+        "durationMs": 3.2
+      }
+    },
+    {
+      "scenario": "thieu-hang",
+      "instance": "order-grpc-v2",
+      "transport": "gRPC (client mới v2)",
+      "request": {
+        "sku": "SKU-001",
+        "quantity": 10
+      },
+      "sentAt": "2026-10-13T05:11:59.752Z",
+      "receivedAt": "2026-10-13T05:11:59.757Z",
+      "elapsedMs": 5,
+      "status": 409,
+      "body": {
+        "error": {
+          "code": "OUT_OF_STOCK",
+          "message": "Not enough stock to fulfil the order.",
+          "details": {
+            "sku": "SKU-001",
+            "requested": 10,
+            "available": 5
+          }
+        }
+      },
+      "internal": {
+        "outcome": "OUT_OF_STOCK",
+        "grpcCode": "FAILED_PRECONDITION",
+        "grpcDetails": "insufficient stock",
+        "durationMs": 1.6
+      }
+    },
+    {
+      "scenario": "cham",
+      "instance": "order-rest",
+      "transport": "REST",
+      "request": {
+        "sku": "SKU-001",
+        "quantity": 2
+      },
+      "sentAt": "2026-10-13T05:11:59.954Z",
+      "receivedAt": "2026-10-13T05:12:01.966Z",
+      "elapsedMs": 2012,
+      "status": 504,
+      "body": {
+        "error": {
+          "code": "INVENTORY_TIMEOUT",
+          "message": "Inventory service did not respond in time."
+        }
+      },
+      "internal": {
+        "outcome": "TIMEOUT",
+        "error": "TimeoutError",
+        "cause": "The operation was aborted due to timeout",
+        "durationMs": 2005.7
+      }
+    },
+    {
+      "scenario": "cham",
+      "instance": "order-grpc-v1",
+      "transport": "gRPC (client cũ v1)",
+      "request": {
+        "sku": "SKU-001",
+        "quantity": 2
+      },
+      "sentAt": "2026-10-13T05:11:59.954Z",
+      "receivedAt": "2026-10-13T05:12:01.964Z",
+      "elapsedMs": 2010,
+      "status": 504,
+      "body": {
+        "error": {
+          "code": "INVENTORY_TIMEOUT",
+          "message": "Inventory service did not respond in time."
+        }
+      },
+      "internal": {
+        "outcome": "TIMEOUT",
+        "grpcCode": "DEADLINE_EXCEEDED",
+        "grpcDetails": "Deadline exceeded after 2.005s,LB pick: 0.001s,remote_addr=127.0.0.1:50051",
+        "durationMs": 2005.1
+      }
+    },
+    {
+      "scenario": "cham",
+      "instance": "order-grpc-v2",
+      "transport": "gRPC (client mới v2)",
+      "request": {
+        "sku": "SKU-001",
+        "quantity": 2
+      },
+      "sentAt": "2026-10-13T05:11:59.955Z",
+      "receivedAt": "2026-10-13T05:12:01.967Z",
+      "elapsedMs": 2012,
+      "status": 504,
+      "body": {
+        "error": {
+          "code": "INVENTORY_TIMEOUT",
+          "message": "Inventory service did not respond in time."
+        }
+      },
+      "internal": {
+        "outcome": "TIMEOUT",
+        "grpcCode": "DEADLINE_EXCEEDED",
+        "grpcDetails": "Deadline exceeded after 2.005s,LB pick: 0.001s,remote_addr=127.0.0.1:50051",
+        "durationMs": 2005.6
+      }
+    },
+    {
+      "scenario": "tat",
+      "instance": "order-rest",
+      "transport": "REST",
+      "request": {
+        "sku": "SKU-001",
+        "quantity": 2
+      },
+      "sentAt": "2026-10-13T05:12:05.650Z",
+      "receivedAt": "2026-10-13T05:12:05.654Z",
+      "elapsedMs": 4,
+      "status": 503,
+      "body": {
+        "error": {
+          "code": "INVENTORY_UNAVAILABLE",
+          "message": "Inventory service is unavailable. Please retry later."
+        }
+      },
+      "internal": {
+        "outcome": "UNAVAILABLE",
+        "error": "TypeError",
+        "cause": "ECONNREFUSED",
+        "durationMs": 1.7
+      }
+    },
+    {
+      "scenario": "tat",
+      "instance": "order-grpc-v1",
+      "transport": "gRPC (client cũ v1)",
+      "request": {
+        "sku": "SKU-001",
+        "quantity": 2
+      },
+      "sentAt": "2026-10-13T05:12:05.772Z",
+      "receivedAt": "2026-10-13T05:12:05.777Z",
+      "elapsedMs": 5,
+      "status": 503,
+      "body": {
+        "error": {
+          "code": "INVENTORY_UNAVAILABLE",
+          "message": "Inventory service is unavailable. Please retry later."
+        }
+      },
+      "internal": {
+        "outcome": "UNAVAILABLE",
+        "grpcCode": "UNAVAILABLE",
+        "grpcDetails": "No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:50051. Resolution note: ",
+        "durationMs": 1.5
+      }
+    },
+    {
+      "scenario": "tat",
+      "instance": "order-grpc-v2",
+      "transport": "gRPC (client mới v2)",
+      "request": {
+        "sku": "SKU-001",
+        "quantity": 2
+      },
+      "sentAt": "2026-10-13T05:12:05.898Z",
+      "receivedAt": "2026-10-13T05:12:05.906Z",
+      "elapsedMs": 8,
+      "status": 503,
+      "body": {
+        "error": {
+          "code": "INVENTORY_UNAVAILABLE",
+          "message": "Inventory service is unavailable. Please retry later."
+        }
+      },
+      "internal": {
+        "outcome": "UNAVAILABLE",
+        "grpcCode": "UNAVAILABLE",
+        "grpcDetails": "No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:50051. Resolution note: ",
+        "durationMs": 3.2
+      }
+    }
+  ],
+  "notes": {
+    "slow": {
+      "stockAfter": 5,
+      "stockExpected": 5,
+      "inventoryOutcomes": [
+        {
+          "event": "rest.Reserve",
+          "result": "SKIPPED_CALLER_CANCELLED",
+          "note": "skipped: caller cancelled",
+          "clientVersion": "order-api/2.0.0;proto=v2;source",
+          "durationMs": 5012.1
+        },
+        {
+          "event": "grpc.Reserve",
+          "result": "SKIPPED_CALLER_CANCELLED",
+          "note": "skipped: caller cancelled",
+          "clientVersion": "order-api/1.0.0;proto=v1;bundle=612d9e6b315e",
+          "durationMs": 5012
+        },
+        {
+          "event": "grpc.Reserve",
+          "result": "SKIPPED_CALLER_CANCELLED",
+          "note": "skipped: caller cancelled",
+          "clientVersion": "order-api/2.0.0;proto=v2;source",
+          "durationMs": 5011.8
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,141 @@
+{
+  "label": "live-order-grpc-v1",
+  "orderUrl": "http://127.0.0.1:3002",
+  "takenAt": "2026-10-13T05:11:53.893Z",
+  "cases": [
+    {
+      "case": "du-hang",
+      "title": "Đủ hàng (SKU-001 × 2)",
+      "request": {
+        "method": "POST",
+        "url": "/orders",
+        "body": {
+          "sku": "SKU-001",
+          "quantity": 2
+        }
+      },
+      "status": 201,
+      "contentType": "application/json; charset=utf-8",
+      "body": {
+        "orderId": "ord_69c9f99f-5c68-431f-ab86-c954916870f7",
+        "sku": "SKU-001",
+        "quantity": 2,
+        "status": "CONFIRMED",
+        "createdAt": "2026-10-13T05:11:53.881Z"
+      },
+      "normalized": {
+        "orderId": "<orderId>",
+        "sku": "SKU-001",
+        "quantity": 2,
+        "status": "CONFIRMED",
+        "createdAt": "<createdAt>"
+      },
+      "elapsedMs": 4
+    },
+    {
+      "case": "thieu-hang",
+      "title": "Thiếu hàng (SKU-001 × 10)",
+      "request": {
+        "method": "POST",
+        "url": "/orders",
+        "body": {
+          "sku": "SKU-001",
+          "quantity": 10
+        }
+      },
+      "status": 409,
+      "contentType": "application/json; charset=utf-8",
+      "body": {
+        "error": {
+          "code": "OUT_OF_STOCK",
+          "message": "Not enough stock to fulfil the order.",
+          "details": {
+            "sku": "SKU-001",
+            "requested": 10,
+            "available": 5
+          }
+        }
+      },
+      "normalized": {
+        "error": {
+          "code": "OUT_OF_STOCK",
+          "message": "Not enough stock to fulfil the order.",
+          "details": {
+            "sku": "SKU-001",
+            "requested": 10,
+            "available": 5
+          }
+        }
+      },
+      "elapsedMs": 3
+    },
+    {
+      "case": "sku-la",
+      "title": "SKU không tồn tại",
+      "request": {
+        "method": "POST",
+        "url": "/orders",
+        "body": {
+          "sku": "SKU-404",
+          "quantity": 1
+        }
+      },
+      "status": 404,
+      "contentType": "application/json; charset=utf-8",
+      "body": {
+        "error": {
+          "code": "SKU_NOT_FOUND",
+          "message": "SKU not found.",
+          "details": {
+            "sku": "SKU-404"
+          }
+        }
+      },
+      "normalized": {
+        "error": {
+          "code": "SKU_NOT_FOUND",
+          "message": "SKU not found.",
+          "details": {
+            "sku": "SKU-404"
+          }
+        }
+      },
+      "elapsedMs": 3
+    },
+    {
+      "case": "input-sai",
+      "title": "Input sai (quantity = 0)",
+      "request": {
+        "method": "POST",
+        "url": "/orders",
+        "body": {
+          "sku": "SKU-001",
+          "quantity": 0
+        }
+      },
+      "status": 400,
+      "contentType": "application/json; charset=utf-8",
+      "body": {
+        "error": {
+          "code": "VALIDATION_ERROR",
+          "message": "Request body must contain a non-empty 'sku' string and a positive integer 'quantity'.",
+          "details": {
+            "sku": "SKU-001",
+            "quantity": 0
+          }
+        }
+      },
+      "normalized": {
+        "error": {
+          "code": "VALIDATION_ERROR",
+          "message": "Request body must contain a non-empty 'sku' string and a positive integer 'quantity'.",
+          "details": {
+            "sku": "SKU-001",
+            "quantity": 0
+          }
+        }
+      },
+      "elapsedMs": 2
+    }
+  ]
+}

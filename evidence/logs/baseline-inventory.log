@@ -1,0 +1,10 @@
+{"ts":"2026-10-13T04:56:30.667Z","svc":"inventory","inst":"inventory","server":"inventory/1.0.0","event":"started","pid":26032,"build":{"file":"C:\\My Workspace\\HCMUS\\Web nâng cao\\Block3\\src\\shared\\build-info.ts","isBundle":false}}
+{"ts":"2026-10-13T04:56:30.675Z","svc":"inventory","inst":"inventory","server":"inventory/1.0.0","event":"rest.listening","port":5001}
+{"ts":"2026-10-13T04:56:32.559Z","svc":"inventory","inst":"inventory","server":"inventory/1.0.0","event":"admin.reset","stock":{"SKU-001":5}}
+{"ts":"2026-10-13T04:56:33.089Z","svc":"inventory","inst":"inventory","server":"inventory/1.0.0","event":"rest.Reserve","clientVersion":"order-api/1.0.0","sku":"SKU-001","quantity":2,"result":"RESERVED","httpStatus":201,"reservationId":"res_6607e2a1-b878-4c14-bf4e-7c9850b4ad69","stockLeft":3,"durationMs":0.1}
+{"ts":"2026-10-13T04:56:33.100Z","svc":"inventory","inst":"inventory","server":"inventory/1.0.0","event":"admin.reset","stock":{"SKU-001":5}}
+{"ts":"2026-10-13T04:56:33.104Z","svc":"inventory","inst":"inventory","server":"inventory/1.0.0","event":"rest.Reserve","clientVersion":"order-api/1.0.0","sku":"SKU-001","quantity":10,"result":"INSUFFICIENT_STOCK","httpStatus":409,"durationMs":0}
+{"ts":"2026-10-13T04:56:33.108Z","svc":"inventory","inst":"inventory","server":"inventory/1.0.0","event":"admin.reset","stock":{"SKU-001":5}}
+{"ts":"2026-10-13T04:56:33.111Z","svc":"inventory","inst":"inventory","server":"inventory/1.0.0","event":"rest.Reserve","clientVersion":"order-api/1.0.0","sku":"SKU-404","quantity":1,"result":"NOT_FOUND","httpStatus":404,"durationMs":0}
+{"ts":"2026-10-13T04:56:33.115Z","svc":"inventory","inst":"inventory","server":"inventory/1.0.0","event":"admin.reset","stock":{"SKU-001":5}}
+{"ts":"2026-10-13T04:56:33.118Z","svc":"inventory","inst":"inventory","server":"inventory/1.0.0","event":"admin.reset","stock":{"SKU-001":5}}

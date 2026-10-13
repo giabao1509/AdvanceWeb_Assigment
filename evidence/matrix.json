@@ -1,0 +1,785 @@
+{
+  "takenAt": "2026-10-13T05:11:54.496Z",
+  "matrix": [
+    {
+      "instance": "order-rest",
+      "client": "REST baseline",
+      "server": "server mới (v2) · REST",
+      "clientVersion": "order-api/2.0.0;proto=v2;source",
+      "at": "2026-10-13T05:11:53.862Z",
+      "status": 201,
+      "body": {
+        "orderId": "ord_4edb7b2b-d948-4e06-a5b8-e1494907bad9",
+        "sku": "SKU-001",
+        "quantity": 2,
+        "status": "CONFIRMED",
+        "createdAt": "2026-10-13T05:11:53.702Z"
+      },
+      "hasReservationExpiresAt": false,
+      "orderLog": {
+        "ts": "2026-10-13T05:11:53.702Z",
+        "svc": "order-api",
+        "inst": "order-rest",
+        "clientVersion": "order-api/2.0.0;proto=v2;source",
+        "event": "inventory.call",
+        "transport": "rest",
+        "method": "POST /reservations",
+        "target": "http://127.0.0.1:5001",
+        "deadlineMs": 2000,
+        "httpStatus": 201,
+        "reqBodyBytes": 30,
+        "resBodyBytes": 89,
+        "durationMs": 1.4,
+        "outcome": "RESERVED",
+        "reservationId": "res_ad559b9f-9263-4c49-8856-2fe675a2b4b9",
+        "_seq": 414,
+        "_src": "order-rest"
+      },
+      "inventoryLog": {
+        "ts": "2026-10-13T05:03:30.966Z",
+        "svc": "inventory",
+        "inst": "inventory-v2",
+        "server": "inventory/2.0.0;proto=v2",
+        "event": "grpc.Reserve",
+        "rpc": "/inventory.InventoryService/Reserve",
+        "clientVersion": "order-api/2.0.0;proto=v2;source",
+        "peer": "127.0.0.1:59671",
+        "deadline": "2026-10-13T05:03:32.966Z",
+        "sku": "SKU-001",
+        "quantity": 2,
+        "result": "RESERVED",
+        "grpcCode": 0,
+        "reservationId": "res_47f1e64a-b039-4059-b3bf-84b329003ec6",
+        "reservationExpiresAt": "2026-10-13T05:13:30.966Z",
+        "stockLeft": 3,
+        "durationMs": 0,
+        "_seq": 387,
+        "_src": "inventory-v2"
+      },
+      "vsBaseline": [
+        {
+          "case": "du-hang",
+          "identical": true,
+          "a": {
+            "status": 201,
+            "body": {
+              "orderId": "<orderId>",
+              "sku": "SKU-001",
+              "quantity": 2,
+              "status": "CONFIRMED",
+              "createdAt": "<createdAt>"
+            }
+          },
+          "b": {
+            "status": 201,
+            "body": {
+              "orderId": "<orderId>",
+              "sku": "SKU-001",
+              "quantity": 2,
+              "status": "CONFIRMED",
+              "createdAt": "<createdAt>"
+            }
+          }
+        },
+        {
+          "case": "thieu-hang",
+          "identical": true,
+          "a": {
+            "status": 409,
+            "body": {
+              "error": {
+                "code": "OUT_OF_STOCK",
+                "message": "Not enough stock to fulfil the order.",
+                "details": {
+                  "sku": "SKU-001",
+                  "requested": 10,
+                  "available": 5
+                }
+              }
+            }
+          },
+          "b": {
+            "status": 409,
+            "body": {
+              "error": {
+                "code": "OUT_OF_STOCK",
+                "message": "Not enough stock to fulfil the order.",
+                "details": {
+                  "sku": "SKU-001",
+                  "requested": 10,
+                  "available": 5
+                }
+              }
+            }
+          }
+        },
+        {
+          "case": "sku-la",
+          "identical": true,
+          "a": {
+            "status": 404,
+            "body": {
+              "error": {
+                "code": "SKU_NOT_FOUND",
+                "message": "SKU not found.",
+                "details": {
+                  "sku": "SKU-404"
+                }
+              }
+            }
+          },
+          "b": {
+            "status": 404,
+            "body": {
+              "error": {
+                "code": "SKU_NOT_FOUND",
+                "message": "SKU not found.",
+                "details": {
+                  "sku": "SKU-404"
+                }
+              }
+            }
+          }
+        },
+        {
+          "case": "input-sai",
+          "identical": true,
+          "a": {
+            "status": 400,
+            "body": {
+              "error": {
+                "code": "VALIDATION_ERROR",
+                "message": "Request body must contain a non-empty 'sku' string and a positive integer 'quantity'.",
+                "details": {
+                  "sku": "SKU-001",
+                  "quantity": 0
+                }
+              }
+            }
+          },
+          "b": {
+            "status": 400,
+            "body": {
+              "error": {
+                "code": "VALIDATION_ERROR",
+                "message": "Request body must contain a non-empty 'sku' string and a positive integer 'quantity'.",
+                "details": {
+                  "sku": "SKU-001",
+                  "quantity": 0
+                }
+              }
+            }
+          }
+        }
+      ],
+      "identicalToBaseline": true,
+      "onlyAdditiveVsBaseline": false,
+      "addedKeys": [],
+      "cases": [
+        {
+          "case": "du-hang",
+          "status": 201
+        },
+        {
+          "case": "thieu-hang",
+          "status": 409
+        },
+        {
+          "case": "sku-la",
+          "status": 404
+        },
+        {
+          "case": "input-sai",
+          "status": 400
+        }
+      ]
+    },
+    {
+      "instance": "order-grpc-v1",
+      "client": "client cũ (proto v1)",
+      "server": "server mới (v2)",
+      "clientVersion": "order-api/1.0.0;proto=v1;bundle=612d9e6b315e",
+      "at": "2026-10-13T05:11:54.067Z",
+      "status": 201,
+      "body": {
+        "orderId": "ord_da7f53cd-a9eb-4c6f-94cf-db25d60771ab",
+        "sku": "SKU-001",
+        "quantity": 2,
+        "status": "CONFIRMED",
+        "createdAt": "2026-10-13T05:11:53.902Z"
+      },
+      "hasReservationExpiresAt": false,
+      "orderLog": {
+        "ts": "2026-10-13T05:11:53.902Z",
+        "svc": "order-api",
+        "inst": "order-grpc-v1",
+        "clientVersion": "order-api/1.0.0;proto=v1;bundle=612d9e6b315e",
+        "event": "inventory.call",
+        "transport": "grpc",
+        "method": "/inventory.InventoryService/Reserve",
+        "target": "127.0.0.1:50051",
+        "deadlineMs": 2000,
+        "durationMs": 1.8,
+        "reqMsgBytes": 11,
+        "grpcCode": "OK",
+        "outcome": "RESERVED",
+        "reservationId": "res_de9edb83-f383-42b6-9f0a-fb972041764d",
+        "resMsgBytes": 67,
+        "unknownFieldBytes": 14,
+        "_seq": 440,
+        "_src": "order-grpc-v1"
+      },
+      "inventoryLog": {
+        "ts": "2026-10-13T05:11:53.901Z",
+        "svc": "inventory",
+        "inst": "inventory-v2",
+        "server": "inventory/2.0.0;proto=v2",
+        "event": "grpc.Reserve",
+        "rpc": "/inventory.InventoryService/Reserve",
+        "clientVersion": "order-api/1.0.0;proto=v1;bundle=612d9e6b315e",
+        "peer": "127.0.0.1:59670",
+        "deadline": "2026-10-13T05:11:55.900Z",
+        "sku": "SKU-001",
+        "quantity": 2,
+        "result": "RESERVED",
+        "grpcCode": 0,
+        "reservationId": "res_de9edb83-f383-42b6-9f0a-fb972041764d",
+        "reservationExpiresAt": "2026-10-13T05:21:53.901Z",
+        "stockLeft": 3,
+        "durationMs": 0,
+        "_seq": 439,
+        "_src": "inventory-v2"
+      },
+      "vsBaseline": [
+        {
+          "case": "du-hang",
+          "identical": true,
+          "a": {
+            "status": 201,
+            "body": {
+              "orderId": "<orderId>",
+              "sku": "SKU-001",
+              "quantity": 2,
+              "status": "CONFIRMED",
+              "createdAt": "<createdAt>"
+            }
+          },
+          "b": {
+            "status": 201,
+            "body": {
+              "orderId": "<orderId>",
+              "sku": "SKU-001",
+              "quantity": 2,
+              "status": "CONFIRMED",
+              "createdAt": "<createdAt>"
+            }
+          }
+        },
+        {
+          "case": "thieu-hang",
+          "identical": true,
+          "a": {
+            "status": 409,
+            "body": {
+              "error": {
+                "code": "OUT_OF_STOCK",
+                "message": "Not enough stock to fulfil the order.",
+                "details": {
+                  "sku": "SKU-001",
+                  "requested": 10,
+                  "available": 5
+                }
+              }
+            }
+          },
+          "b": {
+            "status": 409,
+            "body": {
+              "error": {
+                "code": "OUT_OF_STOCK",
+                "message": "Not enough stock to fulfil the order.",
+                "details": {
+                  "sku": "SKU-001",
+                  "requested": 10,
+                  "available": 5
+                }
+              }
+            }
+          }
+        },
+        {
+          "case": "sku-la",
+          "identical": true,
+          "a": {
+            "status": 404,
+            "body": {
+              "error": {
+                "code": "SKU_NOT_FOUND",
+                "message": "SKU not found.",
+                "details": {
+                  "sku": "SKU-404"
+                }
+              }
+            }
+          },
+          "b": {
+            "status": 404,
+            "body": {
+              "error": {
+                "code": "SKU_NOT_FOUND",
+                "message": "SKU not found.",
+                "details": {
+                  "sku": "SKU-404"
+                }
+              }
+            }
+          }
+        },
+        {
+          "case": "input-sai",
+          "identical": true,
+          "a": {
+            "status": 400,
+            "body": {
+              "error": {
+                "code": "VALIDATION_ERROR",
+                "message": "Request body must contain a non-empty 'sku' string and a positive integer 'quantity'.",
+                "details": {
+                  "sku": "SKU-001",
+                  "quantity": 0
+                }
+              }
+            }
+          },
+          "b": {
+            "status": 400,
+            "body": {
+              "error": {
+                "code": "VALIDATION_ERROR",
+                "message": "Request body must contain a non-empty 'sku' string and a positive integer 'quantity'.",
+                "details": {
+                  "sku": "SKU-001",
+                  "quantity": 0
+                }
+              }
+            }
+          }
+        }
+      ],
+      "identicalToBaseline": true,
+      "onlyAdditiveVsBaseline": false,
+      "addedKeys": [],
+      "cases": [
+        {
+          "case": "du-hang",
+          "status": 201
+        },
+        {
+          "case": "thieu-hang",
+          "status": 409
+        },
+        {
+          "case": "sku-la",
+          "status": 404
+        },
+        {
+          "case": "input-sai",
+          "status": 400
+        }
+      ]
+    },
+    {
+      "instance": "order-grpc-v2",
+      "client": "client mới (proto v2)",
+      "server": "server mới (v2)",
+      "clientVersion": "order-api/2.0.0;proto=v2;source",
+      "at": "2026-10-13T05:11:54.270Z",
+      "status": 201,
+      "body": {
+        "orderId": "ord_e4fc3faf-e9ed-4e24-ba13-74134af22b21",
+        "sku": "SKU-001",
+        "quantity": 2,
+        "status": "CONFIRMED",
+        "createdAt": "2026-10-13T05:11:54.114Z",
+        "reservationExpiresAt": "2026-10-13T05:21:54.112Z"
+      },
+      "hasReservationExpiresAt": true,
+      "orderLog": {
+        "ts": "2026-10-13T05:11:54.114Z",
+        "svc": "order-api",
+        "inst": "order-grpc-v2",
+        "clientVersion": "order-api/2.0.0;proto=v2;source",
+        "event": "inventory.call",
+        "transport": "grpc",
+        "method": "/inventory.InventoryService/Reserve",
+        "target": "127.0.0.1:50051",
+        "deadlineMs": 2000,
+        "durationMs": 2.3,
+        "reqMsgBytes": 11,
+        "grpcCode": "OK",
+        "outcome": "RESERVED",
+        "reservationId": "res_e58a35b1-671c-4255-96c2-41998645bc80",
+        "resMsgBytes": 66,
+        "unknownFieldBytes": 0,
+        "reservationExpiresAt": "2026-10-13T05:21:54.112Z",
+        "_seq": 466,
+        "_src": "order-grpc-v2"
+      },
+      "inventoryLog": {
+        "ts": "2026-10-13T05:11:54.112Z",
+        "svc": "inventory",
+        "inst": "inventory-v2",
+        "server": "inventory/2.0.0;proto=v2",
+        "event": "grpc.Reserve",
+        "rpc": "/inventory.InventoryService/Reserve",
+        "clientVersion": "order-api/2.0.0;proto=v2;source",
+        "peer": "127.0.0.1:59671",
+        "deadline": "2026-10-13T05:11:56.111Z",
+        "sku": "SKU-001",
+        "quantity": 2,
+        "result": "RESERVED",
+        "grpcCode": 0,
+        "reservationId": "res_e58a35b1-671c-4255-96c2-41998645bc80",
+        "reservationExpiresAt": "2026-10-13T05:21:54.112Z",
+        "stockLeft": 3,
+        "durationMs": 0.1,
+        "_seq": 465,
+        "_src": "inventory-v2"
+      },
+      "vsBaseline": [
+        {
+          "case": "du-hang",
+          "identical": false,
+          "a": {
+            "status": 201,
+            "body": {
+              "orderId": "<orderId>",
+              "sku": "SKU-001",
+              "quantity": 2,
+              "status": "CONFIRMED",
+              "createdAt": "<createdAt>"
+            }
+          },
+          "b": {
+            "status": 201,
+            "body": {
+              "orderId": "<orderId>",
+              "sku": "SKU-001",
+              "quantity": 2,
+              "status": "CONFIRMED",
+              "createdAt": "<createdAt>",
+              "reservationExpiresAt": "<reservationExpiresAt>"
+            }
+          }
+        },
+        {
+          "case": "thieu-hang",
+          "identical": true,
+          "a": {
+            "status": 409,
+            "body": {
+              "error": {
+                "code": "OUT_OF_STOCK",
+                "message": "Not enough stock to fulfil the order.",
+                "details": {
+                  "sku": "SKU-001",
+                  "requested": 10,
+                  "available": 5
+                }
+              }
+            }
+          },
+          "b": {
+            "status": 409,
+            "body": {
+              "error": {
+                "code": "OUT_OF_STOCK",
+                "message": "Not enough stock to fulfil the order.",
+                "details": {
+                  "sku": "SKU-001",
+                  "requested": 10,
+                  "available": 5
+                }
+              }
+            }
+          }
+        },
+        {
+          "case": "sku-la",
+          "identical": true,
+          "a": {
+            "status": 404,
+            "body": {
+              "error": {
+                "code": "SKU_NOT_FOUND",
+                "message": "SKU not found.",
+                "details": {
+                  "sku": "SKU-404"
+                }
+              }
+            }
+          },
+          "b": {
+            "status": 404,
+            "body": {
+              "error": {
+                "code": "SKU_NOT_FOUND",
+                "message": "SKU not found.",
+                "details": {
+                  "sku": "SKU-404"
+                }
+              }
+            }
+          }
+        },
+        {
+          "case": "input-sai",
+          "identical": true,
+          "a": {
+            "status": 400,
+            "body": {
+              "error": {
+                "code": "VALIDATION_ERROR",
+                "message": "Request body must contain a non-empty 'sku' string and a positive integer 'quantity'.",
+                "details": {
+                  "sku": "SKU-001",
+                  "quantity": 0
+                }
+              }
+            }
+          },
+          "b": {
+            "status": 400,
+            "body": {
+              "error": {
+                "code": "VALIDATION_ERROR",
+                "message": "Request body must contain a non-empty 'sku' string and a positive integer 'quantity'.",
+                "details": {
+                  "sku": "SKU-001",
+                  "quantity": 0
+                }
+              }
+            }
+          }
+        }
+      ],
+      "identicalToBaseline": false,
+      "onlyAdditiveVsBaseline": true,
+      "addedKeys": [
+        "reservationExpiresAt"
+      ],
+      "cases": [
+        {
+          "case": "du-hang",
+          "status": 201
+        },
+        {
+          "case": "thieu-hang",
+          "status": 409
+        },
+        {
+          "case": "sku-la",
+          "status": 404
+        },
+        {
+          "case": "input-sai",
+          "status": 400
+        }
+      ]
+    },
+    {
+      "instance": "order-grpc-v2-oldsrv",
+      "client": "client mới (proto v2)",
+      "server": "server cũ (v1)",
+      "clientVersion": "order-api/2.0.0;proto=v2;source",
+      "at": "2026-10-13T05:11:54.489Z",
+      "status": 201,
+      "body": {
+        "orderId": "ord_ce207cfe-18fb-4ea3-b9dd-80de6806e231",
+        "sku": "SKU-001",
+        "quantity": 2,
+        "status": "CONFIRMED",
+        "createdAt": "2026-10-13T05:11:54.328Z"
+      },
+      "hasReservationExpiresAt": false,
+      "orderLog": {
+        "ts": "2026-10-13T05:11:54.328Z",
+        "svc": "order-api",
+        "inst": "order-grpc-v2-oldsrv",
+        "clientVersion": "order-api/2.0.0;proto=v2;source",
+        "event": "inventory.call",
+        "transport": "grpc",
+        "method": "/inventory.InventoryService/Reserve",
+        "target": "127.0.0.1:50052",
+        "deadlineMs": 2000,
+        "durationMs": 2.2,
+        "reqMsgBytes": 11,
+        "grpcCode": "OK",
+        "outcome": "RESERVED",
+        "reservationId": "res_00ef14e7-e3c7-48a3-aeaf-6b10d5285315",
+        "resMsgBytes": 53,
+        "unknownFieldBytes": 0,
+        "reservationExpiresAt": "absent (field 4 not sent by server)",
+        "_seq": 492,
+        "_src": "order-grpc-v2-oldsrv"
+      },
+      "inventoryLog": {
+        "ts": "2026-10-13T05:11:54.328Z",
+        "svc": "inventory",
+        "inst": "inventory-v1",
+        "server": "inventory/1.0.0;proto=v1",
+        "event": "grpc.Reserve",
+        "rpc": "/inventory.InventoryService/Reserve",
+        "clientVersion": "order-api/2.0.0;proto=v2;source",
+        "peer": "127.0.0.1:59646",
+        "deadline": "2026-10-13T05:11:56.327Z",
+        "sku": "SKU-001",
+        "quantity": 2,
+        "result": "RESERVED",
+        "grpcCode": 0,
+        "reservationId": "res_00ef14e7-e3c7-48a3-aeaf-6b10d5285315",
+        "stockLeft": 3,
+        "durationMs": 0,
+        "_seq": 491,
+        "_src": "inventory-v1"
+      },
+      "vsBaseline": [
+        {
+          "case": "du-hang",
+          "identical": true,
+          "a": {
+            "status": 201,
+            "body": {
+              "orderId": "<orderId>",
+              "sku": "SKU-001",
+              "quantity": 2,
+              "status": "CONFIRMED",
+              "createdAt": "<createdAt>"
+            }
+          },
+          "b": {
+            "status": 201,
+            "body": {
+              "orderId": "<orderId>",
+              "sku": "SKU-001",
+              "quantity": 2,
+              "status": "CONFIRMED",
+              "createdAt": "<createdAt>"
+            }
+          }
+        },
+        {
+          "case": "thieu-hang",
+          "identical": true,
+          "a": {
+            "status": 409,
+            "body": {
+              "error": {
+                "code": "OUT_OF_STOCK",
+                "message": "Not enough stock to fulfil the order.",
+                "details": {
+                  "sku": "SKU-001",
+                  "requested": 10,
+                  "available": 5
+                }
+              }
+            }
+          },
+          "b": {
+            "status": 409,
+            "body": {
+              "error": {
+                "code": "OUT_OF_STOCK",
+                "message": "Not enough stock to fulfil the order.",
+                "details": {
+                  "sku": "SKU-001",
+                  "requested": 10,
+                  "available": 5
+                }
+              }
+            }
+          }
+        },
+        {
+          "case": "sku-la",
+          "identical": true,
+          "a": {
+            "status": 404,
+            "body": {
+              "error": {
+                "code": "SKU_NOT_FOUND",
+                "message": "SKU not found.",
+                "details": {
+                  "sku": "SKU-404"
+                }
+              }
+            }
+          },
+          "b": {
+            "status": 404,
+            "body": {
+              "error": {
+                "code": "SKU_NOT_FOUND",
+                "message": "SKU not found.",
+                "details": {
+                  "sku": "SKU-404"
+                }
+              }
+            }
+          }
+        },
+        {
+          "case": "input-sai",
+          "identical": true,
+          "a": {
+            "status": 400,
+            "body": {
+              "error": {
+                "code": "VALIDATION_ERROR",
+                "message": "Request body must contain a non-empty 'sku' string and a positive integer 'quantity'.",
+                "details": {
+                  "sku": "SKU-001",
+                  "quantity": 0
+                }
+              }
+            }
+          },
+          "b": {
+            "status": 400,
+            "body": {
+              "error": {
+                "code": "VALIDATION_ERROR",
+                "message": "Request body must contain a non-empty 'sku' string and a positive integer 'quantity'.",
+                "details": {
+                  "sku": "SKU-001",
+                  "quantity": 0
+                }
+              }
+            }
+          }
+        }
+      ],
+      "identicalToBaseline": true,
+      "onlyAdditiveVsBaseline": false,
+      "addedKeys": [],
+      "cases": [
+        {
+          "case": "du-hang",
+          "status": 201
+        },
+        {
+          "case": "thieu-hang",
+          "status": 409
+        },
+        {
+          "case": "sku-la",
+          "status": 404
+        },
+        {
+          "case": "input-sai",
+          "status": 400
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "builtAt": "2026-10-13T04:59:20.697Z",
+  "proto": "frozen/v1/proto/inventory.proto",
+  "protoSha256": "c0dc847181f3c94c312ed9031cd429d47c9d56a8af955163b41e6d25cc5cd468",
+  "bundles": {
+    "order-api-v1": {
+      "file": "builds/order-api-v1.cjs",
+      "sha256": "612d9e6b315eb7cf96567d8ccebeb2daefebc49b59f793b8d393316ef4a8bb15",
+      "bytes": 2136227
+    },
+    "inventory-v1": {
+      "file": "builds/inventory-v1.cjs",
+      "sha256": "3fdbc9f86062d14530fd1c80751a6b2bf92c19a7461fa29470b1bfa584bb8d1a",
+      "bytes": 2132917
+    }
+  }
+}
