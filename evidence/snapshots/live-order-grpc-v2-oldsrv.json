@@ -1,7 +1,7 @@
 {
   "label": "live-order-grpc-v2-oldsrv",
   "orderUrl": "http://127.0.0.1:3004",
-  "takenAt": "2026-10-13T05:11:54.319Z",
+  "takenAt": "2026-10-14T16:02:44.986Z",
   "cases": [
     {
       "case": "du-hang",
@@ -17,11 +17,11 @@
       "status": 201,
       "contentType": "application/json; charset=utf-8",
       "body": {
-        "orderId": "ord_ab99e91f-5c88-48e8-9c17-9f3cbdfb3639",
+        "orderId": "ord_8ee9e34f-12e2-44db-a878-2012b6c28246",
         "sku": "SKU-001",
         "quantity": 2,
         "status": "CONFIRMED",
-        "createdAt": "2026-10-13T05:11:54.293Z"
+        "createdAt": "2026-10-14T16:02:44.892Z"
       },
       "normalized": {
         "orderId": "<orderId>",
@@ -30,7 +30,7 @@
         "status": "CONFIRMED",
         "createdAt": "<createdAt>"
       },
-      "elapsedMs": 13
+      "elapsedMs": 85
     },
     {
       "case": "thieu-hang",
@@ -67,7 +67,7 @@
           }
         }
       },
-      "elapsedMs": 9
+      "elapsedMs": 32
     },
     {
       "case": "sku-la",
@@ -100,7 +100,7 @@
           }
         }
       },
-      "elapsedMs": 6
+      "elapsedMs": 18
     },
     {
       "case": "input-sai",
@@ -135,7 +135,7 @@
           }
         }
       },
-      "elapsedMs": 2
+      "elapsedMs": 10
     }
   ]
 }

@@ -1,0 +1,3 @@
+# Frozen bundles must retain the exact bytes recorded in builds/build-info.json.
+/builds/*.cjs -text
+/frozen/v1/proto/inventory.proto -text

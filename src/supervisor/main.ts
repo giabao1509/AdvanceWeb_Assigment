@@ -272,6 +272,11 @@ function readEvidence() {
 // ---------- http ----------
 const app = express();
 app.use(express.json());
+// Keep explanations in the report while the dashboard focuses on running flows.
+for (const file of ["REPORT.html", "REPORT.md", "README.md", "PLAN.md", "builds/build-info.json"]) {
+  app.get(`/${file}`, (_req, res) => res.sendFile(join(root, file)));
+}
+app.use("/evidence", express.static(join(root, "evidence")));
 app.use(express.static(join(root, "dashboard")));
 
 app.get("/api/state", (_req, res) => {

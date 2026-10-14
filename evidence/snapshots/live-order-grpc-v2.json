@@ -1,7 +1,7 @@
 {
   "label": "live-order-grpc-v2",
   "orderUrl": "http://127.0.0.1:3003",
-  "takenAt": "2026-10-13T05:11:54.105Z",
+  "takenAt": "2026-10-14T16:02:44.744Z",
   "cases": [
     {
       "case": "du-hang",
@@ -17,12 +17,12 @@
       "status": 201,
       "contentType": "application/json; charset=utf-8",
       "body": {
-        "orderId": "ord_ebdb56b2-b1d8-48a7-a20e-5dc1b96f654b",
+        "orderId": "ord_af967616-1927-40ae-a8e9-3d4c45d97ea5",
         "sku": "SKU-001",
         "quantity": 2,
         "status": "CONFIRMED",
-        "createdAt": "2026-10-13T05:11:54.083Z",
-        "reservationExpiresAt": "2026-10-13T05:21:54.081Z"
+        "createdAt": "2026-10-14T16:02:44.660Z",
+        "reservationExpiresAt": "2026-10-14T16:12:44.658Z"
       },
       "normalized": {
         "orderId": "<orderId>",
@@ -32,7 +32,7 @@
         "createdAt": "<createdAt>",
         "reservationExpiresAt": "<reservationExpiresAt>"
       },
-      "elapsedMs": 8
+      "elapsedMs": 16
     },
     {
       "case": "thieu-hang",
@@ -69,7 +69,7 @@
           }
         }
       },
-      "elapsedMs": 6
+      "elapsedMs": 29
     },
     {
       "case": "sku-la",
@@ -102,7 +102,7 @@
           }
         }
       },
-      "elapsedMs": 5
+      "elapsedMs": 16
     },
     {
       "case": "input-sai",
@@ -137,7 +137,7 @@
           }
         }
       },
-      "elapsedMs": 2
+      "elapsedMs": 9
     }
   ]
 }

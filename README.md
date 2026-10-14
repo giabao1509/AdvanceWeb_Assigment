@@ -16,7 +16,7 @@ npm install
 npm start            # supervisor chạy 6 process + dashboard
 ```
 
-Mở **http://localhost:4000**. Phím `1`–`5` chuyển giữa các tab Problem · Solution · Demo · Evidence · Trade-off.
+Mở **http://localhost:4000** để chọn client, chạy các luồng đặt hàng, điều khiển Inventory và xem kết quả/log. Nút **Đọc báo cáo** mở phần giải thích lựa chọn và kết quả tại [REPORT.html](REPORT.html); có bản [REPORT.md](REPORT.md) để đọc trong IDE.
 
 | Instance | Cổng | Ghi chú |
 |---|---|---|
@@ -29,7 +29,7 @@ Mở **http://localhost:4000**. Phím `1`–`5` chuyển giữa các tab Problem
 
 Log của từng process được ghi vào `logs/<instance>.log` (JSON lines), đồng thời hiển thị live trên dashboard.
 
-### Kịch bản demo gợi ý (tab Demo)
+### Kịch bản demo gợi ý
 
 1. Bấm **gRPC · client cũ** → *Đủ hàng ×2* → `POST /orders`. Kết quả 201. Panel nội bộ cho thấy lời gọi `gRPC /inventory.InventoryService/Reserve`, "13 B bị bỏ qua" (field 4), và Inventory log `gọi bởi order-api/1.0.0;proto=v1;bundle=…`.
 2. **gRPC · client mới**: body có thêm `reservationExpiresAt`.
@@ -63,8 +63,10 @@ node_modules/grpc-tools/bin/protoc \
 
 - `frozen/v1/`: bản chụp source và code sinh từ proto v1, lấy **trước** khi thêm field.
 - `builds/order-api-v1.cjs` và `builds/inventory-v1.cjs` được bundle bằng esbuild qua `npx tsx src/scripts/build-v1.ts`.
-- `builds/build-info.json` ghi sha256 của từng bundle và thời điểm build. Script build từ chối chạy lại nếu file này đã tồn tại.
+- `builds/build-info.json` ghi sha256 của từng bundle và thời điểm build. Mặc định script build từ chối chạy lại nếu file này đã tồn tại.
 - Lúc chạy, bundle tự tính sha256 của chính nó, ghi vào `clientVersion` và gửi metadata `x-client-version`. Dashboard so sánh hash lúc build, hash của file hiện tại và hash của process đang chạy.
+
+Bundle và proto v1 phải giữ nguyên byte, gồm cả newline LF. `.gitattributes` tắt chuyển đổi newline cho `builds/*.cjs` và `frozen/v1/proto/inventory.proto` để hash vẫn khớp manifest. Không chạy lại `build:v1` hoặc dùng `--force` khi chỉ muốn chạy demo/thu thập evidence.
 
 ## Tái tạo evidence (cần `npm start` đang chạy)
 
@@ -75,7 +77,9 @@ npm run evidence:scenarios    # thiếu hàng / chậm / tắt → evidence/scen
 npm run evidence:measure      # payload (message + wire) và latency → evidence/payload.json
 ```
 
-Các nút "Chạy lại" trong tab Evidence gọi đúng những script này.
+Chạy các lệnh trên lần lượt ở terminal thứ hai; tránh gửi request trên dashboard cùng lúc vì chúng dùng chung fixture.
+
+Ma trận ghép log đúng REST/gRPC, cùng `reservationId` và phiên bản caller, trong khoảng của response đơn vừa tạo. Nếu có nhiều lời gọi xen vào khoảng này hoặc không tìm được cặp log, script báo lỗi thay vì ghi bằng chứng không khớp. Bảng payload và cách đọc giới hạn phép đo nằm ở mục 8 của REPORT.md/REPORT.html; ghi chú developer experience nằm trong `evidence/dx-notes.md`.
 
 Hai mốc lịch sử **không** chạy lại được vì code đã chuyển sang bước sau:
 - `evidence/snapshots/baseline-rest.json` và `evidence/logs/baseline-*.log`: chụp ở giai đoạn baseline, khi chỉ có REST.

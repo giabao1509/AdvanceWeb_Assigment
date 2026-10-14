@@ -1,4 +1,4 @@
-/* Dashboard trình bày: REST → gRPC giữa Order API và Inventory. JS thuần, không build. */
+/* Dashboard chạy các luồng: REST → gRPC giữa Order API và Inventory. JS thuần, không build. */
 "use strict";
 
 // ---------------------------------------------------------------- constants
@@ -39,9 +39,7 @@ const S = {
   target: "order-grpc-v1",
   history: [],
   ctx: null,
-  evidence: null,
   hidden: new Set(),
-  scripts: {},
 };
 
 // ---------------------------------------------------------------- utils
@@ -49,10 +47,8 @@ const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const hhmmss = (iso) => { const d = new Date(iso); return isNaN(d) ? "" : d.toLocaleTimeString("vi-VN", { hour12: false }) + "." + String(d.getMilliseconds()).padStart(3, "0"); };
-const get = (obj, path) => path.split(".").reduce((o, k) => (o == null ? o : o[k]), obj);
 const statusClass = (s) => (s >= 500 ? "s5" : s >= 400 ? "s4" : s >= 200 ? "s2" : "");
 const tagFor = (s) => (s >= 500 ? "err" : s >= 400 ? "warn" : "ok");
-const range = (st, unit = "") => !st ? "–" : st.min === st.max ? `${st.median}${unit}` : `${st.median}${unit} <span class="muted">(${st.min}–${st.max})</span>`;
 async function api(path, opts = {}) {
   const r = await fetch(path, { method: opts.method || "GET", headers: { "content-type": "application/json" }, body: opts.body ? JSON.stringify(opts.body) : undefined });
   return r.json().catch(() => ({}));
@@ -76,22 +72,6 @@ function jsonHtml(obj, { newKeys = ["reservationExpiresAt"], dynKeys = ["orderId
     return html;
   }).join("\n");
 }
-
-// ---------------------------------------------------------------- tabs
-function setTab(name) {
-  $$(".tab-btn").forEach((b) => b.classList.toggle("active", b.dataset.tab === name));
-  $$(".tab").forEach((t) => t.classList.toggle("active", t.id === `tab-${name}`));
-  try { localStorage.setItem("tab", name); } catch {}
-  history.replaceState(null, "", `#${name}`);
-  if (name === "demo") requestAnimationFrame(drawWires);
-  if (name === "evidence" || name === "tradeoff") loadEvidence();
-}
-$$(".tab-btn").forEach((b) => b.addEventListener("click", () => setTab(b.dataset.tab)));
-document.addEventListener("keydown", (e) => {
-  if (e.target.matches("input, textarea") || e.ctrlKey || e.metaKey || e.altKey) return;
-  const map = { 1: "problem", 2: "solution", 3: "demo", 4: "evidence", 5: "tradeoff" };
-  if (map[e.key]) setTab(map[e.key]);
-});
 
 setInterval(() => { $("#clock").textContent = new Date().toLocaleTimeString("vi-VN", { hour12: false }); }, 250);
 
@@ -567,291 +547,20 @@ function connect() {
     if (S.logs.length > 3000) S.logs.shift();
     S.lastSeq = Math.max(S.lastSeq, e._seq);
     appendLog(e);
-    if (e._src?.startsWith("script:")) appendScriptLine(e);
     if (S.ctx) renderInternal();
   });
-  es.addEventListener("script", (ev) => {
-    const s = JSON.parse(ev.data);
-    S.scripts[s.name] = s;
-  });
   es.onerror = () => { $("#sysPill").innerHTML = `<span class="dot err"></span>mất kết nối supervisor`; };
-}
-
-// ---------------------------------------------------------------- evidence
-async function loadEvidence(force = false) {
-  if (S.evidence && !force) { renderEvidence(); return; }
-  S.evidence = await api("/api/evidence");
-  renderEvidence();
-}
-
-function appendScriptLine(e) {
-  const box = $(`#out-${e._src.split(":")[1]}`);
-  if (!box) return;
-  box.style.display = "block";
-  box.textContent += e.text + "\n";
-  box.scrollTop = box.scrollHeight;
-}
-async function runScript(name, btn) {
-  btn.disabled = true;
-  const label = btn.innerHTML;
-  btn.innerHTML = `<span class="spinner"></span> đang chạy…`;
-  const out = $(`#out-${name}`);
-  if (out) { out.textContent = ""; out.style.display = "block"; }
-  const r = await api(`/api/run/${name}`, { method: "POST" });
-  btn.innerHTML = label;
-  btn.disabled = false;
-  await loadEvidence(true);
-  const o2 = $(`#out-${name}`);
-  if (o2 && out) { o2.textContent = out.textContent + `\n[exit ${r.code}]`; o2.style.display = "block"; }
-}
-const runBtn = (name, text) => `<button class="btn" data-run="${name}"><span data-icon="play"></span>${text}</button>`;
-const outBox = (name) => `<pre class="code script-out" id="out-${name}" style="display:none"></pre>`;
-const section = (id, num, title, right, body) => `
-  <div class="card ev-section" id="${id}">
-    <div class="card-h"><h3><span class="muted mono" style="margin-right:8px">${num}</span>${title}</h3><div class="row">${right || ""}</div></div>
-    <div class="card-b">${body}</div>
-  </div>`;
-const verdict = (ok, yes, no, warn) => `<span class="verdict ${ok ? "ok" : warn ? "warn" : "err"}">${ok ? "✓" : warn ? "≈" : "✗"} ${ok ? yes : no}</span>`;
-
-function renderEvidence() {
-  const ev = S.evidence;
-  if (!ev) return;
-  const html = [evSnap(ev), evLogs(ev), evProto(ev), evOld(ev), evErr(ev), evPayload(ev), evDx(ev)].join("");
-  $("#evidence").innerHTML = html;
-  hydrateIcons($("#evidence"));
-  $$("#evidence [data-run]").forEach((b) => b.addEventListener("click", () => runScript(b.dataset.run, b)));
-  $$("#evidence .log-line").forEach((d) => d.addEventListener("click", () => {
-    const raw = d.querySelector(".log-raw");
-    if (raw) raw.remove(); else d.insertAdjacentHTML("beforeend", `<pre class="json log-raw">${jsonHtml(JSON.parse(d.dataset.raw))}</pre>`);
-  }));
-  fillTradeoff();
-}
-
-function evSnap(ev) {
-  const cmp = ev.snapshots["compare.baseline-rest__grpc-v1"];
-  const A = ev.snapshots["baseline-rest"];
-  const B = ev.snapshots["grpc-v1"];
-  let body = "";
-  if (cmp && A && B) {
-    body += `<div class="row" style="margin-bottom:12px">${verdict(cmp.identical, "Status + body giống hệt nhau ở mọi case", "Có khác biệt")}
-      <span class="src">evidence/snapshots/baseline-rest.json (${hhmmss(A.takenAt)}) ↔ grpc-v1.json (${hhmmss(B.takenAt)}) · đã thay orderId, createdAt</span></div>
-      <table><thead><tr><th style="width:160px">Case</th><th>Trước · REST baseline</th><th>Sau · gRPC</th><th style="width:90px">Kết quả</th></tr></thead><tbody>` +
-      cmp.rows.map((r) => `<tr><td><b>${esc(r.title)}</b></td>
-        <td><span class="tag ${tagFor(r.a.status)}">${r.a.status}</span><pre class="json" style="margin-top:6px">${jsonHtml(r.a.body)}</pre></td>
-        <td><span class="tag ${tagFor(r.b.status)}">${r.b.status}</span><pre class="json" style="margin-top:6px">${jsonHtml(r.b.body)}</pre></td>
-        <td>${r.identical ? `<span class="tag ok">giống</span>` : `<span class="tag err">khác</span>`}</td></tr>`).join("") + `</tbody></table>`;
-  }
-  const live = Object.entries(ev.snapshots).filter(([k]) => k.startsWith("compare.baseline-rest__live-"));
-  if (live.length) {
-    body += `<div class="sub-h">Chạy lại trên các instance đang chạy (so với baseline REST)</div><table><thead><tr><th>Instance</th><th>Chụp lúc</th><th>Kết quả</th></tr></thead><tbody>` +
-      live.map(([, c]) => `<tr><td class="mono inst-${esc(c.b.replace("live-", ""))}">${esc(c.b.replace("live-", ""))}</td><td class="mono small">${hhmmss(c.comparedAt)}</td>
-        <td>${c.identical ? `<span class="tag ok">giống hệt</span>` : c.onlyAdditive ? `<span class="tag new">chỉ thêm key: ${esc([...new Set(c.rows.flatMap((r) => r.addedKeys))].join(", "))}</span> <span class="small muted">(Order API v2, thay đổi additive đã chốt)</span>` : `<span class="tag err">khác</span>`}</td></tr>`).join("") + `</tbody></table>`;
-  }
-  return section("ev-snap", "E1", "Snapshot status &amp; body API ngoài · trước / sau", runBtn("snapshot", "Chạy lại snapshot"), body + outBox("snapshot"));
-}
-
-function logList(rows) {
-  return `<div class="log-box" style="height:auto;max-height:300px;border:1px solid var(--line);border-radius:10px">` + rows.map((e) => {
-    const { m, cls } = fmtLog(e);
-    const src = e.inst || e._src || "";
-    return `<div class="log-line ${cls}" data-raw="${esc(JSON.stringify(e))}"><span class="t">${hhmmss(e.ts)}</span><span class="i inst-${esc(src)}">${esc(src)}</span><span class="m">${m}</span></div>`;
-  }).join("") + `</div>`;
-}
-function evLogs(ev) {
-  const pick = (rows) => rows.filter((e) => ["order.request", "inventory.call", "order.response", "rest.Reserve", "grpc.Reserve"].includes(e.event));
-  const merge = (a, b) => pick([...a, ...b]).sort((x, y) => (x.ts < y.ts ? -1 : x.ts > y.ts ? 1 : 0));
-  const before = merge(ev.logs.baselineOrder, ev.logs.baselineInventory);
-  const after = merge(ev.logs.grpcOrder, ev.logs.grpcInventory);
-  const body = `<div class="two">
-    <div><div class="row" style="margin-bottom:6px"><span class="tag rest">TRƯỚC · REST</span><span class="src">evidence/logs/baseline-*.log</span></div>${logList(before)}</div>
-    <div><div class="row" style="margin-bottom:6px"><span class="tag grpc">SAU · gRPC</span><span class="src">evidence/logs/grpc-*.log</span></div>${logList(after)}</div>
-  </div><p class="small muted" style="margin:10px 0 0">Bấm một dòng để xem JSON gốc. Dòng <code>inventory.call</code> của Order API ghi <code>"transport":"rest"</code> / <code>"POST /reservations"</code> trước, và <code>"transport":"grpc"</code> / <code>/inventory.InventoryService/Reserve</code> sau.</p>`;
-  return section("ev-logs", "E2", "Log Order API &amp; Inventory: lời gọi nội bộ trước (REST) và sau (gRPC)", "", body);
-}
-
-function diffHtml(text) {
-  return `<div class="diff">` + (text || "").split(/\r?\n/).map((l) => {
-    const c = l.startsWith("+++") || l.startsWith("---") ? "meta" : l.startsWith("@@") ? "hunk" : l.startsWith("+") ? "add" : l.startsWith("-") ? "del" : "";
-    return `<div class="${c}">${esc(l) || " "}</div>`;
-  }).join("") + `</div>`;
-}
-function evProto(ev) {
-  const diff = ev.codegen["proto-v1-v2.diff"];
-  const removed = (diff || "").split(/\r?\n/).filter((l) => l.startsWith("-") && !l.startsWith("---")).length;
-  const block = (file, title) => ev.codegen[file] ? `<details ${file === "v2.txt" ? "open" : ""}><summary class="sub-h" style="cursor:pointer">${title} <span class="src">evidence/codegen/${file}</span></summary><pre class="code">${esc(ev.codegen[file])}</pre></details>` : "";
-  const body = `<div class="row" style="margin-bottom:10px">${verdict(removed === 0, "Chỉ thêm dòng: không đổi tag, kiểu hay nghĩa của field 1–3", `${removed} dòng bị xoá/sửa`)}<span class="src">diff -u proto/history/inventory.v1.proto proto/inventory.proto</span></div>
-    ${diffHtml(diff)}
-    ${block("v1.txt", "Sinh code v1")}
-    ${block("v2-attempt1-failed.txt", "Sinh code v2: lần 1 lỗi (thiếu well-known types)")}
-    ${block("v2.txt", "Sinh code v2: thành công")}
-    ${block("v2-tsc-before-fix.txt", "tsc ngay sau khi sinh lại, trước khi sửa server")}`;
-  return section("ev-proto", "E3", "Diff proto trước / sau khi thêm field &amp; output sinh code", "", body);
-}
-
-function evOld(ev) {
-  const f = ev.frozen;
-  let body = "";
-  if (f) {
-    const b = f.bundles["order-api-v1"];
-    const ok = b.unchanged && b.runningSha256 === b.sha256;
-    body += `<div class="row" style="margin-bottom:10px">${verdict(ok, "Bundle client cũ chưa build lại: hash lúc chạy = hash lúc build", "Hash không khớp")}</div>
-      <div class="two"><dl class="kv">
-        <dt>Build lúc</dt><dd>${esc(f.builtAt)}</dd>
-        <dt>Từ proto</dt><dd>${esc(f.proto)}</dd>
-        <dt>proto sha256</dt><dd>${esc(f.protoSha256)}</dd>
-        <dt>Cách build</dt><dd>esbuild bundle frozen/v1/src/order-api/main.ts → builds/order-api-v1.cjs (src/scripts/build-v1.ts, từ chối build lại)</dd>
-      </dl><dl class="kv">
-        <dt>sha256 lúc build</dt><dd>${esc(b.sha256)}</dd>
-        <dt>sha256 file hiện tại</dt><dd>${esc(b.currentSha256)} ${b.unchanged ? "✓" : "✗"}</dd>
-        <dt>sha256 process đang chạy</dt><dd>${esc(b.runningSha256 ?? "(không chạy)")} ${b.runningSha256 === b.sha256 ? "✓" : "✗"}</dd>
-        <dt>Kích thước</dt><dd>${(b.bytes / 1024).toFixed(0)} KiB</dd>
-      </dl></div>`;
-  }
-  const m = ev.matrix;
-  if (m) {
-    body += `<div class="sub-h">Ma trận client × server <span class="src">evidence/matrix.json · ${hhmmss(m.takenAt)}</span></div>
-      <table><thead><tr><th>Client</th><th>Server</th><th class="num">Status</th><th>reservationExpiresAt (body ngoài)</th><th class="num">Message nhận</th><th class="num">Byte bị bỏ qua</th><th>Inventory log: gọi bởi</th></tr></thead><tbody>` +
-      m.matrix.map((r) => `<tr>
-        <td><b>${esc(r.client)}</b><div class="mono small muted">${esc(r.clientVersion)}</div></td>
-        <td>${esc(r.server)}</td>
-        <td class="num"><span class="tag ${tagFor(r.status)}">${r.status}</span></td>
-        <td>${r.hasReservationExpiresAt ? `<span class="tag new">${esc(r.body.reservationExpiresAt)}</span>` : `<span class="tag">vắng → bỏ key</span>`}</td>
-        <td class="num mono">${r.orderLog?.resMsgBytes != null ? `${r.orderLog.resMsgBytes} B` : r.orderLog?.resBodyBytes != null ? `${r.orderLog.resBodyBytes} B JSON` : "–"}</td>
-        <td class="num mono">${r.orderLog?.unknownFieldBytes > 0 ? `<span class="tag new">${r.orderLog.unknownFieldBytes} B</span>` : r.orderLog?.unknownFieldBytes ?? "–"}</td>
-        <td class="mono small">${esc(r.inventoryLog?.clientVersion ?? "–")}<div class="muted">${esc(r.inventoryLog?.event ?? "")} → ${esc(r.inventoryLog?.result ?? "")}</div></td></tr>`).join("") +
-      `</tbody></table><p class="small muted" style="margin:10px 0 0">Client cũ nhận nhiều byte hơn những gì nó hiểu được. Phần chênh là field 4, được decoder bỏ qua, và flow vẫn hoàn tất với 201. Client mới gọi server cũ thì không nhận được tag 4, nên Order API v2 bỏ key thay vì trả <code>1970-01-01</code>.</p>`;
-  }
-  return section("ev-old", "E4", "Client cũ (build từ proto v1, chưa build lại) với server mới", runBtn("snapshot", "Chạy lại ma trận"), body);
-}
-
-function evErr(ev) {
-  const s = ev.scenarios;
-  if (!s) return section("ev-err", "E5", "Thiếu hàng · Inventory chậm · Inventory tắt", runBtn("scenarios", "Chạy kịch bản lỗi (~10 s)"), `<div class="empty">Chưa có dữ liệu.</div>${outBox("scenarios")}`);
-  const name = { "thieu-hang": "Thiếu hàng", cham: "Inventory chậm 5 s", tat: "Inventory tắt" };
-  const slowOk = s.rows.filter((r) => r.scenario === "cham").every((r) => r.status === 504 && r.elapsedMs < 2600);
-  const downOk = s.rows.filter((r) => r.scenario === "tat").every((r) => r.status === 503);
-  const oosOk = s.rows.filter((r) => r.scenario === "thieu-hang").every((r) => r.status === 409);
-  const body = `<div class="row" style="margin-bottom:10px">
-      ${verdict(oosOk, "Thiếu hàng → 409, không phải 500", "Sai mapping")}
-      ${verdict(slowOk, `Chậm → 504 sau ~${s.deadlineMs} ms`, "Không đúng deadline")}
-      ${verdict(downOk, "Tắt → 503 ngay", "Sai mapping")}
-      ${verdict(s.notes?.slow?.stockAfter === 5, `Không giữ hàng ma (tồn sau = ${s.notes?.slow?.stockAfter})`, `Tồn sau = ${s.notes?.slow?.stockAfter}`)}
-      <span class="src">evidence/scenarios.json · ${hhmmss(s.takenAt)}</span></div>
-    <table><thead><tr><th>Kịch bản</th><th>Client</th><th>Gửi</th><th>Nhận</th><th class="num">Thời gian</th><th class="num">Status</th><th>Response ngoài</th><th>Nội bộ</th></tr></thead><tbody>` +
-    s.rows.map((r) => `<tr><td><b>${name[r.scenario] ?? r.scenario}</b></td><td class="small">${esc(r.transport)}</td>
-      <td class="mono small">${hhmmss(r.sentAt)}</td><td class="mono small">${hhmmss(r.receivedAt)}</td>
-      <td class="num mono">${r.elapsedMs} ms</td><td class="num"><span class="tag ${tagFor(r.status)}">${r.status}</span></td>
-      <td class="mono small">${esc(r.body?.error?.code)}<div class="muted">${esc(r.body?.error?.message)}</div></td>
-      <td class="mono small">${esc(r.internal?.grpcCode ?? (r.internal?.httpStatus ? "HTTP " + r.internal.httpStatus : r.internal?.cause ?? ""))}<div class="muted">${esc((r.internal?.grpcDetails ?? r.internal?.error ?? "").slice(0, 80))}</div></td></tr>`).join("") +
-    `</tbody></table>
-    <div class="sub-h">Phía Inventory sau khi ngủ 5 s</div>
-    <table><thead><tr><th>Event</th><th>Gọi bởi</th><th>Kết quả</th><th class="num">Xử lý</th></tr></thead><tbody>` +
-    (s.notes?.slow?.inventoryOutcomes ?? []).map((o) => `<tr><td class="mono">${esc(o.event)}</td><td class="mono small">${esc(o.clientVersion)}</td><td><span class="tag err">${esc(o.result)}</span> <span class="small muted">${esc(o.note)}</span></td><td class="num mono">${o.durationMs} ms</td></tr>`).join("") +
-    `</tbody></table>${outBox("scenarios")}`;
-  return section("ev-err", "E5", "Thiếu hàng · Inventory chậm · Inventory tắt", runBtn("scenarios", "Chạy lại (~10 s)"), body);
-}
-
-function bars(title, items, unit = "B") {
-  const max = Math.max(...items.map((i) => i.v || 0), 1);
-  return `<div class="bar-group"><h4>${title}</h4>` + items.map((i) => `
-    <div class="bar-row"><span>${i.label}</span><div class="bar-track"><div class="bar-fill ${i.cls}" style="width:${((i.v || 0) / max) * 100}%"></div></div><span class="bar-val">${i.v} ${unit}</span></div>`).join("") + `</div>`;
-}
-function evPayload(ev) {
-  const p = ev.payload;
-  if (!p) return section("ev-payload", "E6", "Payload chặng nội bộ &amp; thời gian phản hồi", runBtn("measure", "Đo"), `<div class="empty">Chưa đo.</div>${outBox("measure")}`);
-  const R = p.rest, G = p.grpcV2, G1 = p.grpcV1;
-  const msgRow = (label, r, g, g1, note = "") => `<tr><td>${label}</td><td class="num mono">${range(r)}</td><td class="num mono">${range(g)}</td><td class="num mono">${range(g1)}</td><td class="small muted">${note}</td></tr>`;
-  const wireRow = (label, r, g) => `<tr><td>${label}</td><td class="num mono">${r}</td><td class="num mono">${g}</td></tr>`;
-  const body = `
-    <div class="sub-h" style="margin-top:0">Bảng 1 · Message đã serialize (đơn vị: byte)</div>
-    <p class="small muted" style="margin:0 0 8px">${esc(p.method.message)}</p>
-    <table><thead><tr><th>Lời gọi</th><th class="num">REST · JSON body</th><th class="num">gRPC v2 · protobuf</th><th class="num">gRPC client v1 nhận</th><th>Ghi chú</th></tr></thead><tbody>
-      ${msgRow("Đủ hàng · request", R["du-hang"].message.request, G["du-hang"].message.request, G1["du-hang"].message.request)}
-      ${msgRow("Đủ hàng · response", R["du-hang"].message.response, G["du-hang"].message.response, G1["du-hang"].message.response, `gRPC có thêm Timestamp (tag 4). Client v1 bỏ qua ${range(G1["du-hang"].message.unknownFieldBytes)} B.`)}
-      ${msgRow("Thiếu hàng · request", R["thieu-hang"].message.request, G["thieu-hang"].message.request, G1["thieu-hang"].message.request)}
-      ${msgRow("Thiếu hàng · response", R["thieu-hang"].message.response, G["thieu-hang"].message.response, G1["thieu-hang"].message.response, "gRPC: lỗi nằm trong status + trailer, không có message")}
-    </tbody></table>
-
-    <div class="sub-h">Bảng 2 · Wire bytes trên socket (đơn vị: byte, ↑ Order→Inventory, ↓ ngược lại)</div>
-    <p class="small muted" style="margin:0 0 8px">${esc(p.method.wire)}</p>
-    <div class="two"><table><thead><tr><th>Lời gọi</th><th class="num">REST · HTTP/1.1</th><th class="num">gRPC · HTTP/2</th></tr></thead><tbody>
-      ${wireRow("Đủ hàng · cold (kết nối mới) ↑+↓", R["du-hang"].wire.cold.total, G["du-hang"].wire.cold.total)}
-      ${wireRow("Đủ hàng · ấm ↑", range(R["du-hang"].wire.warmUp), range(G["du-hang"].wire.warmUp))}
-      ${wireRow("Đủ hàng · ấm ↓", range(R["du-hang"].wire.warmDown), range(G["du-hang"].wire.warmDown))}
-      ${wireRow("<b>Đủ hàng · ấm ↑+↓</b>", range(R["du-hang"].wire.warmTotal), range(G["du-hang"].wire.warmTotal))}
-      ${wireRow("Thiếu hàng · ấm ↑", range(R["thieu-hang"].wire.warmUp), range(G["thieu-hang"].wire.warmUp))}
-      ${wireRow("Thiếu hàng · ấm ↓", range(R["thieu-hang"].wire.warmDown), range(G["thieu-hang"].wire.warmDown))}
-      ${wireRow("<b>Thiếu hàng · ấm ↑+↓</b>", range(R["thieu-hang"].wire.warmTotal), range(G["thieu-hang"].wire.warmTotal))}
-    </tbody></table>
-    <div class="bars">
-      ${bars("Message: response đủ hàng", [{ label: "REST", v: R["du-hang"].message.response.median, cls: "rest" }, { label: "gRPC", v: G["du-hang"].message.response.median, cls: "grpc" }])}
-      ${bars("Wire: đủ hàng, ấm, ↑+↓ (median)", [{ label: "REST", v: R["du-hang"].wire.warmTotal.median, cls: "rest" }, { label: "gRPC", v: G["du-hang"].wire.warmTotal.median, cls: "grpc" }])}
-      ${bars("Wire: kết nối mới, ↑+↓", [{ label: "REST", v: R["du-hang"].wire.cold.total, cls: "rest" }, { label: "gRPC", v: G["du-hang"].wire.cold.total, cls: "grpc" }])}
-    </div></div>
-
-    <div class="sub-h">Bảng 3 · Thời gian phản hồi (ms, median và min–max, N = ${p.runsPerCase})</div>
-    <p class="small muted" style="margin:0 0 8px">${esc(p.method.latency)}</p>
-    <table><thead><tr><th>Đại lượng</th><th class="num">REST</th><th class="num">gRPC</th></tr></thead><tbody>
-      <tr><td>Nội bộ: Order API → Inventory → Order API</td><td class="num mono">${range(p.latency.internal.rest, " ms")}</td><td class="num mono">${range(p.latency.internal.grpc, " ms")}</td></tr>
-      <tr><td>End-to-end: browser POST /orders</td><td class="num mono">${range(p.latency.endToEnd.rest, " ms")}</td><td class="num mono">${range(p.latency.endToEnd.grpc, " ms")}</td></tr>
-    </tbody></table>
-    <p class="src" style="margin-top:8px">evidence/payload.json · ${esc(p.takenAt)} · ${esc(p.environment.node)} · ${esc(p.environment.platform)} · ${esc(p.environment.host)}</p>
-    ${outBox("measure")}`;
-  return section("ev-payload", "E6", "Payload chặng nội bộ &amp; thời gian phản hồi", runBtn("measure", "Đo lại"), body);
-}
-
-function md(text) {
-  const inline = (s) => esc(s).replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>");
-  let out = "", inList = false;
-  for (const line of (text || "").split(/\r?\n/)) {
-    if (/^- /.test(line)) { if (!inList) { out += "<ul>"; inList = true; } out += `<li>${inline(line.slice(2))}</li>`; continue; }
-    if (inList) { out += "</ul>"; inList = false; }
-    if (/^## /.test(line)) out += `<h2>${inline(line.slice(3))}</h2>`;
-    else if (/^# /.test(line)) out += `<h1>${inline(line.slice(2))}</h1>`;
-    else if (line.trim()) out += `<p>${inline(line)}</p>`;
-  }
-  if (inList) out += "</ul>";
-  return out;
-}
-function evDx(ev) {
-  return section("ev-dx", "E7", "Developer experience · quan sát thật", `<span class="src">evidence/dx-notes.md</span>`, `<div class="md">${md(ev.dx)}</div>`);
-}
-
-// ---------------------------------------------------------------- trade-off numbers + criteria
-function fillTradeoff() {
-  const ev = S.evidence;
-  $$("[data-ev]").forEach((el) => {
-    const v = get(ev, el.dataset.ev);
-    el.textContent = v == null ? "–" : el.dataset.ev.endsWith("takenAt") ? new Date(v).toLocaleString("vi-VN") : v;
-  });
-  const cmp = ev.snapshots?.["compare.baseline-rest__grpc-v1"];
-  const grpcLog = ev.logs?.grpcOrder?.some((l) => l.event === "inventory.call" && l.transport === "grpc");
-  const diff = ev.codegen?.["proto-v1-v2.diff"] || "";
-  const removed = diff.split(/\r?\n/).filter((l) => l.startsWith("-") && !l.startsWith("---")).length;
-  const addedTag4 = /\+\s*google\.protobuf\.Timestamp reservation_expires_at = 4;/.test(diff);
-  const b = ev.frozen?.bundles?.["order-api-v1"];
-  const oldRow = ev.matrix?.matrix?.find((r) => r.instance === "order-grpc-v1");
-  const newRow = ev.matrix?.matrix?.find((r) => r.instance === "order-grpc-v2");
-  const sc = ev.scenarios?.rows || [];
-  const finite = sc.length && sc.filter((r) => r.scenario !== "thieu-hang").every((r) => r.elapsedMs < 3000 && [503, 504].includes(r.status));
-  const items = [
-    [cmp?.identical, "Status và body của API ngoài giống nhau trước và sau khi đổi, ở cả đường đủ hàng lẫn thiếu hàng", "E1"],
-    [grpcLog, "Log của Order API cho thấy lời gọi nội bộ là gRPC (/inventory.InventoryService/Reserve)", "E2"],
-    [removed === 0 && addedTag4, "Field mới dùng tag mới (4), các field cũ giữ nguyên", "E3"],
-    [b?.unchanged && b?.runningSha256 === b?.sha256 && oldRow?.status === 201, "Client build từ proto cũ, chưa build lại, hoàn tất flow với server mới", "E4"],
-    [newRow?.hasReservationExpiresAt, "Client mới với server mới đọc đúng field mới", "E4"],
-    [finite, "Khi Inventory chậm hoặc tắt, request kết thúc trong thời gian hữu hạn (504 / 503)", "E5"],
-    [!!ev.payload, "Số liệu nộp là kết quả chạy thật (evidence/*.json kèm timestamp)", "E6"],
-  ];
-  $("#criteria").innerHTML = items.map(([ok, t, ref]) => `<li><span class="ck ${ok ? "ok" : ok === false ? "err" : "wait"}">${ok ? "✓" : ok === false ? "✗" : "…"}</span><div>${t} <span class="tag">${ref}</span></div></li>`).join("");
 }
 
 // ---------------------------------------------------------------- boot
 hydrateIcons();
 buildTopology();
 buildFilters();
-try { S.target = localStorage.getItem("target") || S.target; } catch {}
-let initial = location.hash.slice(1);
-try { initial = initial || localStorage.getItem("tab"); } catch {}
-setTab(["problem", "solution", "demo", "evidence", "tradeoff"].includes(initial) ? initial : "problem");
+try {
+  const savedTarget = localStorage.getItem("target");
+  if (ORDERS.some((order) => order.name === savedTarget)) S.target = savedTarget;
+} catch {}
+// Old bookmarks and stored tabs now open the single demo screen.
+if (location.hash) history.replaceState(null, "", location.pathname + location.search);
+updateTopology();
 connect();
