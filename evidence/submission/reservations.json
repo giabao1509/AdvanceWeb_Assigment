@@ -1,0 +1,1743 @@
+{
+  "runId": "a968e249-c062-4e3c-98a0-2061c8a13020",
+  "startedAt": "2026-10-15T16:16:22.536Z",
+  "generatedAt": "2026-10-15T16:18:27.035Z",
+  "data": [
+    {
+      "id": "B01",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-B01-9f3cfb07",
+      "status": 201,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 20
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 0
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 18
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 1
+      }
+    },
+    {
+      "id": "B02",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-B02-53f3933b",
+      "status": 409,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 18
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 1
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 18
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 1
+      }
+    },
+    {
+      "id": "B03",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-B03-b2411f5d",
+      "status": 201,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 18
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 1
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 17
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 2
+      }
+    },
+    {
+      "id": "B04",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-B04-0b88d8fc",
+      "status": 201,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 17
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 2
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 16
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 3
+      }
+    },
+    {
+      "id": "S01",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-S01-449be84d",
+      "status": 401,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 20
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 0
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 20
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 0
+      }
+    },
+    {
+      "id": "S02",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-S02-f61babf3",
+      "status": 401,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 20
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 0
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 20
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 0
+      }
+    },
+    {
+      "id": "S03",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-S03-98e2da8a",
+      "status": 401,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 20
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 0
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 20
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 0
+      }
+    },
+    {
+      "id": "S04-1",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-S04-1-09d1393e",
+      "status": 201,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 20
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 0
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 19
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 1
+      }
+    },
+    {
+      "id": "S04-2",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-S04-2-26fc931d",
+      "status": 401,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 19
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 1
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 19
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 1
+      }
+    },
+    {
+      "id": "S05",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-S05-bc151724",
+      "status": 401,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 19
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 1
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 19
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 1
+      }
+    },
+    {
+      "id": "S06",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-S06-e765c16f",
+      "status": 401,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 19
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 1
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 19
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 1
+      }
+    },
+    {
+      "id": "S07",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-S07-e6d2aa48",
+      "status": 201,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 19
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 1
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 18
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 2
+      }
+    },
+    {
+      "id": "S08",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-S08-4fff6092",
+      "status": 409,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 18
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 2
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 18
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 2
+      }
+    },
+    {
+      "id": "S09",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-S09-31508f4c",
+      "status": 401,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 18
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 2
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 18
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 2
+      }
+    },
+    {
+      "id": "S10-2",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-S10-2-3679e429",
+      "status": 201,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 18
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 2
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 17
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 3
+      }
+    },
+    {
+      "id": "S10-1",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-S10-1-b2755d8d",
+      "status": 401,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 18
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 2
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 17
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 3
+      }
+    },
+    {
+      "id": "S11",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-S11-21b40b15",
+      "status": 201,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 17
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 3
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 16
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 4
+      }
+    },
+    {
+      "id": "S12",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-S12-1cada5ac",
+      "status": 401,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 16
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 4
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 16
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 4
+      }
+    },
+    {
+      "id": "S13",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-S13-41f8faff",
+      "status": 401,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 16
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 4
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 16
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 4
+      }
+    },
+    {
+      "id": "S14",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-S14-25fa22fe",
+      "status": 401,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 16
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 4
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 16
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 4
+      }
+    },
+    {
+      "id": "S15",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-S15-7b201ef4",
+      "status": 401,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 16
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 4
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 16
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 4
+      }
+    },
+    {
+      "id": "S16",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-S16-d72557bf",
+      "status": 401,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 16
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 4
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 16
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 4
+      }
+    },
+    {
+      "id": "J01",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-J01-ef6875ab",
+      "status": 200,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 16
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 4
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 16
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 4
+      }
+    },
+    {
+      "id": "J02",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-J02-d26aa32a",
+      "status": 401,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 16
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 4
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 16
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 4
+      }
+    },
+    {
+      "id": "J03",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-J03-e0a90585",
+      "status": 401,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 16
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 4
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 16
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 4
+      }
+    },
+    {
+      "id": "J04",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-J04-94bbee5a",
+      "status": 401,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 16
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 4
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 16
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 4
+      }
+    },
+    {
+      "id": "J05",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-J05-d3818133",
+      "status": 401,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 16
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 4
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 16
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 4
+      }
+    },
+    {
+      "id": "J06",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-J06-c53a2929",
+      "status": 401,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 16
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 4
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 16
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 4
+      }
+    },
+    {
+      "id": "J07",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-J07-9d9115d3",
+      "status": 401,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 16
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 4
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 16
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 4
+      }
+    },
+    {
+      "id": "J08",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-J08-9c1a3360",
+      "status": 401,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 16
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 4
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 16
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 4
+      }
+    },
+    {
+      "id": "J09",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-J09-a52c5976",
+      "status": 401,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 16
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 4
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 16
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 4
+      }
+    },
+    {
+      "id": "J10",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-J10-5263e204",
+      "status": 201,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 16
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 4
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 15
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 5
+      }
+    },
+    {
+      "id": "J11",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-J11-89616069",
+      "status": 200,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 15
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 5
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 15
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 5
+      }
+    },
+    {
+      "id": "J12",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-J12-d82f777e",
+      "status": 401,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 15
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 5
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 15
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 5
+      }
+    },
+    {
+      "id": "J13",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-J13-d1bf365c",
+      "status": 401,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 15
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 5
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 15
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 5
+      }
+    },
+    {
+      "id": "J14-login",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-J14-login-c0f8f6a2",
+      "status": 200,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 15
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 5
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 15
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 5
+      }
+    },
+    {
+      "id": "J14-1",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-J14-1-6c539af3",
+      "status": 200,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 15
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 5
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 15
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 5
+      }
+    },
+    {
+      "id": "J14-2",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-J14-2-b88b3cc1",
+      "status": 401,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 15
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 5
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 15
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 5
+      }
+    },
+    {
+      "id": "J18",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-J18-f6f12ece",
+      "status": 401,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 15
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 5
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 15
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 5
+      }
+    },
+    {
+      "id": "J19",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-J19-8226b15d",
+      "status": 403,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 15
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 5
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 15
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 5
+      }
+    },
+    {
+      "id": "J20",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-J20-db130447",
+      "status": 401,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 15
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 5
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 15
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 5
+      }
+    },
+    {
+      "id": "K-login",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-K-login-7bd73702",
+      "status": 200,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 15
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 5
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 15
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 5
+      }
+    },
+    {
+      "id": "K01",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-K01-8b531ad9",
+      "status": 201,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 15
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 5
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 14
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 6
+      }
+    },
+    {
+      "id": "K02",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-K02-b43397f5",
+      "status": 201,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 14
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 6
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 13
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 7
+      }
+    },
+    {
+      "id": "K05-3",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-K05-3-06d0d6b3",
+      "status": 201,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 13
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 7
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 10
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 10
+      }
+    },
+    {
+      "id": "K05-1",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-K05-1-eb6238fb",
+      "status": 201,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 13
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 7
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 10
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 10
+      }
+    },
+    {
+      "id": "K05-2",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-K05-2-6c3ea3b6",
+      "status": 201,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 13
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 7
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 10
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 10
+      }
+    },
+    {
+      "id": "K03",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-K03-95d60e04",
+      "status": 201,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 10
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 10
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 9
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 11
+      }
+    },
+    {
+      "id": "K04-old",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-K04-old-60e6ac66",
+      "status": 401,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 9
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 11
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 9
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 11
+      }
+    },
+    {
+      "id": "K04-new",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-K04-new-8c180326",
+      "status": 201,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 9
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 11
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 8
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 12
+      }
+    },
+    {
+      "id": "J15-login",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-J15-login-6e526c01",
+      "status": 200,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 8
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 12
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 8
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 12
+      }
+    },
+    {
+      "id": "J15-before",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-J15-before-6b03d458",
+      "status": 200,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 8
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 12
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 8
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 12
+      }
+    },
+    {
+      "id": "J15",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-J15-bbc4b456",
+      "status": 204,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 8
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 12
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 8
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 12
+      }
+    },
+    {
+      "id": "J16",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-J16-134fb11a",
+      "status": 401,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 8
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 12
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 8
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 12
+      }
+    },
+    {
+      "id": "J17-before-exp",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-J17-before-exp-41e51950",
+      "status": 200,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 8
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 12
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 8
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 12
+      }
+    },
+    {
+      "id": "J17-after-exp",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-J17-after-exp-46528c43",
+      "status": 401,
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 8
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 12
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 8
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 12
+      }
+    }
+  ]
+}

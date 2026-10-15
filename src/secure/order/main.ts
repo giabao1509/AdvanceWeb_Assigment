@@ -64,17 +64,24 @@ const issueAccessToken = async (user: UserRow, ttl = config.accessTtl): Promise<
 
 const verifyAccessToken = async (request: FastifyRequest): Promise<{ sub: string; username: string } | null> => {
   const authorization = request.headers.authorization;
-  if (!authorization?.startsWith('Bearer ')) return null;
+  if (!authorization?.startsWith('Bearer ')) {
+    request.log.warn({ event: 'ACCESS_JWT_REJECTED', reason: 'MISSING_BEARER', traceId: request.id });
+    return null;
+  }
   try {
     const result = await jwtVerify(authorization.slice(7), jwtKey, {
       algorithms: ['HS256'],
       issuer: config.issuer,
       audience: config.audience,
     });
-    if (!result.payload.sub || typeof result.payload.username !== 'string') return null;
+    if (!result.payload.sub || typeof result.payload.username !== 'string') {
+      request.log.warn({ event: 'ACCESS_JWT_REJECTED', reason: 'MISSING_IDENTITY', traceId: request.id });
+      return null;
+    }
     return { sub: result.payload.sub, username: result.payload.username };
   } catch (error) {
-    request.log.warn({ event: 'ACCESS_JWT_REJECTED', reason: error instanceof Error ? error.name : 'INVALID_JWT' });
+    request.log.warn({ event: 'ACCESS_JWT_REJECTED', reason: error instanceof Error ? error.name : 'INVALID_JWT', traceId: request.id,
+      claim: error && typeof error === 'object' && 'claim' in error ? String(error.claim) : undefined });
     return null;
   }
 };
@@ -134,24 +141,36 @@ app.get('/health', async () => ({ status: 'ok', ...state() }));
 
 app.post('/auth/login', async (request, reply) => {
   const parsed = loginSchema.safeParse(request.body);
-  if (!parsed.success) return reply.code(401).send(unauthorized);
+  if (!parsed.success) {
+    request.log.warn({ event: 'LOGIN_REJECTED', reason: 'INVALID_CREDENTIAL_FORMAT', traceId: request.id });
+    return reply.code(401).send(unauthorized);
+  }
   const user = db.prepare('SELECT id, username, password_hash AS passwordHash FROM users WHERE username = ?')
     .get(parsed.data.username) as UserRow | undefined;
   const matches = await bcrypt.compare(parsed.data.password, user?.passwordHash ?? dummyPasswordHash);
-  if (!user || !matches) return reply.code(401).send(unauthorized);
+  if (!user || !matches) {
+    request.log.warn({ event: 'LOGIN_REJECTED', reason: 'BAD_CREDENTIALS', traceId: request.id });
+    return reply.code(401).send(unauthorized);
+  }
   const refreshToken = createRefreshFamily(user.id);
   setRefreshCookie(reply, refreshToken);
   return { accessToken: await issueAccessToken(user), tokenType: 'Bearer', expiresIn: config.accessTtl };
 });
 
 app.post('/auth/refresh', async (request, reply) => {
-  if (!originAllowed(request)) return reply.code(403).send({ code: 'FORBIDDEN' });
+  if (!originAllowed(request)) {
+    request.log.warn({ event: 'REFRESH_REJECTED', reason: 'FORBIDDEN_ORIGIN', traceId: request.id });
+    return reply.code(403).send({ code: 'FORBIDDEN' });
+  }
   const raw = request.cookies.refresh_token;
-  if (!raw) return reply.code(401).send(unauthorized);
+  if (!raw) {
+    request.log.warn({ event: 'REFRESH_REJECTED', reason: 'MISSING_REFRESH_COOKIE', traceId: request.id });
+    return reply.code(401).send(unauthorized);
+  }
   const rotated = rotateRefresh(raw);
   if (rotated.status !== 'ok') {
     clearRefreshCookie(reply);
-    request.log.warn({ event: 'REFRESH_REJECTED', reason: rotated.status === 'reuse' ? 'TOKEN_REUSE' : 'INVALID_TOKEN' });
+    request.log.warn({ event: 'REFRESH_REJECTED', reason: rotated.status === 'reuse' ? 'TOKEN_REUSE' : 'INVALID_TOKEN', traceId: request.id });
     return reply.code(401).send(unauthorized);
   }
   const user = db.prepare('SELECT id, username, password_hash AS passwordHash FROM users WHERE id = ?')
@@ -169,6 +188,7 @@ app.post('/auth/logout', async (request, reply) => {
     if (row) db.prepare('UPDATE refresh_tokens SET revoked_at = ? WHERE family_id = ? AND revoked_at IS NULL').run(Date.now(), row.familyId);
   }
   clearRefreshCookie(reply);
+  request.log.info({ event: 'LOGOUT_COMPLETED', traceId: request.id });
   return reply.code(204).send();
 });
 

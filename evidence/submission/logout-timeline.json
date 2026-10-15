@@ -1,0 +1,481 @@
+{
+  "runId": "a968e249-c062-4e3c-98a0-2061c8a13020",
+  "startedAt": "2026-10-15T16:16:22.536Z",
+  "generatedAt": "2026-10-15T16:18:27.035Z",
+  "data": [
+    {
+      "id": "J15-login",
+      "label": "Đăng nhập bằng tài khoản lab",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-J15-login-6e526c01",
+      "startedAt": "2026-10-15T16:16:26.409Z",
+      "completedAt": "2026-10-15T16:16:26.639Z",
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:56841/auth/login",
+        "headers": {
+          "content-type": "application/json",
+          "x-trace-id": "a968e249-c062-4e3c-98a0-2061c8a13020-J15-login-6e526c01"
+        },
+        "body": {
+          "username": "demo",
+          "password": "[REDACTED]"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "accessToken": "[REDACTED]",
+          "tokenType": "Bearer",
+          "expiresIn": 120
+        }
+      },
+      "logs": [
+        {
+          "at": "2026-10-15T16:16:26.635Z",
+          "service": "secure-order",
+          "event": "HTTP_RESPONSE",
+          "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-J15-login-6e526c01",
+          "status": 200
+        }
+      ],
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 8
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 12
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 8
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 12
+      },
+      "expectedStatus": 200,
+      "checks": {
+        "status": true,
+        "responseLog": true,
+        "reservationDelta": true,
+        "stockUnchanged": true,
+        "accessIssued": true,
+        "refreshCookieHttpOnly": true
+      },
+      "pass": true,
+      "cookiePolicy": {
+        "httpOnly": true,
+        "sameSite": "Lax",
+        "path": "/auth",
+        "secure": false,
+        "cleared": false
+      },
+      "jwt": {
+        "iat": 1792080986,
+        "exp": 1792081106,
+        "issuer": "block04-order-api",
+        "audience": "block04-client",
+        "issuedAt": "2026-10-15T16:16:26.000Z",
+        "expiresAt": "2026-10-15T16:18:26.000Z"
+      }
+    },
+    {
+      "id": "J15-before",
+      "label": "Access JWT dùng được trước logout",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-J15-before-6b03d458",
+      "startedAt": "2026-10-15T16:16:26.639Z",
+      "completedAt": "2026-10-15T16:16:26.645Z",
+      "request": {
+        "method": "GET",
+        "url": "http://127.0.0.1:56841/auth/me",
+        "headers": {
+          "authorization": "[REDACTED]",
+          "x-trace-id": "a968e249-c062-4e3c-98a0-2061c8a13020-J15-before-6b03d458"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "sub": "6aa88186-bd9f-49af-bc5d-587a8327af2f",
+          "username": "demo"
+        }
+      },
+      "logs": [
+        {
+          "at": "2026-10-15T16:16:26.642Z",
+          "service": "secure-order",
+          "event": "HTTP_RESPONSE",
+          "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-J15-before-6b03d458",
+          "status": 200
+        }
+      ],
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 8
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 12
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 8
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 12
+      },
+      "expectedStatus": 200,
+      "checks": {
+        "status": true,
+        "responseLog": true,
+        "reservationDelta": true,
+        "stockUnchanged": true
+      },
+      "pass": true,
+      "jwt": {
+        "iat": 1792080986,
+        "exp": 1792081106,
+        "issuer": "block04-order-api",
+        "audience": "block04-client",
+        "issuedAt": "2026-10-15T16:16:26.000Z",
+        "expiresAt": "2026-10-15T16:18:26.000Z"
+      }
+    },
+    {
+      "id": "J15",
+      "label": "Logout thu hồi family và xóa cookie",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-J15-bbc4b456",
+      "startedAt": "2026-10-15T16:16:26.645Z",
+      "completedAt": "2026-10-15T16:16:26.649Z",
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:56841/auth/logout",
+        "headers": {
+          "cookie": "[REDACTED]",
+          "x-trace-id": "a968e249-c062-4e3c-98a0-2061c8a13020-J15-bbc4b456"
+        }
+      },
+      "response": {
+        "status": 204,
+        "body": {}
+      },
+      "logs": [
+        {
+          "at": "2026-10-15T16:16:26.648Z",
+          "service": "secure-order",
+          "event": "LOGOUT_COMPLETED",
+          "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-J15-bbc4b456"
+        },
+        {
+          "at": "2026-10-15T16:16:26.648Z",
+          "service": "secure-order",
+          "event": "HTTP_RESPONSE",
+          "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-J15-bbc4b456",
+          "status": 204
+        }
+      ],
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 8
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 12
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 8
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 12
+      },
+      "expectedStatus": 204,
+      "checks": {
+        "status": true,
+        "responseLog": true,
+        "reservationDelta": true,
+        "stockUnchanged": true,
+        "cookieCleared": true,
+        "refreshStoredAsSha256Only": true
+      },
+      "pass": true,
+      "cookiePolicy": {
+        "httpOnly": false,
+        "sameSite": "Lax",
+        "path": "/auth",
+        "secure": false,
+        "cleared": true
+      }
+    },
+    {
+      "id": "J16",
+      "label": "Refresh sau logout bị từ chối",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-J16-134fb11a",
+      "startedAt": "2026-10-15T16:16:26.650Z",
+      "completedAt": "2026-10-15T16:16:26.655Z",
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:56841/auth/refresh",
+        "headers": {
+          "cookie": "[REDACTED]",
+          "x-trace-id": "a968e249-c062-4e3c-98a0-2061c8a13020-J16-134fb11a"
+        }
+      },
+      "response": {
+        "status": 401,
+        "body": {
+          "code": "UNAUTHORIZED",
+          "message": "Authentication failed"
+        }
+      },
+      "logs": [
+        {
+          "at": "2026-10-15T16:16:26.652Z",
+          "service": "secure-order",
+          "event": "REFRESH_REJECTED",
+          "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-J16-134fb11a",
+          "reason": "INVALID_TOKEN"
+        },
+        {
+          "at": "2026-10-15T16:16:26.652Z",
+          "service": "secure-order",
+          "event": "HTTP_RESPONSE",
+          "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-J16-134fb11a",
+          "status": 401
+        }
+      ],
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 8
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 12
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 8
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 12
+      },
+      "expectedStatus": 401,
+      "checks": {
+        "status": true,
+        "responseLog": true,
+        "reasonLog": true,
+        "reservationDelta": true,
+        "stockUnchanged": true
+      },
+      "pass": true,
+      "cookiePolicy": {
+        "httpOnly": false,
+        "sameSite": "Lax",
+        "path": "/auth",
+        "secure": false,
+        "cleared": true
+      }
+    },
+    {
+      "id": "J17-before-exp",
+      "label": "Access JWT cũ còn hạn sau logout vẫn dùng được",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-J17-before-exp-41e51950",
+      "startedAt": "2026-10-15T16:16:26.656Z",
+      "completedAt": "2026-10-15T16:16:26.661Z",
+      "request": {
+        "method": "GET",
+        "url": "http://127.0.0.1:56841/auth/me",
+        "headers": {
+          "authorization": "[REDACTED]",
+          "x-trace-id": "a968e249-c062-4e3c-98a0-2061c8a13020-J17-before-exp-41e51950"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "sub": "6aa88186-bd9f-49af-bc5d-587a8327af2f",
+          "username": "demo"
+        }
+      },
+      "logs": [
+        {
+          "at": "2026-10-15T16:16:26.658Z",
+          "service": "secure-order",
+          "event": "HTTP_RESPONSE",
+          "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-J17-before-exp-41e51950",
+          "status": 200
+        }
+      ],
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 8
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 12
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 8
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 12
+      },
+      "expectedStatus": 200,
+      "checks": {
+        "status": true,
+        "responseLog": true,
+        "reservationDelta": true,
+        "stockUnchanged": true,
+        "observedBeforeExp": true
+      },
+      "pass": true,
+      "jwt": {
+        "iat": 1792080986,
+        "exp": 1792081106,
+        "issuer": "block04-order-api",
+        "audience": "block04-client",
+        "issuedAt": "2026-10-15T16:16:26.000Z",
+        "expiresAt": "2026-10-15T16:18:26.000Z"
+      }
+    },
+    {
+      "id": "J17-after-exp",
+      "label": "Cùng access JWT bị từ chối sau exp",
+      "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-J17-after-exp-46528c43",
+      "startedAt": "2026-10-15T16:18:27.010Z",
+      "completedAt": "2026-10-15T16:18:27.018Z",
+      "request": {
+        "method": "GET",
+        "url": "http://127.0.0.1:56841/auth/me",
+        "headers": {
+          "authorization": "[REDACTED]",
+          "x-trace-id": "a968e249-c062-4e3c-98a0-2061c8a13020-J17-after-exp-46528c43"
+        }
+      },
+      "response": {
+        "status": 401,
+        "body": {
+          "code": "UNAUTHORIZED",
+          "message": "Authentication failed"
+        }
+      },
+      "logs": [
+        {
+          "at": "2026-10-15T16:18:27.014Z",
+          "service": "secure-order",
+          "event": "ACCESS_JWT_REJECTED",
+          "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-J17-after-exp-46528c43",
+          "reason": "JWTExpired",
+          "claim": "exp"
+        },
+        {
+          "at": "2026-10-15T16:18:27.014Z",
+          "service": "secure-order",
+          "event": "HTTP_RESPONSE",
+          "traceId": "a968e249-c062-4e3c-98a0-2061c8a13020-J17-after-exp-46528c43",
+          "status": 401
+        }
+      ],
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 8
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 12
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 8
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 12
+      },
+      "expectedStatus": 401,
+      "checks": {
+        "status": true,
+        "responseLog": true,
+        "reasonLog": true,
+        "reservationDelta": true,
+        "stockUnchanged": true,
+        "observedAfterExp": true
+      },
+      "pass": true,
+      "jwt": {
+        "iat": 1792080986,
+        "exp": 1792081106,
+        "issuer": "block04-order-api",
+        "audience": "block04-client",
+        "issuedAt": "2026-10-15T16:16:26.000Z",
+        "expiresAt": "2026-10-15T16:18:26.000Z"
+      }
+    }
+  ]
+}

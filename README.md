@@ -15,7 +15,7 @@ Browser -> P5 Supervisor/Dashboard :3000
 
 ## Chạy dự án
 
-Yêu cầu Node.js `>=24.10` và npm 10+ theo target runtime trong `Plan.md`.
+Yêu cầu **Node.js >=22.17.1** và npm 10+. Môi trường đã chạy build, test và thu evidence là **Node.js 22.17.1 trên Windows x64**.
 
 ```powershell
 npm.cmd install
@@ -55,6 +55,7 @@ npm.cmd run typecheck       # kiểm tra TypeScript
 npm.cmd run build           # build server và React dashboard
 npm.cmd test                # unit test ngắn cho canonical/HMAC
 npm.cmd run demo:all        # 10 HTTP scenarios đại diện, cần npm start đang chạy
+npm.cmd run evidence:submission # bộ evidence nộp đầy đủ, tự chạy worker riêng
 npm.cmd run db:reset        # reset cả baseline và secure khi service đang dừng
 ```
 
@@ -66,6 +67,27 @@ npm.cmd run db:reset        # reset cả baseline và secure khi service đang d
 - `evidence/logs/runtime.jsonl`
 
 Smoke suite có chủ ý không chạy toàn bộ matrix trong `Plan.md`; nó tập trung vào các boundary và state transition quan trọng: B03, S01, S04, B04, J04, J01, J10, J11, J12, J13. Các negative case còn lại có thể chạy thủ công hoặc bổ sung vào runner mà không thay đổi API.
+
+## Bộ evidence dùng để nộp
+
+Sau khi cài dependency và tạo khóa lab, chạy `npm.cmd run evidence:submission`. Không cần mở server trước. Runner tự chọn port trống, dùng database/log riêng trong `data/submission-*`, không reset dữ liệu dashboard hoặc thay khóa hiện có. Nó chờ JWT login hết hạn thật (mặc định khoảng 120 giây), sau đó dừng các worker đã tạo.
+
+Kết quả được xuất vào **`evidence/submission/`**, là bộ artifact có thể commit sau khi đã che credential:
+
+| File | Nội dung |
+|---|---|
+| `summary.md` | Bảng kết quả, lý do từ chối và reservation trước/sau |
+| `cases.json`, `negative-cases.json` | Request/response thật, trace ID, log tương ứng và mốc JWT `iat`/`exp` |
+| `canonical-example.json` | Body hash, canonical, kết quả ký và verify HMAC/Ed25519 bằng khóa lab; timestamp ví dụ đã quá hạn |
+| `logs.jsonl` | Chỉ các field audit an toàn của đúng lần chạy, không sao chép toàn bộ log runtime |
+| `reservations.json` | Snapshot stock/reservation của các request |
+| `logout-timeline.json` | Logout, refresh bị từ chối và cùng access JWT trước/sau `exp` |
+| `rotation.json`, `concurrency.json` | State/HTTP thật khi đổi key, overlap nhỏ, nonce/refresh đồng thời |
+| `versions.json`, `manifest.json` | Phiên bản thực tế đang cài, runtime và SHA-256 source/artifact |
+
+Mỗi lần chạy thay bộ submission bằng một run ID mới; exit code khác 0 nếu có check thất bại. `versions.json` báo rõ runtime có đáp ứng `engines.node` hay không, không sửa phiên bản thực tế để khớp tài liệu. Rotation ở đây chứng minh overlap trong phạm vi runner đã kiểm soát, chưa phải benchmark zero downtime production.
+
+`demo:all` và `evidence/summary.md` ở thư mục cha là smoke suite cũ. Bộ nộp hiện tại nằm trong `evidence/submission/`; các JSON/log runtime cũ vẫn được gitignore. Không commit `.env`, `secrets/`, database, bearer JWT hoặc refresh token thô.
 
 ## Hợp đồng bảo mật nội bộ
 

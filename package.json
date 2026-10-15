@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": ">=24.10"
+    "node": ">=22.17.1"
   },
   "scripts": {
     "dev": "tsx src/supervisor/main.ts",
@@ -16,13 +16,14 @@
     "db:reset": "tsx scripts/reset-fixtures.ts",
     "test": "vitest run --root .",
     "test:evidence": "tsx scripts/export-evidence.ts",
+    "evidence:submission": "tsx scripts/export-submission.ts",
     "demo:all": "tsx scripts/export-evidence.ts"
   },
   "dependencies": {
     "@fastify/cookie": "11.0.2",
     "@fastify/static": "10.1.6",
-    "better-sqlite3": "12.4.1",
     "bcryptjs": "3.0.2",
+    "better-sqlite3": "12.4.1",
     "dotenv": "17.2.3",
     "fastify": "5.12.7",
     "jose": "6.1.0",
@@ -31,7 +32,7 @@
   },
   "devDependencies": {
     "@types/better-sqlite3": "7.6.13",
-    "@types/node": "24.9.1",
+    "@types/node": "22.17.1",
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.2",
     "@vitejs/plugin-react": "5.0.4",

@@ -235,7 +235,7 @@ Cách hiện tại gọn cho lab nhưng chưa có log retention, cảnh báo ho�
 
 Sinh khóa tại máy bằng `npm.cmd run keys:generate`. Script dùng `randomBytes(32)` cho hai secret độc lập và `generateKeyPairSync('ed25519')` cho hai cặp khóa. Agent chỉ viết/chạy script; không tự nghĩ ra chuỗi khóa trong chat.
 
-Tại thư mục dự án, dùng Node.js từ 24.10:
+Tại thư mục dự án, dùng Node.js từ 22.17.1:
 
 ```powershell
 npm.cmd ci
@@ -293,7 +293,7 @@ OpenSSL có thể tạo khóa cùng định dạng; KMS/Vault phù hợp quản 
 
 Khóa local dễ setup nhưng cần bảo vệ quyền truy cập; `.gitignore` không mã hóa file. Script giữ secret/`.env` đã có, nhưng **nếu thiếu một nửa cặp Ed25519, nó sinh lại cả hai file**. Thay file khóa không tự cập nhật mọi process đang chạy.
 
-Chi tiết thực thi nằm ở [generate-keys.ts](scripts/generate-keys.ts); không đưa raw key, private PEM hoặc password vào report/commit.
+Không đưa raw key, private PEM hoặc password vào report/commit.
 
 <a id="ket-qua"></a>
 
@@ -301,16 +301,18 @@ Chi tiết thực thi nằm ở [generate-keys.ts](scripts/generate-keys.ts); kh
 
 ### Quyết định
 
-Dùng smoke HTTP và case end-to-end để minh họa request thật, thay đổi dữ liệu và trạng thái khóa/token. [Evidence đã lưu](evidence/summary.md) ngày 15/10/2026 ghi **10/10 case smoke đạt**: gọi Inventory không chữ ký, thiếu JWT, login/đặt hàng, replay nonce và refresh family.
+[Bộ evidence nộp](evidence/submission/summary.md) ghi request/response thật, trace ID riêng, log lý do từ chối, snapshot reservation và các mốc JWT `iat`/`exp`. Các tình huống gồm HMAC/Ed25519, timestamp, nonce, JWT sai, refresh reuse, logout và rotation.
+
+Timeline logout dùng cùng access JWT do login cấp: được nhận khi còn hạn sau logout và bị từ chối khi hết hạn thật. HTTP nội bộ được thu qua IPC, không dựng từ response ngoài.
+
+Chạy lại bằng `npm.cmd run evidence:submission`; không cần mở server trước. Runner chờ JWT hết hạn thực tế, mặc định khoảng 120 giây.
 
 ### Phương án thay thế
 
-Unit test giúp kiểm logic độc lập; full matrix, browser test và kiểm thử tải cho phạm vi rộng hơn nhưng cần thêm thời gian, fixture và môi trường.
+Unit test kiểm logic độc lập; kiểm thử tải, lỗi mạng và browser-cookie test cho phạm vi rộng hơn nhưng cần môi trường và fixture bổ sung.
 
 ### Trade-off
 
-10 case smoke không chứng minh mọi nhánh JWT, Ed25519, concurrency hoặc rotation dưới tải đều đã được kiểm chứng. Kết quả trên là artifact đã lưu, không phải lần chạy mới.
+Kết quả chứng minh hành vi của lần chạy đã lưu, không chứng minh mọi lỗi mạng hoặc zero downtime production. Runner dùng database và port riêng, giữ nguyên khóa và dữ liệu dashboard.
 
-Bản cuối phù hợp demo local. Khi mở rộng cần ưu tiên TLS, phân quyền quản trị, rotation có grace period, shared store cho nhiều replica và xử lý bù khi Order/Inventory lỗi giữa chừng.
-
-Các vị trí source chính: [JWT/refresh](src/secure/order/main.ts), [verify/nonce](src/secure/inventory/main.ts), [HMAC/Ed25519](src/shared/signing.ts), [database](src/shared/database.ts), [Supervisor](src/supervisor/main.ts), [dashboard](src/dashboard/main.tsx).
+Phiên bản Node thực tế được ghi nguyên trạng trong evidence. Lần thu hiện dùng Node 22.17.1, đáp ứng mức ≥22.17.1 đã khai báo trong dự án.

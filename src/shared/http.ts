@@ -14,6 +14,9 @@ export const registerCommonHooks = (app: FastifyInstance): void => {
   app.addHook('onRequest', async (request) => {
     request.id = String(request.headers['x-trace-id'] ?? randomUUID());
   });
+  app.addHook('onResponse', async (request, reply) => {
+    request.log.info({ event: 'HTTP_RESPONSE', traceId: request.id, method: request.method, path: request.url, status: reply.statusCode });
+  });
 };
 
 export const duplicateHeader = (request: FastifyRequest, headerName: string): boolean => {

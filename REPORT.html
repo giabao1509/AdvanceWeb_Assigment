@@ -29,7 +29,7 @@ p{margin:13px 0}strong{color:#334f79}ul{padding-left:24px}li{padding:3px 0}code{
 @media print{html,body{background:#fff;font-size:10pt;line-height:1.65;color:#111}.topbar,.sidebar,.report-note{display:none}.layout{display:block;margin:0;padding:0;max-width:none}main{border:0;box-shadow:none;padding:0}h1{font-size:20pt}h2{font-size:16pt;page-break-after:avoid;padding-top:16px;margin-top:26px}h3{font-size:12pt;page-break-after:avoid}p,li{orphans:3;widows:3}table{font-size:9pt}.table-scroll{overflow:visible}th,td{padding:7px;min-width:0}tr{break-inside:avoid}thead{display:table-header-group}.architecture-figure{break-inside:avoid;margin:18px 0}.architecture-figure svg{min-width:0;width:100%}.diagram-scroll{overflow:visible}.code-block{white-space:pre-wrap;break-inside:avoid}.code-block code{white-space:pre-wrap;font-size:9pt}a{color:#1e437b}code{background:#f3f5f8}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style>
 </head>
 <body>
-<header class="topbar"><div class="brand"><span class="mark">B4</span><div><b>BÁO CÁO KỸ THUẬT</b><small>Server-to-Server Authentication &amp; JWT · 15/10/2026</small></div></div><div class="actions"><a href="REPORT.md">Bản Markdown</a><button type="button" onclick="window.print()">In / Lưu PDF</button></div></header>
+<header class="topbar"><div class="brand"><span class="mark">B4</span><div><b>BÁO CÁO KỸ THUẬT</b><small>Server-to-Server Authentication &amp; JWT · 15/10/2026</small></div></div><div class="actions"><button type="button" onclick="window.print()">In / Lưu PDF</button></div></header>
 <div class="layout"><nav class="sidebar" aria-label="Mục lục báo cáo"><strong>NỘI DUNG BÁO CÁO</strong><a href="#kien-truc">1. Kiến trúc tổng quát</a><a href="#stack">2. Stack và giao tiếp giữa các service</a><a href="#database">3. Lưu dữ liệu bằng SQLite</a><a href="#jwt-session">4. JWT hay session?</a><a href="#refresh">5. Mật khẩu, refresh token và logout</a><a href="#hmac-ed25519">6. HMAC hay chữ ký Ed25519?</a><a href="#chong-replay">7. Bảo vệ nội dung và chống replay</a><a href="#rotation">8. Đổi thuật toán và rotation key</a><a href="#dashboard">9. Dashboard, logging và documentation</a><a href="#secrets">10. Thiết lập secrets và tạo khóa bằng agent</a><a href="#ket-qua">11. Kết quả và giới hạn</a></nav><main>
 <h1 id="heading-0">BÁO CÁO LỰA CHỌN KỸ THUẬT — BLOCK 04</h1>
 <p><strong>Đề tài:</strong> Server-to-Server Authentication &amp; JWT<br><strong>Phạm vi:</strong> Giải thích kiến trúc, lựa chọn kỹ thuật và các đánh đổi của lab Order–Inventory.</p>
@@ -122,7 +122,7 @@ p{margin:13px 0}strong{color:#334f79}ul{padding-left:24px}li{padding:3px 0}code{
 <h2 id="secrets">10. Thiết lập secrets và tạo khóa bằng agent</h2>
 <h3 id="heading-233">Quyết định</h3>
 <p>Sinh khóa tại máy bằng <code>npm.cmd run keys:generate</code>. Script dùng <code>randomBytes(32)</code> cho hai secret độc lập và <code>generateKeyPairSync('ed25519')</code> cho hai cặp khóa. Agent chỉ viết/chạy script; không tự nghĩ ra chuỗi khóa trong chat.</p>
-<p>Tại thư mục dự án, dùng Node.js từ 24.10:</p>
+<p>Tại thư mục dự án, dùng Node.js từ 22.17.1:</p>
 <pre class="code-block"><code>npm.cmd ci
 npm.cmd run keys:generate
 npm.cmd run db:seed
@@ -156,16 +156,17 @@ file có sẵn. Không tự seed/reset nếu chưa được yêu cầu.</code></
 <p>OpenSSL có thể tạo khóa cùng định dạng; KMS/Vault phù hợp quản lý tập trung. Script Node tránh yêu cầu cài thêm công cụ và khớp trực tiếp với hàm nạp khóa của dự án.</p>
 <h3 id="heading-291">Trade-off</h3>
 <p>Khóa local dễ setup nhưng cần bảo vệ quyền truy cập; <code>.gitignore</code> không mã hóa file. Script giữ secret/<code>.env</code> đã có, nhưng <strong>nếu thiếu một nửa cặp Ed25519, nó sinh lại cả hai file</strong>. Thay file khóa không tự cập nhật mọi process đang chạy.</p>
-<p>Chi tiết thực thi nằm ở <a href="scripts/generate-keys.ts">generate-keys.ts</a>; không đưa raw key, private PEM hoặc password vào report/commit.</p>
+<p>Không đưa raw key, private PEM hoặc password vào report/commit.</p>
 <h2 id="ket-qua">11. Kết quả và giới hạn</h2>
-<h3 id="heading-301">Quyết định</h3>
-<p>Dùng smoke HTTP và case end-to-end để minh họa request thật, thay đổi dữ liệu và trạng thái khóa/token. <a href="evidence/summary.md">Evidence đã lưu</a> ngày 15/10/2026 ghi <strong>10/10 case smoke đạt</strong>: gọi Inventory không chữ ký, thiếu JWT, login/đặt hàng, replay nonce và refresh family.</p>
-<h3 id="heading-305">Phương án thay thế</h3>
-<p>Unit test giúp kiểm logic độc lập; full matrix, browser test và kiểm thử tải cho phạm vi rộng hơn nhưng cần thêm thời gian, fixture và môi trường.</p>
-<h3 id="heading-309">Trade-off</h3>
-<p>10 case smoke không chứng minh mọi nhánh JWT, Ed25519, concurrency hoặc rotation dưới tải đều đã được kiểm chứng. Kết quả trên là artifact đã lưu, không phải lần chạy mới.</p>
-<p>Bản cuối phù hợp demo local. Khi mở rộng cần ưu tiên TLS, phân quyền quản trị, rotation có grace period, shared store cho nhiều replica và xử lý bù khi Order/Inventory lỗi giữa chừng.</p>
-<p>Các vị trí source chính: <a href="src/secure/order/main.ts">JWT/refresh</a>, <a href="src/secure/inventory/main.ts">verify/nonce</a>, <a href="src/shared/signing.ts">HMAC/Ed25519</a>, <a href="src/shared/database.ts">database</a>, <a href="src/supervisor/main.ts">Supervisor</a>, <a href="src/dashboard/main.tsx">dashboard</a>.</p>
+<h3 id="evidence-decision">Quyết định</h3>
+<p>Bộ evidence nộp ghi request/response thật, trace ID riêng, log lý do từ chối, snapshot reservation và các mốc JWT <code>iat</code>/<code>exp</code>. Các tình huống gồm HMAC/Ed25519, timestamp, nonce, JWT sai, refresh reuse, logout và rotation.</p>
+<p>Timeline logout dùng cùng access JWT do login cấp: được nhận khi còn hạn sau logout và bị từ chối khi hết hạn thật. HTTP nội bộ được thu qua IPC, không dựng từ response ngoài.</p>
+<p>Chạy lại bằng <code>npm.cmd run evidence:submission</code>; không cần mở server trước. Runner chờ JWT hết hạn thực tế, mặc định khoảng 120 giây.</p>
+<h3 id="evidence-alternatives">Phương án thay thế</h3>
+<p>Unit test kiểm logic độc lập; kiểm thử tải, lỗi mạng và browser-cookie test cho phạm vi rộng hơn nhưng cần môi trường và fixture bổ sung.</p>
+<h3 id="evidence-tradeoff">Trade-off</h3>
+<p>Kết quả chứng minh hành vi của lần chạy đã lưu, không chứng minh mọi lỗi mạng hoặc zero downtime production. Runner dùng database và port riêng, giữ nguyên khóa và dữ liệu dashboard.</p>
+<p>Phiên bản Node thực tế được ghi nguyên trạng trong evidence. Lần thu hiện dùng Node 22.17.1, đáp ứng mức ≥22.17.1 đã khai báo trong dự án.</p>
 <footer class="report-note"><span>Block 04 · Báo cáo giải thích quyết định và đánh đổi</span><span>HTML tự chứa · đọc offline · đối chiếu source ngày 15/10/2026</span></footer></main></div>
 </body>
 </html>

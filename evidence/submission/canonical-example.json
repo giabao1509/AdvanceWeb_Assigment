@@ -1,0 +1,35 @@
+{
+  "runId": "a968e249-c062-4e3c-98a0-2061c8a13020",
+  "startedAt": "2026-10-15T16:16:22.536Z",
+  "generatedAt": "2026-10-15T16:18:27.035Z",
+  "data": {
+    "purpose": "Ví dụ tính thật bằng khóa lab; timestamp cố định đã quá hạn, không công bố khóa bí mật.",
+    "body": {
+      "sku": "SKU-001",
+      "quantity": 1,
+      "orderId": "1340ea76-f262-431f-b4f6-6754ed7923df"
+    },
+    "canonicalBody": "{\"sku\":\"SKU-001\",\"quantity\":1,\"orderId\":\"1340ea76-f262-431f-b4f6-6754ed7923df\"}",
+    "bodySha256": "13e24945c159de0751f1a5deb95fe9e8df9325b2b92d3edb58e2d43be48cc45c",
+    "examples": [
+      {
+        "algorithm": "hmac-sha256",
+        "kid": "hmac-lab-1",
+        "canonical": "v1\nPOST\n/internal/reservations\nhmac-sha256\nhmac-lab-1\n1700000000\n00000000-0000-4000-8000-000000000001\n13e24945c159de0751f1a5deb95fe9e8df9325b2b92d3edb58e2d43be48cc45c",
+        "lineCount": 8,
+        "trailingNewline": false,
+        "signature": "sSvMdRJNC-RcQF5NR2Qx8f3xP6FGj3aWmpMChAh42lw",
+        "verified": true
+      },
+      {
+        "algorithm": "ed25519",
+        "kid": "ed-1",
+        "canonical": "v1\nPOST\n/internal/reservations\ned25519\ned-1\n1700000000\n00000000-0000-4000-8000-000000000001\n13e24945c159de0751f1a5deb95fe9e8df9325b2b92d3edb58e2d43be48cc45c",
+        "lineCount": 8,
+        "trailingNewline": false,
+        "signature": "e9YaJvBXDK3WQY-xyAKt0kP7wbsrK6E_NVePJFQO7yQJIFnslS_8rbvJBqLpLagnAH0CbpNQXvS3tXt5uVYnBQ",
+        "verified": true
+      }
+    ]
+  }
+}

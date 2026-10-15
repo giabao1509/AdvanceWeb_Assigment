@@ -1,0 +1,51 @@
+{
+  "runId": "a968e249-c062-4e3c-98a0-2061c8a13020",
+  "startedAt": "2026-10-15T16:16:22.536Z",
+  "generatedAt": "2026-10-15T16:18:27.035Z",
+  "data": [
+    {
+      "id": "S10",
+      "before": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 18
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 2
+      },
+      "after": {
+        "stock": [
+          {
+            "sku": "SKU-001",
+            "availableQty": 17
+          },
+          {
+            "sku": "SKU-LOW",
+            "availableQty": 1
+          }
+        ],
+        "reservations": 3
+      },
+      "statuses": [
+        401,
+        201
+      ],
+      "pass": true
+    },
+    {
+      "id": "J14",
+      "statuses": [
+        200,
+        401
+      ],
+      "familyRows": 2,
+      "allRevoked": true,
+      "pass": true
+    }
+  ]
+}

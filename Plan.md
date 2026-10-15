@@ -39,7 +39,7 @@ Cần chứng minh:
 
 | Hạng mục | Công nghệ / quyết định chốt | Lý do |
 |---|---|---|
-| Runtime | **Node.js 24.x** (khuyến nghị >=24.10) | Tiếp nối dự án Node/TypeScript, có `node:crypto` và `child_process` |
+| Runtime | **Node.js >=22.17.1**, môi trường demo dùng **22.17.1** | Đồng bộ với runtime thực tế đã chạy build/test/evidence; có `node:crypto` và `child_process` |
 | Ngôn ngữ | **TypeScript 5.9+**, bật `strict` | Type-safe, tái sử dụng code Block 03 |
 | Module | **ESM** (`"type": "module"`) | Nhất quán với `tsx`/Node hiện đại |
 | Backend HTTP | **Fastify 5** | Schema, hooks, logging, hiệu năng tốt |
