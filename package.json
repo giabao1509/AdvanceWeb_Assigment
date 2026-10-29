@@ -1,0 +1,14 @@
+{
+  "name": "task-authorization-minilab",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22.13.0" },
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test",
+    "test:ui": "node scripts/ui-smoke.js",
+    "db:reset": "node src/reset.js"
+  },
+  "dependencies": { "express": "^5.1.0" }
+}

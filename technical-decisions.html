@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quyết định kỹ thuật · Task Management API</title>
+  <style>
+    :root { color-scheme: light; --ink:#182c3e; --muted:#526575; --line:#d8e3e9; --accent:#006c68; --paper:#fff; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:#eef3f6; color:var(--ink); font:16px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif; }
+    main { max-width:1180px; margin:auto; padding:44px 28px 28px; }
+    .eyebrow { color:var(--accent); font-size:12px; letter-spacing:.13em; font-weight:750; text-transform:uppercase; }
+    h1 { max-width:850px; margin:10px 0 12px; font-size:clamp(30px,4vw,46px); line-height:1.18; letter-spacing:-.035em; }
+    .intro { max-width:850px; color:var(--muted); margin:0; }
+    .toolbar { display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin:22px 0; }
+    .badge { padding:5px 12px; border:1px solid #b6d7d1; background:#e2f0ec; color:#145e52; border-radius:30px; font-size:13px; font-weight:650; }
+    button { margin-left:auto; border:1px solid var(--line); border-radius:8px; padding:9px 15px; background:white; color:var(--ink); font:inherit; cursor:pointer; }
+    button:hover { border-color:var(--accent); }
+    button:focus-visible,a:focus-visible { outline:3px solid #188e83; outline-offset:4px; }
+    .flow { display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:18px 20px; margin-bottom:26px; border-radius:12px; background:#173d4b; color:white; font-size:14px; }
+    .flow strong { color:#9ce5d5; }
+    .flow i { color:#a3c0ca; font-style:normal; }
+    .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; }
+    article { background:var(--paper); border:1px solid var(--line); border-radius:14px; overflow:hidden; break-inside:avoid; }
+    .card-head { padding:20px 24px 15px; border-bottom:1px solid var(--line); }
+    .meta { display:flex; align-items:center; gap:10px; color:var(--muted); font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; }
+    .number { display:inline-grid; place-items:center; width:29px; height:29px; border-radius:8px; background:#e5f2ee; color:var(--accent); }
+    h2 { font-size:21px; line-height:1.35; margin:9px 0 0; letter-spacing:-.02em; }
+    dl { margin:0; padding:18px 24px 22px; }
+    dt { color:var(--accent); font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.055em; margin-top:16px; }
+    dt:first-child { margin-top:0; }
+    dd { margin:5px 0 0; font-size:15px; }
+    dd p { margin:0 0 6px; }
+    dd p:last-child { margin:0; }
+    code { padding:1px 4px; background:#eff4f6; border-radius:4px; font: .88em ui-monospace,Consolas,monospace; overflow-wrap:anywhere; }
+    .trade { color:var(--muted); }
+    footer { padding-top:22px; color:var(--muted); font-size:13px; }
+    a { color:var(--accent); }
+    @media(max-width:760px) { main { padding:28px 16px; } .grid { grid-template-columns:1fr; } .card-head,dl { padding-left:20px; padding-right:20px; } button { margin-left:0; } }
+    @media print { @page { size:A4; margin:12mm; } body { background:white; font-size:11px; } main { max-width:none; padding:0; } h1 { font-size:27px; } .toolbar { margin:10px 0; } button { display:none; } .flow { background:white; color:var(--ink); border:1px solid var(--line); padding:9px; margin-bottom:12px; } .flow strong { color:var(--accent); } .grid { display:block; } article { margin-bottom:12px; border-radius:6px; } .card-head { padding:10px 14px; } h2 { font-size:17px; margin-top:4px; } dl { padding:10px 14px; } dt { margin-top:8px; font-size:10px; } dd { font-size:12px; } .number { width:23px; height:23px; } footer { padding-top:8px; font-size:10px; } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="eyebrow">Task Management API · Minilab authorization</div>
+    <h1>8 quyết định kỹ thuật<br>định hình hệ thống</h1>
+    <p class="intro">Trọng tâm: ai được thao tác trên tài nguyên nào, vì sao được phép và cách chứng minh quyết định đó đúng.</p>
+    <div class="toolbar">
+      <span class="badge">Theo thiết kế trong plan.md</span>
+      <span class="badge">Ưu tiên Starter → V3 · V4 mở rộng</span>
+      <button type="button" onclick="window.print()">In / Lưu PDF</button>
+    </div>
+  </header>
+  <div class="flow" aria-label="Luồng xử lý quyền trên server">
+    <strong>Luồng cốt lõi</strong><span>Xác thực</span><i aria-hidden="true">→</i><span>Đọc dữ liệu server</span><i aria-hidden="true">→</i><span>Kiểm tra quyền</span><i aria-hidden="true">→</i><span>Thực thi hoặc từ chối</span>
+  </div>
+
+  <section class="grid" aria-label="Các quyết định kỹ thuật">
+    <article>
+      <div class="card-head"><div class="meta"><span class="number">01</span> Kiến trúc · plan §2</div><h2>Một ứng dụng, một process</h2></div>
+      <dl>
+        <dt>Quyết định</dt><dd>Node.js + Express phục vụ API và UI HTML/CSS/JS thuần cùng origin; không thêm framework UI hay dịch vụ bên ngoài.</dd>
+        <dt>Phương án thay thế</dt><dd>React + API tách riêng; microservices và hạ tầng container.</dd>
+        <dt>Lý do chọn &amp; trade-off</dt><dd><p><strong>Chọn vì:</strong> ít bước cài đặt, dễ chạy local, tập trung vào bài toán phân quyền.</p><p class="trade"><strong>Đánh đổi:</strong> UI thủ công hơn; chưa đáp ứng nhu cầu triển khai và mở rộng độc lập từng thành phần.</p></dd>
+      </dl>
+    </article>
+
+    <article>
+      <div class="card-head"><div class="meta"><span class="number">02</span> Phiên bản · plan §1, §4–6</div><h2>Một codebase, policy tăng dần</h2></div>
+      <dl>
+        <dt>Quyết định</dt><dd>Chọn Starter → V4 bằng <code>/api/:version</code>, dùng chung database. Mỗi bản bổ sung lớp bảo vệ; endpoint chỉ mở từ bản giới thiệu nó.</dd>
+        <dt>Phương án thay thế</dt><dd>Năm ứng dụng/database riêng; hoặc chỉ giữ bản cuối và giải thích thay đổi bằng tài liệu.</dd>
+        <dt>Lý do chọn &amp; trade-off</dt><dd><p><strong>Chọn vì:</strong> so sánh cùng người, cùng tài nguyên để thấy rõ tác động của policy.</p><p class="trade"><strong>Đánh đổi:</strong> mutation ảnh hưởng mọi bản, cần reset khi demo. Starter cố ý có IDOR; chỉ chạy local, không dùng cơ chế chọn policy này cho production.</p></dd>
+      </dl>
+    </article>
+
+    <article>
+      <div class="card-head"><div class="meta"><span class="number">03</span> Ranh giới tin cậy · plan §1, §3, §5</div><h2>Server giữ danh tính và quyền</h2></div>
+      <dl>
+        <dt>Quyết định</dt><dd>Nếu chưa có starter xác thực, dùng adapter token demo cố định. Server lấy danh tính từ token, quyền từ database; UI chỉ gửi request. Tách hàm quyết định quyền (PDP) và route thực thi kiểm tra (PEP).</dd>
+        <dt>Phương án thay thế</dt><dd>Xây đăng nhập JWT/OAuth2 đầy đủ; rải điều kiện quyền ở từng route; chỉ ẩn nút trên UI.</dd>
+        <dt>Lý do chọn &amp; trade-off</dt><dd><p><strong>Chọn vì:</strong> tập trung vào authorization; policy nhất quán cả khi gọi HTTP trực tiếp, không tin role/tenant tự khai.</p><p class="trade"><strong>Đánh đổi:</strong> token demo không thay thế xác thực thật; mọi route vẫn phải gọi PDP đúng chỗ trước khi trả dữ liệu hoặc ghi thay đổi.</p></dd>
+      </dl>
+    </article>
+
+    <article>
+      <div class="card-head"><div class="meta"><span class="number">04</span> Mô hình quyền · plan §4, §10</div><h2>Kết hợp role, quan hệ và thuộc tính</h2></div>
+      <dl>
+        <dt>Quyết định</dt><dd>V1 kiểm tra membership; V2 thêm role theo project; V3 yêu cầu Member là assignee và task còn Open. Owner được sửa cả task Closed. V4 kiểm tra tenant trước, rồi mới xét quyền admin/role.</dd>
+        <dt>Phương án thay thế</dt><dd>Chỉ dùng role toàn hệ thống; chỉ kiểm tra assignee; đưa policy sang engine chuyên dụng.</dd>
+        <dt>Lý do chọn &amp; trade-off</dt><dd><p><strong>Chọn vì:</strong> role đơn lẻ không diễn tả đủ quyền trên từng tài nguyên và trạng thái.</p><p class="trade"><strong>Đánh đổi:</strong> nhiều điều kiện và ngoại lệ hơn, cần bảng quyền cùng test rõ ràng. Lab giữ một Owner cố định, không hỗ trợ chuyển Owner.</p></dd>
+      </dl>
+    </article>
+
+    <article>
+      <div class="card-head"><div class="meta"><span class="number">05</span> Lưu trữ · plan §2–3, §9</div><h2>SQLite bền vững, SQL trực tiếp</h2></div>
+      <dl>
+        <dt>Quyết định</dt><dd>Một file SQLite, không ORM; truy vấn tham số hóa, foreign key và constraints. Chỉ seed khi tạo database; restart giữ dữ liệu, reset mới khôi phục seed.</dd>
+        <dt>Phương án thay thế</dt><dd>Dữ liệu trong RAM/JSON; PostgreSQL + ORM.</dd>
+        <dt>Lý do chọn &amp; trade-off</dt><dd><p><strong>Chọn vì:</strong> có lưu trữ bền và quan hệ dữ liệu mà không cần dựng database server; SQL dễ quan sát khi học.</p><p class="trade"><strong>Đánh đổi:</strong> tự viết truy vấn; chưa đánh giá tải ghi đồng thời hay nhiều process. Foreign key không thay thế kiểm tra quyền và ràng buộc nghiệp vụ.</p></dd>
+      </dl>
+    </article>
+
+    <article>
+      <div class="card-head"><div class="meta"><span class="number">06</span> Tính nhất quán · plan §3–5</div><h2>Đọc → kiểm quyền → ghi trong transaction</h2></div>
+      <dl>
+        <dt>Quyết định</dt><dd>Mutation đọc trạng thái hiện tại, kiểm quyền rồi ghi trong cùng transaction/connection; từ chối hoặc lỗi thì rollback. PATCH chỉ cho sửa title, description, status.</dd>
+        <dt>Phương án thay thế</dt><dd>Kiểm quyền rồi ghi ở hai bước rời; tin trạng thái trong payload; cache quyền qua nhiều request.</dd>
+        <dt>Lý do chọn &amp; trade-off</dt><dd><p><strong>Chọn vì:</strong> gắn quyết định với dữ liệu được đọc; tránh dùng <code>status=Open</code> trong payload để vượt quyền sửa task Closed. Mỗi request đọc lại quyền hiện tại.</p><p class="trade"><strong>Đánh đổi:</strong> transaction giữ tài nguyên lâu hơn, cần xử lý lỗi/rollback; chưa có kiểm chứng chịu tải ghi đồng thời.</p></dd>
+      </dl>
+    </article>
+
+    <article>
+      <div class="card-head"><div class="meta"><span class="number">07</span> API &amp; quan sát · plan §5–6</div><h2>Lỗi rõ nghĩa, trace có giới hạn</h2></div>
+      <dl>
+        <dt>Quyết định</dt><dd>401 khi xác thực lỗi; 403 khi thiếu quyền; 404 khi không tồn tại. UI hiển thị trace server thực sự đánh giá, không chứa token hay nội dung task bị từ chối; 204 vẫn không có body.</dd>
+        <dt>Phương án thay thế</dt><dd>Trả 404 cho cả thiếu quyền; không có trace; trả toàn bộ ngữ cảnh để debug.</dd>
+        <dt>Lý do chọn &amp; trade-off</dt><dd><p><strong>Chọn vì:</strong> người học phân biệt được lỗi và hiểu bước kiểm tra dẫn đến allow/deny.</p><p class="trade"><strong>Đánh đổi:</strong> 403 có thể tiết lộ ID tồn tại. Trace chỉ phục vụ lab local, cần giới hạn nội dung và kích thước; với 204 dùng header demo.</p></dd>
+      </dl>
+    </article>
+
+    <article>
+      <div class="card-head"><div class="meta"><span class="number">08</span> Kiểm chứng · plan §7–9</div><h2>Test HTTP, dữ liệu tách biệt, evidence thật</h2></div>
+      <dl>
+        <dt>Quyết định</dt><dd>Dùng node:test + Supertest, SQLite tạm riêng từng test; kiểm tra status, response và state. Cùng regression IDOR dự kiến FAIL ở Starter, PASS ở V1; evidence chỉ lấy từ lần chạy thật.</dd>
+        <dt>Phương án thay thế</dt><dd>Chỉ test UI thủ công; chỉ unit test policy; dùng chung database demo cho test.</dd>
+        <dt>Lý do chọn &amp; trade-off</dt><dd><p><strong>Chọn vì:</strong> kiểm chứng cả route và policy, phát hiện lộ dữ liệu hoặc ghi trái phép mà không phụ thuộc UI/thứ tự test.</p><p class="trade"><strong>Đánh đổi:</strong> cần quản lý fixture và dọn database; HTTP tests không xác nhận giao diện. Regression cố ý FAIL chạy riêng để bộ test mặc định vẫn hữu ích.</p></dd>
+      </dl>
+    </article>
+  </section>
+  <footer>
+    Nguồn: <a href="plan.md">plan.md</a> · Đây là bản tóm tắt thiết kế dự kiến, không xác nhận tiến độ triển khai hoặc kết quả test.
+    Các phương án thay thế và phần phân tích đánh đổi được bổ sung để giải thích lựa chọn trong kế hoạch.
+  </footer>
+</main>
+</body>
+</html>
