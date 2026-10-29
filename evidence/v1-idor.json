@@ -1,0 +1,51 @@
+{
+  "id": "v1-idor",
+  "capturedAt": "2026-10-29T09:02:56.369Z",
+  "request": {
+    "method": "GET",
+    "path": "/api/v1/tasks/B1",
+    "actor": "alice",
+    "headers": {
+      "Authorization": "[REDACTED]"
+    }
+  },
+  "expectedStatus": 403,
+  "response": {
+    "status": 403,
+    "durationMs": 17,
+    "body": {
+      "data": null,
+      "error": {
+        "code": "NOT_PROJECT_MEMBER"
+      },
+      "trace": [
+        {
+          "name": "Authentication",
+          "result": "PASS",
+          "reason": "alice"
+        },
+        {
+          "name": "Project membership",
+          "result": "FAIL",
+          "reason": "PROJECT_MEMBERSHIP_REQUIRED"
+        },
+        {
+          "name": "Authorization decision",
+          "result": "DENY",
+          "reason": "NOT_PROJECT_MEMBER"
+        },
+        {
+          "name": "Request outcome",
+          "result": "REJECTED",
+          "reason": "NOT_PROJECT_MEMBER"
+        }
+      ],
+      "requestId": "0ac89bfb-e0a0-4d5c-a6a6-352340bafd9f"
+    }
+  },
+  "verification": {
+    "statusMatches": true,
+    "stateUnchanged": true,
+    "deniedDataIsNull": true
+  }
+}

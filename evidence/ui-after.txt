@@ -1,0 +1,11 @@
+Command: node scripts/ui-smoke.js (npm.cmd run test:ui)
+Started: 2026-10-29T09:03:07.398Z
+Expected exit: 0
+Actual exit: 0
+
+STDOUT
+UI smoke PASS: app navigation, V1–V4, task forms, members, delete/reset, anonymous/spoofing/compare, stale response, mobile; no browser JS errors.
+
+STDERR
+(node:13908) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)

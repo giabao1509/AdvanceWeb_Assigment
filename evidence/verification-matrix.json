@@ -1,0 +1,636 @@
+[
+  {
+    "id": "starter-idor",
+    "capturedAt": "2026-10-29T09:02:56.351Z",
+    "request": {
+      "method": "GET",
+      "path": "/api/starter/tasks/B1",
+      "actor": "alice",
+      "headers": {
+        "Authorization": "[REDACTED]"
+      }
+    },
+    "expectedStatus": 200,
+    "response": {
+      "status": 200,
+      "durationMs": 59,
+      "body": {
+        "data": {
+          "id": "B1",
+          "projectId": "beta",
+          "assigneeId": "charlie",
+          "title": "Beta · Private roadmap",
+          "description": "Private Beta task content",
+          "status": "Open"
+        },
+        "error": null,
+        "trace": [
+          {
+            "name": "Authentication",
+            "result": "PASS",
+            "reason": "alice"
+          },
+          {
+            "name": "Object authorization",
+            "result": "SKIPPED",
+            "reason": "STARTER_IDOR"
+          },
+          {
+            "name": "Authorization decision",
+            "result": "ALLOW",
+            "reason": "STARTER_AUTHENTICATION_ONLY"
+          },
+          {
+            "name": "Request outcome",
+            "result": "SUCCESS",
+            "reason": "HTTP_200"
+          }
+        ],
+        "requestId": "c5941f26-9150-47fc-964c-57113081cb39"
+      }
+    },
+    "verification": {
+      "statusMatches": true,
+      "stateUnchanged": true
+    }
+  },
+  {
+    "id": "v1-idor",
+    "capturedAt": "2026-10-29T09:02:56.369Z",
+    "request": {
+      "method": "GET",
+      "path": "/api/v1/tasks/B1",
+      "actor": "alice",
+      "headers": {
+        "Authorization": "[REDACTED]"
+      }
+    },
+    "expectedStatus": 403,
+    "response": {
+      "status": 403,
+      "durationMs": 17,
+      "body": {
+        "data": null,
+        "error": {
+          "code": "NOT_PROJECT_MEMBER"
+        },
+        "trace": [
+          {
+            "name": "Authentication",
+            "result": "PASS",
+            "reason": "alice"
+          },
+          {
+            "name": "Project membership",
+            "result": "FAIL",
+            "reason": "PROJECT_MEMBERSHIP_REQUIRED"
+          },
+          {
+            "name": "Authorization decision",
+            "result": "DENY",
+            "reason": "NOT_PROJECT_MEMBER"
+          },
+          {
+            "name": "Request outcome",
+            "result": "REJECTED",
+            "reason": "NOT_PROJECT_MEMBER"
+          }
+        ],
+        "requestId": "0ac89bfb-e0a0-4d5c-a6a6-352340bafd9f"
+      }
+    },
+    "verification": {
+      "statusMatches": true,
+      "stateUnchanged": true,
+      "deniedDataIsNull": true
+    }
+  },
+  {
+    "id": "anonymous",
+    "capturedAt": "2026-10-29T09:02:56.381Z",
+    "request": {
+      "method": "GET",
+      "path": "/api/v1/tasks/A1",
+      "actor": "Anonymous",
+      "headers": {}
+    },
+    "expectedStatus": 401,
+    "response": {
+      "status": 401,
+      "durationMs": 11,
+      "body": {
+        "data": null,
+        "error": {
+          "code": "UNAUTHENTICATED"
+        },
+        "trace": [
+          {
+            "name": "Authentication",
+            "result": "FAIL",
+            "reason": "TOKEN_REQUIRED"
+          },
+          {
+            "name": "Request outcome",
+            "result": "REJECTED",
+            "reason": "UNAUTHENTICATED"
+          }
+        ],
+        "requestId": "6c32b2c7-2f18-42be-8092-cc49605fe537"
+      }
+    },
+    "verification": {
+      "statusMatches": true,
+      "stateUnchanged": true,
+      "deniedDataIsNull": true
+    }
+  },
+  {
+    "id": "alice-legitimate",
+    "capturedAt": "2026-10-29T09:02:56.393Z",
+    "request": {
+      "method": "GET",
+      "path": "/api/v1/tasks/A1",
+      "actor": "alice",
+      "headers": {
+        "Authorization": "[REDACTED]"
+      }
+    },
+    "expectedStatus": 200,
+    "response": {
+      "status": 200,
+      "durationMs": 11,
+      "body": {
+        "data": {
+          "id": "A1",
+          "projectId": "alpha",
+          "assigneeId": "bob",
+          "title": "Alpha · Build API",
+          "description": "Task assigned to Bob",
+          "status": "Open"
+        },
+        "error": null,
+        "trace": [
+          {
+            "name": "Authentication",
+            "result": "PASS",
+            "reason": "alice"
+          },
+          {
+            "name": "Project membership",
+            "result": "PASS",
+            "reason": "PROJECT_MEMBERSHIP_REQUIRED"
+          },
+          {
+            "name": "Authorization decision",
+            "result": "ALLOW",
+            "reason": "PROJECT_MEMBER_ALLOWED"
+          },
+          {
+            "name": "Request outcome",
+            "result": "SUCCESS",
+            "reason": "HTTP_200"
+          }
+        ],
+        "requestId": "47e45396-797c-408e-a9c6-23f2352539cd"
+      }
+    },
+    "verification": {
+      "statusMatches": true,
+      "stateUnchanged": true
+    }
+  },
+  {
+    "id": "charlie-legitimate",
+    "capturedAt": "2026-10-29T09:02:56.406Z",
+    "request": {
+      "method": "GET",
+      "path": "/api/v1/tasks/B1",
+      "actor": "charlie",
+      "headers": {
+        "Authorization": "[REDACTED]"
+      }
+    },
+    "expectedStatus": 200,
+    "response": {
+      "status": 200,
+      "durationMs": 12,
+      "body": {
+        "data": {
+          "id": "B1",
+          "projectId": "beta",
+          "assigneeId": "charlie",
+          "title": "Beta · Private roadmap",
+          "description": "Private Beta task content",
+          "status": "Open"
+        },
+        "error": null,
+        "trace": [
+          {
+            "name": "Authentication",
+            "result": "PASS",
+            "reason": "charlie"
+          },
+          {
+            "name": "Project membership",
+            "result": "PASS",
+            "reason": "PROJECT_MEMBERSHIP_REQUIRED"
+          },
+          {
+            "name": "Authorization decision",
+            "result": "ALLOW",
+            "reason": "PROJECT_MEMBER_ALLOWED"
+          },
+          {
+            "name": "Request outcome",
+            "result": "SUCCESS",
+            "reason": "HTTP_200"
+          }
+        ],
+        "requestId": "f0f27fe3-1565-4f1d-aaa4-3d4e9c1941f0"
+      }
+    },
+    "verification": {
+      "statusMatches": true,
+      "stateUnchanged": true
+    }
+  },
+  {
+    "id": "member-not-assigned",
+    "capturedAt": "2026-10-29T09:02:56.438Z",
+    "request": {
+      "method": "PATCH",
+      "path": "/api/v3/tasks/A4",
+      "actor": "bob",
+      "headers": {
+        "Authorization": "[REDACTED]",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "title": "Denied attempt"
+      }
+    },
+    "expectedStatus": 403,
+    "response": {
+      "status": 403,
+      "durationMs": 31,
+      "body": {
+        "data": null,
+        "error": {
+          "code": "NOT_ASSIGNEE"
+        },
+        "trace": [
+          {
+            "name": "Authentication",
+            "result": "PASS",
+            "reason": "bob"
+          },
+          {
+            "name": "Project membership",
+            "result": "PASS",
+            "reason": "PROJECT_MEMBERSHIP_REQUIRED"
+          },
+          {
+            "name": "Project role",
+            "result": "PASS",
+            "reason": "Member:edit"
+          },
+          {
+            "name": "Task assignee",
+            "result": "FAIL",
+            "reason": "CALLER_MUST_BE_ASSIGNEE"
+          },
+          {
+            "name": "Authorization decision",
+            "result": "DENY",
+            "reason": "NOT_ASSIGNEE"
+          },
+          {
+            "name": "Request outcome",
+            "result": "REJECTED",
+            "reason": "NOT_ASSIGNEE"
+          }
+        ],
+        "requestId": "43da0c16-d295-435a-b7f8-78661f668b4f"
+      }
+    },
+    "verification": {
+      "statusMatches": true,
+      "stateUnchanged": true,
+      "deniedDataIsNull": true
+    }
+  },
+  {
+    "id": "member-task-closed",
+    "capturedAt": "2026-10-29T09:02:56.452Z",
+    "request": {
+      "method": "PATCH",
+      "path": "/api/v3/tasks/A2",
+      "actor": "bob",
+      "headers": {
+        "Authorization": "[REDACTED]",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "title": "Denied attempt"
+      }
+    },
+    "expectedStatus": 403,
+    "response": {
+      "status": 403,
+      "durationMs": 13,
+      "body": {
+        "data": null,
+        "error": {
+          "code": "TASK_CLOSED"
+        },
+        "trace": [
+          {
+            "name": "Authentication",
+            "result": "PASS",
+            "reason": "bob"
+          },
+          {
+            "name": "Project membership",
+            "result": "PASS",
+            "reason": "PROJECT_MEMBERSHIP_REQUIRED"
+          },
+          {
+            "name": "Project role",
+            "result": "PASS",
+            "reason": "Member:edit"
+          },
+          {
+            "name": "Task assignee",
+            "result": "PASS",
+            "reason": "CALLER_MUST_BE_ASSIGNEE"
+          },
+          {
+            "name": "Task status",
+            "result": "FAIL",
+            "reason": "CURRENT_TASK_MUST_BE_OPEN"
+          },
+          {
+            "name": "Authorization decision",
+            "result": "DENY",
+            "reason": "TASK_CLOSED"
+          },
+          {
+            "name": "Request outcome",
+            "result": "REJECTED",
+            "reason": "TASK_CLOSED"
+          }
+        ],
+        "requestId": "3aca901b-666c-4c7b-8e1e-f19bdb9aef46"
+      }
+    },
+    "verification": {
+      "statusMatches": true,
+      "stateUnchanged": true,
+      "deniedDataIsNull": true
+    }
+  },
+  {
+    "id": "spoofed-role",
+    "capturedAt": "2026-10-29T09:02:56.464Z",
+    "request": {
+      "method": "DELETE",
+      "path": "/api/v2/projects/alpha?role=Admin",
+      "actor": "bob",
+      "headers": {
+        "X-Role": "Admin",
+        "Authorization": "[REDACTED]"
+      }
+    },
+    "expectedStatus": 403,
+    "response": {
+      "status": 403,
+      "durationMs": 12,
+      "body": {
+        "data": null,
+        "error": {
+          "code": "ROLE_DENIED"
+        },
+        "trace": [
+          {
+            "name": "Authentication",
+            "result": "PASS",
+            "reason": "bob"
+          },
+          {
+            "name": "Project membership",
+            "result": "PASS",
+            "reason": "PROJECT_MEMBERSHIP_REQUIRED"
+          },
+          {
+            "name": "Project role",
+            "result": "FAIL",
+            "reason": "Member:delete"
+          },
+          {
+            "name": "Authorization decision",
+            "result": "DENY",
+            "reason": "ROLE_DENIED"
+          },
+          {
+            "name": "Request outcome",
+            "result": "REJECTED",
+            "reason": "ROLE_DENIED"
+          }
+        ],
+        "requestId": "ee6c28bf-f430-4bdb-925e-9811345842dd"
+      }
+    },
+    "verification": {
+      "statusMatches": true,
+      "stateUnchanged": true,
+      "deniedDataIsNull": true
+    }
+  },
+  {
+    "id": "admin-cross-tenant",
+    "capturedAt": "2026-10-29T09:02:56.477Z",
+    "request": {
+      "method": "GET",
+      "path": "/api/v4/tasks/B1?tenantId=beta&role=Admin",
+      "actor": "admin-alpha",
+      "headers": {
+        "X-Role": "Admin",
+        "X-Tenant-Id": "beta",
+        "Authorization": "[REDACTED]"
+      }
+    },
+    "expectedStatus": 403,
+    "response": {
+      "status": 403,
+      "durationMs": 12,
+      "body": {
+        "data": null,
+        "error": {
+          "code": "TENANT_MISMATCH"
+        },
+        "trace": [
+          {
+            "name": "Authentication",
+            "result": "PASS",
+            "reason": "admin-alpha"
+          },
+          {
+            "name": "Tenant boundary",
+            "result": "FAIL",
+            "reason": "SAME_TENANT_REQUIRED"
+          },
+          {
+            "name": "Authorization decision",
+            "result": "DENY",
+            "reason": "TENANT_MISMATCH"
+          },
+          {
+            "name": "Request outcome",
+            "result": "REJECTED",
+            "reason": "TENANT_MISMATCH"
+          }
+        ],
+        "requestId": "0f53211b-407e-4d0a-a1c2-c4fb67127217"
+      }
+    },
+    "verification": {
+      "statusMatches": true,
+      "stateUnchanged": true,
+      "deniedDataIsNull": true
+    }
+  },
+  {
+    "id": "admin-own-tenant",
+    "capturedAt": "2026-10-29T09:02:56.488Z",
+    "request": {
+      "method": "GET",
+      "path": "/api/v4/tasks/A1",
+      "actor": "admin-alpha",
+      "headers": {
+        "Authorization": "[REDACTED]"
+      }
+    },
+    "expectedStatus": 200,
+    "response": {
+      "status": 200,
+      "durationMs": 10,
+      "body": {
+        "data": {
+          "id": "A1",
+          "projectId": "alpha",
+          "assigneeId": "bob",
+          "title": "Alpha · Build API",
+          "description": "Task assigned to Bob",
+          "status": "Open"
+        },
+        "error": null,
+        "trace": [
+          {
+            "name": "Authentication",
+            "result": "PASS",
+            "reason": "admin-alpha"
+          },
+          {
+            "name": "Tenant boundary",
+            "result": "PASS",
+            "reason": "SAME_TENANT_REQUIRED"
+          },
+          {
+            "name": "Tenant admin",
+            "result": "PASS",
+            "reason": "ADMIN_IN_OWN_TENANT"
+          },
+          {
+            "name": "Authorization decision",
+            "result": "ALLOW",
+            "reason": "TENANT_ADMIN_ALLOWED"
+          },
+          {
+            "name": "Request outcome",
+            "result": "SUCCESS",
+            "reason": "HTTP_200"
+          }
+        ],
+        "requestId": "3508a9e0-3bd5-4285-9ca1-c17dee9bfaae"
+      }
+    },
+    "verification": {
+      "statusMatches": true,
+      "stateUnchanged": true
+    }
+  },
+  {
+    "id": "member-assigned-open",
+    "capturedAt": "2026-10-29T09:02:56.528Z",
+    "request": {
+      "method": "PATCH",
+      "path": "/api/v3/tasks/A1",
+      "actor": "bob",
+      "headers": {
+        "Authorization": "[REDACTED]",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "title": "Evidence: assigned open task updated"
+      }
+    },
+    "expectedStatus": 200,
+    "response": {
+      "status": 200,
+      "durationMs": 40,
+      "body": {
+        "data": {
+          "id": "A1",
+          "projectId": "alpha",
+          "assigneeId": "bob",
+          "title": "Evidence: assigned open task updated",
+          "description": "Task assigned to Bob",
+          "status": "Open"
+        },
+        "error": null,
+        "trace": [
+          {
+            "name": "Authentication",
+            "result": "PASS",
+            "reason": "bob"
+          },
+          {
+            "name": "Project membership",
+            "result": "PASS",
+            "reason": "PROJECT_MEMBERSHIP_REQUIRED"
+          },
+          {
+            "name": "Project role",
+            "result": "PASS",
+            "reason": "Member:edit"
+          },
+          {
+            "name": "Task assignee",
+            "result": "PASS",
+            "reason": "CALLER_MUST_BE_ASSIGNEE"
+          },
+          {
+            "name": "Task status",
+            "result": "PASS",
+            "reason": "CURRENT_TASK_MUST_BE_OPEN"
+          },
+          {
+            "name": "Authorization decision",
+            "result": "ALLOW",
+            "reason": "POLICY_ALLOWED"
+          },
+          {
+            "name": "Request outcome",
+            "result": "SUCCESS",
+            "reason": "HTTP_200"
+          }
+        ],
+        "requestId": "0ed236ec-2ae4-4606-95a7-34a2e7cb2f27"
+      }
+    },
+    "verification": {
+      "statusMatches": true,
+      "stateUnchanged": false
+    }
+  }
+]

@@ -186,3 +186,80 @@ test('SQLite persists across reopen; reset restores seed and foreign keys cascad
     assert.equal(db.prepare('SELECT count(*) AS n FROM tasks').get().n,6);
   } finally { db?.close(); rmSync(dir,{recursive:true,force:true}); }
 });
+
+test('Project directory exposes only discoverable names; detail/list enforce every version', async t => {
+  const { request } = await fixture(t);
+  for (const version of ['starter','v1','v2','v3','v4']) {
+    for (const path of ['projects','projects/alpha','projects/alpha/tasks']) {
+      assert.equal((await request(version,null,'GET',path)).status,401);
+      assert.equal((await request(version,'invalid','GET',path)).status,401);
+    }
+    const catalog = await request(version,'alice','GET','projects');
+    assert.equal(catalog.status,200);
+    assert.deepEqual(catalog.body.data,[{id:'alpha',name:'Project Alpha'},{id:'beta',name:'Project Beta'}]);
+    for(const path of ['projects/beta','projects/beta/tasks']) {
+      const r = await request(version,'alice','GET',path);
+      assert.equal(r.status,version === 'starter' ? 200 : 403);
+      if(version !== 'starter') {
+        assert.equal(r.body.data,null);
+        assert.doesNotMatch(JSON.stringify(r.body),/Private Beta|roadmap|charlie|B1|B2/);
+      }
+    }
+    assert.equal((await request(version,'vera','GET','projects/alpha')).status,200);
+    const tasks = await request(version,'vera','GET','projects/alpha/tasks');
+    assert.equal(tasks.status,200); assert.deepEqual(tasks.body.data.map(task=>task.id),['A1','A2','A3','A4']);
+    assert.equal((await request(version,'alice','GET','projects/missing')).status,404);
+    assert.equal((await request(version,'alice','GET','projects/missing/tasks')).status,404);
+    assert.equal((await request(version,'alice','GET','projects/bad%20id/tasks')).status,400);
+    for(const path of ['projects/alpha','projects/alpha/tasks']) {
+      assert.equal((await request(version,'admin-alpha','GET',path)).status,['starter','v4'].includes(version)?200:403);
+    }
+  }
+});
+
+test('Live directory/task list follow mutation, revoked membership, deletion and reset', async t => {
+  const { request, baseUrl } = await fixture(t);
+  await request('v3','bob','PATCH','tasks/A1',{title:'Live title',status:'Closed'});
+  const tasks = await request('v3','alice','GET','projects/alpha/tasks');
+  assert.equal(tasks.body.data[0].title,'Live title'); assert.equal(tasks.body.data[0].status,'Closed');
+  await request('v3','alice','DELETE','projects/alpha/members/bob');
+  for(const path of ['projects/alpha','projects/alpha/tasks']) assert.equal((await request('v3','bob','GET',path)).status,403);
+  await request('v3','alice','DELETE','projects/alpha');
+  assert.deepEqual((await request('v3','alice','GET','projects')).body.data.map(p=>p.id),['beta']);
+  assert.equal((await request('v3','alice','GET','projects/alpha/tasks')).status,404);
+  await fetch(`${baseUrl}/lab/reset`,{method:'POST'});
+  assert.equal((await request('v3','bob','GET','projects/alpha/tasks')).body.data.length,4);
+  assert.equal((await request('v3','alice','GET','projects')).body.data.length,2);
+});
+
+test('Trace separates authorization, fixed-owner business rule and final HTTP outcome', async t => {
+  const { request, db } = await fixture(t);
+  for(const version of ['starter','v1','v2','v3','v4']) {
+    for(const method of ['PATCH','DELETE']) {
+      const before=db.prepare('SELECT * FROM project_memberships WHERE projectId = ? AND userId = ?').get('alpha','alice');
+      const r=await request(version,'alice',method,'projects/alpha/members/alice',method==='PATCH'?{role:'Member'}:undefined);
+      assert.equal(r.status,409); assert.equal(r.body.error.code,'OWNER_IS_FIXED');
+      assert.deepEqual(r.body.trace.slice(-3),[
+        {name:'Authorization decision',result:'ALLOW',reason:version==='starter'?'STARTER_AUTHENTICATION_ONLY':version==='v1'?'PROJECT_MEMBER_ALLOWED':'POLICY_ALLOWED'},
+        {name:'Business rule: fixed project owner',result:'FAIL',reason:'OWNER_IS_FIXED'},
+        {name:'Request outcome',result:'REJECTED',reason:'OWNER_IS_FIXED'},
+      ]);
+      assert.deepEqual(db.prepare('SELECT * FROM project_memberships WHERE projectId = ? AND userId = ?').get('alpha','alice'),before);
+      assert.ok(!r.body.trace.some(c=>c.result==='SUCCESS'));
+    }
+  }
+  const valid=await request('starter','alice','PATCH','projects/alpha/members/vera',{role:'Member'});
+  assert.equal(valid.status,200);
+  assert.deepEqual(valid.body.trace.at(-1),{name:'Request outcome',result:'SUCCESS',reason:'HTTP_200'});
+  const invalid=await request('starter','alice','PATCH','projects/alpha/members/vera',{role:'Admin'});
+  assert.equal(invalid.status,400);
+  assert.ok(invalid.body.trace.some(c=>c.name==='Authorization decision' && c.result==='ALLOW'));
+  assert.deepEqual(invalid.body.trace.at(-1),{name:'Request outcome',result:'REJECTED',reason:'INVALID_ROLE'});
+  const denied=await request('v2','bob','PATCH','projects/alpha/members/vera',{role:'Viewer'});
+  assert.equal(denied.status,403);
+  assert.ok(denied.body.trace.some(c=>c.name==='Authorization decision' && c.result==='DENY'));
+  assert.ok(!denied.body.trace.some(c=>c.name.startsWith('Business rule')),'Business rule was not reached after authorization denial');
+  assert.deepEqual(denied.body.trace.at(-1),{name:'Request outcome',result:'REJECTED',reason:'ROLE_DENIED'});
+  const anonymous=await request('starter',null,'GET','tasks/A1');
+  assert.deepEqual(anonymous.body.trace.at(-1),{name:'Request outcome',result:'REJECTED',reason:'UNAUTHENTICATED'});
+});

@@ -1,6 +1,6 @@
 # Kế hoạch triển khai minilab Task Management API
 
-> Bản chạy tối giản đã triển khai Starter–V4, UI và SQLite. Ưu tiên theo yêu cầu mới: chạy đúng hành vi, chưa tạo đầy đủ bộ evidence. Seed/reset nằm trong `db.js`; routes/trace nằm trong `app.js` để giảm số module. Lệnh evidence/regression riêng bên dưới vẫn là dự kiến, chưa có script tương ứng.
+> Đã triển khai Starter–V4, UI web app và SQLite. Bộ evidence local đã được thu thập bằng `npm.cmd run evidence`: 11 ca HTTP, regression đỏ/xanh, 47/47 tests, browser smoke và diff tái dựng có kiểm chứng. Seed/reset nằm trong `db.js`; routes/trace nằm trong `app.js`. Chi tiết artifact và giới hạn tại `evidence/README.md`; chưa có nghiệm thu giảng viên hoặc hosted CI.
 
 ## 1. Mục tiêu và phạm vi
 
@@ -11,7 +11,7 @@ Xây dựng minilab minh họa sự khác nhau giữa authentication và applica
 - Ưu tiên hoàn thành Starter và V1–V3; V4 là mở rộng sau khi các test chính đã đạt.
 - UI phục vụ demo, thử request và đọc log; server quyết định quyền truy cập.
 - Chỉ sử dụng dữ liệu giả và token demo. Starter cố ý có IDOR để thực hành, chỉ chạy local.
-- Hiện trạng workspace: chỉ có file `README`, chưa có starter code hoặc cơ chế đăng nhập. Nếu không có starter được cung cấp thêm, dùng adapter xác thực với token demo cố định để mô phỏng danh tính đã đăng nhập; không xây hệ thống đăng nhập mới.
+- Ứng dụng đã có backend, SQLite và UI. Dùng adapter token demo để mô phỏng danh tính; không xây hệ thống đăng nhập thật mới.
 
 ## 2. Stack và cấu trúc tối giản
 
@@ -50,7 +50,7 @@ POLICY.md
 README.md
 ```
 
-Các file evidence chỉ được tạo từ kết quả chạy thật; danh sách trên là đầu ra dự kiến, chưa phải bằng chứng đã có.
+Danh sách cấu trúc trên là bản thiết kế ban đầu; tên artifact thực tế và cách tái tạo hiện tại được liệt kê trong `evidence/README.md`. File JSON/log đã được tạo từ request/test chạy thật; diff được ghi rõ là tái dựng, không phải lịch sử hai commit.
 
 ## 3. Dữ liệu mẫu và danh tính
 
@@ -167,30 +167,21 @@ Validate version/route → Authenticate → Validate ID và payload
 - `role` trong API quản lý member là role của user đích, chỉ nhận Viewer/Member sau khi caller đã được authorize; không phải role tự khai của caller.
 - Xóa project đồng thời loại task và memberships liên quan trong transaction SQLite. Test xác nhận người bị từ chối không làm thay đổi dữ liệu.
 
-## 6. UI demo và log
+## 6. UI web app và công cụ demo
 
-Một trang gồm ba vùng, bố cục đơn giản, không cần dashboard thống kê:
+Định hướng UI request/response ban đầu đã được thay bằng [UI-PLAN.md](UI-PLAN.md), theo yêu cầu chốt ngày 2026-10-29.
 
-1. **Request:** chọn version, danh tính hoặc Anonymous, action, task/project ID; payload JSON chỉ hiện khi cần. Có thể nhập ID tự do và dán Bearer token để thử request sai.
-2. **Response:** method, URL, HTTP status, JSON response và thời gian xử lý.
-3. **Authorization trace:** các bước server thực sự đã đánh giá, kết quả từng bước và lý do allow/deny.
+- Đăng nhập chọn tài khoản demo → danh sách mọi project → bảng task → xem/sửa bằng form. Giao diện tiếng Việt, nền sáng, responsive.
+- Có tab thành viên cho GET/POST/PATCH/DELETE và xác nhận xóa project. Các nút vẫn hiện để thử quyền thật trên server.
+- Bổ sung GET `/api/:version/projects` (danh mục chỉ ID/tên), GET `/projects/:id` và GET `/projects/:id/tasks` (nội dung theo policy đọc).
+- Danh mục project là ngoại lệ có chủ đích: tài khoản hợp lệ khám phá được ID/tên mọi project ở mọi version, không nhận nội dung task/members qua danh mục.
+- Nội dung và mutation tuân thủ Starter–V4. Alice mở Beta ở Starter được; V1–V4 bị từ chối. Tenant admin cùng tenant ở V4 có quyền dù không có membership.
+- Response/trace nằm trong Chi tiết kỹ thuật, có lịch sử thao tác; công cụ request tùy chỉnh/preset/so sánh GET nằm trong phần nâng cao.
+- Đổi tài khoản/version xóa dữ liệu bảo vệ và lịch sử cũ; bỏ response đến muộn. Request refresh sau mutation không thay kết quả thao tác đang xem.
+- Reset có xác nhận, nạp lại SQLite và UI. Không tự gửi mutation nhiều version.
+- Chưa mở rộng nghiệp vụ tạo project/task, xóa task hoặc authentication thật.
 
-Trace ví dụ Alice đọc B1:
-
-```text
-Starter: authenticated Alice → object authorization SKIPPED → 200
-V1: authenticated Alice → project membership FAIL → 403
-V4: authenticated Alice → tenant boundary FAIL → 403
-```
-
-“Trước kiểm tra” là thông tin request và danh tính đã xác thực; “sau kiểm tra” là kết quả PDP và response thực tế. Không trả một bản task chưa được authorize để UI hiển thị ở phần trước kiểm tra. Trace chỉ chứa check đã chạy; các check không chạy được ghi SKIPPED, không bịa kết quả.
-
-- Với JSON response, dùng envelope `{ data, error, trace, requestId }`. Bản minilab dùng 200 cho sửa/xóa và 201 cho tạo membership; chưa có endpoint trả 204.
-- Trace chỉ gồm tên check, pass/fail/skipped và mã lý do; không chứa token hoặc nội dung task bị từ chối. Log hiển thị là tiện ích phát triển local.
-- Preset: Alice đọc A1, Alice đọc B1, Charlie đọc B1, Viewer thử edit, Bob sửa A1/A2/A3/A4, giả mạo Admin, Admin Alpha gọi Beta.
-- Nút **So sánh Starter/V1** gửi cùng GET với cùng user/ID đến hai version, hiển thị cạnh nhau. Không tự gửi mutation qua nhiều version vì dữ liệu có thể đã thay đổi.
-- Nút **Reset dữ liệu** gọi endpoint demo riêng, chỉ có trong chế độ lab local; các version dùng chung file SQLite nên mutation ở version trước ảnh hưởng version sau cho đến khi reset. UI ghi rõ điều này; restart server không reset dữ liệu.
-- Có ô header/query tùy chọn cho thử giả mạo; server phải bỏ qua quyền caller tự khai ngay cả khi request được gửi bằng curl hoặc test.
+Cách chạy và trình bày hiện tại ở [README.md](README.md), [DEMO.md](DEMO.md). Checklist triển khai và kết quả kiểm tra UI mới được theo dõi trong UI-PLAN.md; checklist Gate/evidence cũ bên dưới không tự chuyển thành hoàn tất từ việc có code mới.
 
 ## 7. Chiến lược kiểm thử và evidence
 
@@ -213,7 +204,7 @@ Mỗi test tạo app với file SQLite tạm và seed riêng để không phụ 
 
 Kiểm tra cả HTTP status, nội dung response và state sau request. Với mutation bị từ chối, assert dữ liệu không đổi; với mutation được phép, assert thay đổi đã xảy ra và đọc lại được khi phù hợp. Response từ chối không chứa title/description của task đích.
 
-Lệnh dự kiến:
+Các lệnh đã triển khai:
 
 ```text
 npm start                       # Chạy server + UI local
@@ -221,7 +212,7 @@ npm run db:reset                 # Reset database demo về seed ban đầu
 npm test                        # Characterization Starter + tests V1–V4 đã triển khai
 npm run test:idor -- --version=starter  # Regression riêng: dự kiến FAIL
 npm run test:idor -- --version=v1       # Cùng regression: dự kiến PASS
-npm run evidence                # Reset fixture và ghi kết quả thực tế
+npm run evidence                # SQLite tạm riêng, ghi response/log/diff và chạy browser smoke
 ```
 
 Trên PowerShell dùng `npm.cmd` nếu execution policy chặn `npm.ps1`. Script evidence phải ghi rõ version, request đã bỏ token, status, body đã giới hạn, kết quả test và thời điểm chạy. Không đánh dấu hoàn thành bằng output mẫu tự viết.
@@ -256,7 +247,7 @@ Code diff: lưu hoặc hướng dẫn chạy `git diff` cho các file auth/polic
 - [ ] SQLite lưu dữ liệu qua restart; reset khôi phục seed; test dùng database tạm riêng và không thay đổi database demo.
 - [ ] Ghi rõ những phần chưa triển khai/chưa kiểm thử; không gọi V4 hoàn thành nếu mới có kế hoạch.
 
-Ngoài phạm vi: đăng nhập thật, cấp/thu hồi token, OAuth2 server, nhiều process, stress test concurrent writes, cache authorization, policy engine phân tán, chuyển Owner, bulk APIs và UI quản trị hoàn chỉnh. Một file SQLite trong một process đủ cho minilab; vẫn dùng transaction cho kiểm tra quyền và ghi dữ liệu, chưa đánh giá khả năng chịu tải hoặc triển khai phân tán.
+Ngoài phạm vi: đăng nhập thật, cấp/thu hồi token, OAuth2 server, nhiều process, stress test concurrent writes, cache authorization, policy engine phân tán, chuyển Owner, bulk APIs, tạo project/task và xóa task. UI quản lý cho API hiện có được bổ sung theo UI-PLAN.md. Một file SQLite trong một process đủ cho minilab; vẫn dùng transaction cho kiểm tra quyền và ghi dữ liệu, chưa đánh giá khả năng chịu tải hoặc triển khai phân tán.
 
 ## 10. Nội dung giải thích khi demo
 

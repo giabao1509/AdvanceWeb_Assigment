@@ -8,6 +8,8 @@
     "start": "node src/server.js",
     "test": "node --test",
     "test:ui": "node scripts/ui-smoke.js",
+    "test:idor": "node scripts/idor-regression.js",
+    "evidence": "node scripts/collect-evidence.js",
     "db:reset": "node src/reset.js"
   },
   "dependencies": { "express": "^5.1.0" }

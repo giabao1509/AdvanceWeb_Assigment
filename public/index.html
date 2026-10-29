@@ -1,31 +1,42 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="vi">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Task Authorization Lab</title><link rel="stylesheet" href="/styles.css">
-  <script type="module" src="/app.js"></script>
+  <title>Task Authorization Lab · Công việc</title>
+  <link rel="stylesheet" href="/styles.css"><script type="module" src="/app.js"></script>
 </head>
 <body>
-  <header><div><span class="eyebrow">ADVANCED WEB / BLOCK 06</span><h1>Task Authorization Lab<span class="dot">.</span></h1><p>Một request hợp lệ. Nhưng có đúng quyền?</p></div><button id="reset" class="secondary">↺ Reset dữ liệu</button></header>
-  <nav aria-label="Phiên bản" id="versions"></nav>
-  <section class="policy"><span id="policy-label" class="eyebrow"></span><p id="policy-text"></p></section>
-  <main>
-    <section class="panel request"><div class="panel-heading"><h2>01 / Request</h2><span class="tag">LOCAL LAB</span></div>
-      <label for="preset">Tình huống nhanh</label><select id="preset"><option value="">Tự tạo request…</option></select>
-      <div class="row"><div><label for="user">Danh tính</label><select id="user"></select></div><div><label for="action">Thao tác</label><select id="action">
-        <option value="read">GET · Đọc task</option><option value="edit">PATCH · Sửa task</option><option value="delete">DELETE · Xóa project</option><option value="list">GET · Xem members</option><option value="add">POST · Thêm member</option><option value="role">PATCH · Đổi role member</option><option value="remove">DELETE · Xóa member</option>
-      </select></div></div>
-      <div class="row"><div><label for="resource" id="resource-label">Task ID</label><input id="resource" value="B1" maxlength="64" autocomplete="off"></div><div id="member-field" hidden><label for="member">User ID của member</label><input id="member" value="bob" autocomplete="off"></div></div>
-      <div id="payload-field" hidden><label for="payload">JSON body</label><textarea id="payload" rows="5" spellcheck="false">{"title":"Updated from lab"}</textarea></div>
-      <details><summary>Token và request tùy chỉnh</summary><label for="token">Bearer token (để trống = Anonymous)</label><input id="token" spellcheck="false" autocomplete="off"><label for="query">Query giả mạo, ví dụ role=Admin&amp;tenantId=beta</label><input id="query" placeholder="role=Admin&amp;tenantId=beta"><label for="headers">Headers bổ sung (JSON; Authorization dùng ô token)</label><textarea id="headers" rows="3" spellcheck="false">{}</textarea></details>
-      <div class="url" id="url"></div><div class="buttons"><button id="send">Gửi request →</button><button id="compare" class="secondary">So sánh Starter / V1</button></div>
-      <p class="muted">Mọi version có cùng endpoint, chỉ khác policy. Các version dùng chung SQLite; Reset trước khi so sánh thao tác xóa hoặc đổi quyền.</p>
-    </section>
-    <section class="panel output"><div class="panel-heading"><h2>02 / Response</h2><span id="status" class="tag">CHƯA GỬI</span></div><div id="message" role="status" aria-live="polite">Chọn một tình huống rồi gửi request để xem server quyết định quyền.</div><div id="responses"></div>
-      <div class="panel-heading trace-heading"><h2>03 / Authorization trace</h2><span class="muted">SERVER-SIDE</span></div><div id="trace"><p class="muted">Authentication → Resource policy → Allow / Deny</p></div>
-    </section>
-  </main>
-  <section class="fixtures"><h2>Dữ liệu mẫu</h2><div class="row"><p><strong>Project Alpha</strong><br>Alice · Owner / Bob · Member / Vera · Viewer<br>A1: Bob, Open · A2: Bob, Closed<br>A3: chưa assign, Open · A4: Alice, Open</p><p><strong>Project Beta</strong><br>Charlie · Owner<br>B1: Charlie, Open · B2: chưa assign, Open<br>Admin Alpha / Beta: chỉ có quyền admin từ V4.</p></div><p class="muted">Danh mục fixture cố định phục vụ bài học, không phản ánh dữ liệu hiện tại sau mutation. Token demo mô phỏng authentication có sẵn; Starter cố ý có IDOR.</p></section>
-  <footer>Authentication ≠ Authorization <span>SQLite · Project RBAC · ReBAC · ABAC · Tenant boundary</span></footer>
+  <section id="login" class="login-shell">
+    <div class="login-intro"><span class="eyebrow">TASKSPACE / BLOCK 06</span><h1>Công việc rõ ràng.<br>Cộng tác đúng quyền.</h1><p>Quản lý dự án, theo dõi công việc và cộng tác cùng nhóm trong một không gian.</p><div class="intro-card"><span class="badge">KHÔNG GIAN THỰC HÀNH</span><h2>Một ứng dụng, năm lớp bảo vệ</h2><p>Trải nghiệm cùng thao tác qua Starter → V4 để thấy cách quyền truy cập thay đổi.</p></div></div>
+    <form id="login-form" class="login-card"><span class="eyebrow">CHÀO MỪNG TRỞ LẠI</span><h2>Vào không gian làm việc</h2><p class="muted">Chọn tài khoản demo. Không cần mật khẩu.</p><label for="login-user">Tài khoản</label><select id="login-user" required><option value="alice">Alice · Owner Alpha</option><option value="bob">Bob · Member Alpha</option><option value="vera">Vera · Viewer Alpha</option><option value="charlie">Charlie · Owner Beta</option><option value="admin-alpha">Admin Alpha · Tenant admin</option><option value="admin-beta">Admin Beta · Tenant admin</option></select><button type="submit">Vào ứng dụng →</button><p class="muted">Danh tính và token demo chỉ phục vụ bài thực hành local.</p></form>
+  </section>
+  <div id="workspace" hidden>
+    <header class="topbar"><a href="#" id="brand" class="brand"><span class="brand-mark">T</span>Taskspace<span class="badge">LOCAL LAB</span></a><div class="account"><span id="account-name"></span><button id="switch-user" class="secondary small">Đổi tài khoản</button></div></header>
+    <div class="app-layout"><aside class="sidebar"><span class="eyebrow">KHÔNG GIAN LÀM VIỆC</span><button id="home" class="sidebar-link">▦ &nbsp; Tất cả dự án</button><div class="sidebar-note"><strong>Thực hành phân quyền</strong><p>Chọn phiên bản và thử cùng thao tác bằng những tài khoản khác nhau.</p><p>Mọi phiên bản dùng chung dữ liệu SQLite.</p></div><button id="reset" class="secondary small">Khôi phục dữ liệu mẫu</button></aside>
+    <main>
+      <div class="version-bar"><span class="muted">Phiên bản bảo vệ</span><nav id="versions" aria-label="Phiên bản"></nav></div>
+      <p id="policy-text" class="policy"></p>
+      <div id="notice" role="status" aria-live="polite" hidden></div>
+      <section id="page" aria-label="Nội dung ứng dụng"></section>
+      <details id="technical"><summary>Chi tiết kỹ thuật <span class="muted">Request · Response · Authorization trace</span></summary><label for="history">Thao tác gần đây</label><select id="history"></select><div id="technical-content"><p class="muted">Thực hiện một thao tác để xem kết quả server.</p></div></details>
+      <details id="demo-tools"><summary>Công cụ demo nâng cao</summary><p class="muted">Thử truy cập trực tiếp, token sai hoặc giả mạo quyền. Kết quả vẫn do server quyết định.</p><label for="preset">Tình huống nhanh</label><select id="preset"><option value="">Chọn tình huống…</option><option value="idor">Alice mở Beta · IDOR</option><option value="viewer">Vera sửa A1 · Viewer</option><option value="closed">Bob sửa A2 · Closed</option><option value="assigned">Bob sửa A1 · Open</option><option value="admin">Admin Alpha mở Alpha</option><option value="cross">Admin Alpha mở Beta</option></select>
+      <form id="raw-form"><div class="form-grid"><div><label for="raw-method">Method</label><select id="raw-method"><option>GET</option><option>PATCH</option><option>POST</option><option>DELETE</option></select></div><div><label for="raw-path">Đường dẫn sau /api/:version/</label><input id="raw-path" value="tasks/B1" required></div></div><label for="raw-token">Bearer token (để trống để thử Anonymous)</label><input id="raw-token" autocomplete="off" spellcheck="false"><label for="raw-query">Query thử nghiệm</label><input id="raw-query" placeholder="role=Admin&amp;tenantId=beta"><label for="raw-headers">Headers bổ sung (JSON; token lấy từ ô trên)</label><textarea id="raw-headers" rows="2">{}</textarea><label for="raw-body">JSON body (POST/PATCH)</label><textarea id="raw-body" rows="3">{"title":"Updated from lab"}</textarea><div class="actions"><button>Gửi request</button><button type="button" id="compare" class="secondary">So sánh GET Starter / V1</button></div></form></details>
+      <footer>Task Authorization Lab · Authentication ≠ Authorization</footer>
+    </main></div>
+  </div>
+  <dialog id="modal" aria-labelledby="modal-title"><div class="dialog-heading"><h2 id="modal-title"></h2><button id="close-modal" class="secondary small" aria-label="Đóng">✕</button></div><div id="modal-content"></div></dialog>
+  <dialog id="permission-popup" aria-labelledby="permission-title" aria-describedby="permission-description permission-help">
+    <div class="permission-icon" aria-hidden="true">!</div>
+    <h2 id="permission-title"></h2>
+    <p id="permission-description"></p>
+    <p id="permission-help" class="muted"></p>
+    <div class="actions"><button id="permission-dismiss" autofocus>Đã hiểu</button></div>
+  </dialog>
+  <dialog id="success-popup" aria-labelledby="success-title" aria-describedby="success-description">
+    <div class="success-icon" aria-hidden="true">✓</div>
+    <h2 id="success-title">Thao tác thành công</h2>
+    <p id="success-description"></p>
+    <div class="actions"><button id="success-dismiss" autofocus>Đã hiểu</button></div>
+  </dialog>
 </body>
 </html>

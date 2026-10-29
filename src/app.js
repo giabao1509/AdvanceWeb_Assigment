@@ -25,9 +25,10 @@ export function createApp({ db = openDatabase() } = {}) {
   });
   app.use(express.json({ limit: '16kb' }));
   function send(req, res, status, data = null, error = null) {
+    req.trace.push({ name: 'Request outcome', result: status >= 500 ? 'ERROR' : status >= 400 ? 'REJECTED' : 'SUCCESS', reason: error?.code || `HTTP_${status}` });
     res.status(status).json({ data, error, trace: req.trace, requestId: req.requestId });
   }
-  // Public catalog contains only fixed lab identities/IDs, never live task contents.
+    // Public catalog contains only fixed lab identities/IDs, never live task contents.
   app.get('/lab/config', (req, res) => send(req, res, 200, {
     versions,
     users: identities.map(id => ({ id, token: `demo-${id}` })),
@@ -57,7 +58,7 @@ export function createApp({ db = openDatabase() } = {}) {
         if (!project) fail(404, 'PROJECT_NOT_FOUND');
         const membership = db.prepare('SELECT * FROM project_memberships WHERE projectId = ? AND userId = ?').get(project.id, req.principal.id);
         const decision = authorize(req.params.version, req.principal, action, { project, task, membership });
-        req.trace.push(...decision.checks, { name: 'Decision', result: decision.allowed ? 'ALLOW' : 'DENY', reason: decision.reason });
+        req.trace.push(...decision.checks, { name: 'Authorization decision', result: decision.allowed ? 'ALLOW' : 'DENY', reason: decision.reason });
         if (!decision.allowed) fail(403, decision.reason);
         return work(req, { task, project });
       };
@@ -65,7 +66,15 @@ export function createApp({ db = openDatabase() } = {}) {
       send(req, res, Number.isInteger(output?.status) ? output.status : 200, output?.data ?? output);
     };
   }
-  api.get('/tasks/:id', endpoint('read', 'task', (req, { task }) => task));
+    // Discoverable lab directory: authentication grants only project IDs/names.
+    api.get('/projects', (req, res) => {
+      req.trace.push({ name: 'Lab directory', result: 'ALLOW', reason: 'DISCOVERABLE_PROJECT_NAMES_ONLY' });
+      send(req, res, 200, db.prepare('SELECT id, name FROM projects ORDER BY id').all());
+    });
+    api.get('/projects/:id', endpoint('read', 'project', (req, { project }) => project));
+    api.get('/projects/:id/tasks', endpoint('read', 'project', (req, { project }) =>
+      db.prepare('SELECT * FROM tasks WHERE projectId = ? ORDER BY id').all(project.id)));
+    api.get('/tasks/:id', endpoint('read', 'task', (req, { task }) => task));
   api.patch('/tasks/:id', endpoint('edit', 'task', (req, { task }) => {
     bodyFields(req.body, ['title','description','status']);
     for (const key of ['title','description']) if (key in req.body && (typeof req.body[key] !== 'string' || req.body[key].length > (key === 'title' ? 200 : 2000) || (key === 'title' && !req.body[key].trim()))) fail(400, 'INVALID_TEXT');
@@ -93,7 +102,9 @@ export function createApp({ db = openDatabase() } = {}) {
   const changeMember = remove => endpoint('members', 'project', (req, { project }) => {
     const member = db.prepare('SELECT * FROM project_memberships WHERE projectId = ? AND userId = ?').get(project.id, req.params.userId);
     if (!member) fail(404, 'MEMBERSHIP_NOT_FOUND');
-    if (member.role === 'Owner') fail(409, 'OWNER_IS_FIXED');
+    const ownerIsFixed = member.role === 'Owner';
+    req.trace.push({ name: 'Business rule: fixed project owner', result: ownerIsFixed ? 'FAIL' : 'PASS', reason: ownerIsFixed ? 'OWNER_IS_FIXED' : 'TARGET_IS_NOT_OWNER' });
+    if (ownerIsFixed) fail(409, 'OWNER_IS_FIXED');
     if (remove) {
       db.prepare('DELETE FROM project_memberships WHERE projectId = ? AND userId = ?').run(project.id, member.userId);
       return { deleted: member.userId };
