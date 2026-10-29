@@ -19,9 +19,9 @@ flowchart TB
   ROUTE -->|JSON: data, error, trace, requestId| UI
 ```
 
-Khi nhận yêu cầu từ trình duyệt, Express xác định người gửi và đọc dữ liệu cần xét quyền. Hàm `authorize()` trả về quyết định cho phép hoặc từ chối; route dựa vào đó để trả nội dung hoặc ghi thay đổi. SQLite lưu cả dữ liệu nghiệp vụ và thông tin phân quyền. Các thành phần trong sơ đồ đều chạy trong cùng một process.
+Luồng xử lý gồm ba bước: **xác định người gửi → kiểm tra quyền → đọc hoặc sửa dữ liệu**. Server chỉ thực hiện bước cuối khi người dùng được phép. Dữ liệu công việc và thông tin phân quyền đều nằm trong SQLite; các thành phần trên chạy trong cùng một ứng dụng.
 
-**PEP** (Policy Enforcement Point) là nơi thực thi quyết định, nằm trong wrapper `endpoint()` của route. **PDP** (Policy Decision Point) là nơi tính quyết định, nằm trong `policy.js`. PDP không tự ghi database; PEP phải chặn trước khi gọi phần xử lý nghiệp vụ.
+**PDP** (Policy Decision Point) quyết định người dùng có được phép thao tác hay không. **PEP** (Policy Enforcement Point) thực thi quyết định đó: cho chạy nghiệp vụ hoặc dừng request. Trong code, PDP là hàm `authorize()` trong `policy.js`; PEP nằm trong hàm bọc route `endpoint()`.
 
 UI và API được Express phục vụ tại `http://127.0.0.1:3000`. UI dùng HTML/CSS/JavaScript thuần; server chỉ bind loopback. Các nút vẫn xuất hiện để người học thử cả trường hợp bị từ chối. Việc ẩn hoặc hiện nút không quyết định quyền truy cập.
 
@@ -29,7 +29,7 @@ UI và API được Express phục vụ tại `http://127.0.0.1:3000`. UI dùng 
 
 ## 02. Dữ liệu: phân biệt danh tính, role và quan hệ
 
-SQLite có năm bảng. `users` xác định một người thuộc tenant nào và có phải tenant admin hay không. Role Viewer/Member/Owner nằm ở `project_memberships`, vì một người có thể có quyền khác nhau trong từng project. `tasks.assigneeId` ghi người được giao việc; quan hệ này không tự cấp quyền thành viên.
+SQLite lưu tổ chức, người dùng, project, danh sách thành viên và task trong năm bảng. Mỗi người thuộc một tổ chức, nhưng có thể giữ vai trò khác nhau ở từng project. Người được giao task được lưu riêng: được giao việc chưa có nghĩa là có quyền tham gia project.
 
 ```mermaid
 flowchart LR
@@ -53,13 +53,15 @@ flowchart LR
 
 Alpha có A1 (Bob, Open), A2 (Bob, Closed), A3 (chưa giao, Open), A4 (Alice, Open). Beta có B1 (Charlie, Open) và B2 (chưa giao, Open). Các ID cố định giúp so sánh policy mà không cần tạo thêm dữ liệu.
 
-### Danh tính được xác định như thế nào?
+### Server xác định người dùng và kiểm tra quyền ra sao?
 
-Client gửi `Authorization: Bearer demo-bob`. `authenticate()` chỉ nhận các định danh demo đã liệt kê, sau đó truy vấn bảng `users`. Principal dùng để xét quyền gồm thông tin người dùng từ database. Đây là mô phỏng xác thực bằng token công khai; màn hình chọn tài khoản không kiểm tra mật khẩu, không phát JWT và không có phiên đăng nhập bảo mật.
+Khi chọn Bob, trình duyệt gửi token demo của Bob trong mỗi request. Server dùng token để tìm thông tin tài khoản; thông tin này gọi là **principal**, tức người đang yêu cầu thao tác. Đây chỉ là cách chọn tài khoản để demo, chưa có đăng nhập bằng mật khẩu hay phiên bảo mật.
 
-Role của caller được đọc lại từ membership của **đúng project chứa tài nguyên**. Query `role=Admin`, header `X-Role` hay `X-Tenant-Id` không được dùng làm đầu vào cấp quyền. Với task, project được lấy từ `task.projectId` trong database, không lấy từ một project do caller tự khai.
+Sau đó, server kiểm tra quyền trên task được yêu cầu. Ví dụ, khi Bob muốn sửa A1, server tìm project chứa A1 rồi đọc tư cách thành viên và vai trò của Bob trong project đó. Các thông tin này lấy từ database, không lấy từ quyền do trình duyệt tự khai.
 
-**Ví dụ:** Bob vẫn là assignee của A1 sau khi Alice xóa membership của Bob. Request tiếp theo của Bob bị từ chối vì bước membership thất bại trước bước assignee. Được giao việc và còn quyền tham gia project là hai điều kiện riêng.
+Từ V3, Bob chỉ sửa được A1 khi còn là thành viên, có vai trò cho phép sửa, được giao A1 và task còn Open. Nếu bị xóa khỏi project, Bob mất quyền sửa dù A1 vẫn ghi tên Bob là người được giao.
+
+**Scope và quyền trên task:** lab chưa dùng OAuth2 hay scope. Nếu sau này token có scope “đọc task”, server vẫn phải kiểm tra người dùng được đọc task nào. Scope đó không tự cho phép đọc mọi task như B1.
 
 ## 03. Năm policy thay đổi điều gì?
 
@@ -77,13 +79,13 @@ Mỗi version dùng cùng routes và database. Bảng dưới áp dụng cho cá
 
 Membership tạo danh sách quyền truy cập theo project (ACL). V2 gom quyền theo role (RBAC). V3 bổ sung quan hệ người dùng–task (ReBAC) và thuộc tính trạng thái (ABAC). V4 thêm điều kiện tenant. Các khái niệm này cùng xuất hiện trong một chuỗi kiểm tra; hệ thống không chạy bốn engine phân quyền riêng.
 
-Từ V2, action `read` cho mọi role có membership; `edit` cho Member/Owner; `delete` và `members` cho Owner. Vì vậy, **Viewer đọc được task nhưng không được xem danh sách thành viên**: API members dùng action `members`, không dùng `read`.
+Từ V2, các thành viên đều được đọc task; Member và Owner được sửa; chỉ Owner được xóa project và quản lý thành viên. Việc xem danh sách thành viên cũng thuộc quyền quản lý, nên **Viewer đọc được task nhưng không xem được danh sách thành viên**.
 
 ### Các ngoại lệ có chủ đích
 
 **Owner ở V3/V4** được sửa cả task Closed và task giao cho người khác. Điều kiện assignee/Open chỉ áp dụng với Member. Member có thể đóng task Open của mình, nhưng request mở lại bị chặn vì trạng thái trước khi ghi đã là Closed.
 
-**Admin ở V4** được xét sau khi kiểm tra tenant. Nếu khác tenant, server trả `TENANT_MISMATCH` ngay; cờ admin không vượt qua bước này. Nếu cùng tenant, PDP cho phép mà không cần membership. Phần xử lý nghiệp vụ vẫn kiểm tra payload, Owner cố định và tenant của người được thêm vào project.
+**Admin ở V4** chỉ được quản trị trong tổ chức của mình, kể cả khi chưa tham gia từng project. Admin Alpha vẫn bị chặn ở Beta. Quyền admin không bỏ qua kiểm tra dữ liệu đầu vào, quy tắc giữ nguyên Owner hay yêu cầu thành viên mới phải cùng tổ chức.
 
 V1–V3 không có tenant boundary riêng. V4 cũng không hoàn toàn là “thêm một điều kiện”: nó vừa siết ranh giới tenant, vừa mở ngoại lệ admin trong tenant. Không có đặc quyền admin ở V1–V3 khi người đó chưa có membership.
 
@@ -95,25 +97,27 @@ Trong báo cáo này, danh sách thành viên ở V1 được gọi là ACL cấ
 
 ### Starter → V1: chặn truy cập ngoài project bằng ACL
 
-Ở Starter, Alice có token hợp lệ nên vẫn đọc được B1 của Beta dù không tham gia project này. V1 cần chặn trường hợp IDOR đó: người dùng chỉ được truy cập tài nguyên trong project mình tham gia.
+Ở Starter, Alice đổi ID từ A1 sang B1 vẫn đọc được dữ liệu của Beta dù không tham gia project này. Đây là **IDOR/BOLA** (Broken Object Level Authorization): truy cập trái phép theo chiều ngang, sang tài nguyên ngoài quyền. V1 chặn trường hợp này bằng membership.
 
-Server tra project từ tài nguyên thật, rồi kiểm tra caller có trong `project_memberships` của project đó. Danh sách thành viên đóng vai trò ACL chung cho tài nguyên thuộc project, đáp ứng phạm vi V1. Chưa cần kiểm tra assignee hay status vì V1 đang giải quyết quyền tham gia project.
+V1 tìm project chứa task, rồi kiểm tra người gửi có trong danh sách thành viên hay không. Danh sách này đóng vai trò ACL cho các tài nguyên trong project. V1 chưa xét người được giao task hoặc trạng thái, vì mục tiêu ở bước này là chặn người ngoài project.
 
 Alice/B1 chuyển 200 → 403, còn Alice/A1 và Charlie/B1 vẫn 200. Tuy nhiên, Vera là Viewer vẫn sửa task, xóa project và quản lý members trong Alpha được. V1 mới trả lời “có trong danh sách truy cập không”, chưa phân biệt hành động; đây là lý do cần V2.
 
 ### V1 → V2: giữ ACL, thêm quyền theo role và action
 
-Viewer chỉ đọc, Member được đọc/sửa, Owner được quản lý members và xóa project. Membership đơn thuần của V1 không diễn tả được sự khác nhau này.
+V1 cấp quyền quá rộng cho thành viên. V2 bắt đầu áp dụng **least privilege** (quyền tối thiểu): Viewer chỉ đọc, Member đọc/sửa, Owner quản lý members và xóa project.
 
-Sau khi kiểm tra membership, PDP đọc role của caller tại đúng project rồi xét ma trận role–action. ACL tiếp tục chặn người ngoài; RBAC bổ sung giới hạn hành động cho người bên trong. Không dùng role do caller tự khai và không bỏ bước ACL.
+Viewer/Member gọi chức năng xóa project hoặc quản lý members trái với yêu cầu này là **BFLA** (Broken Function Level Authorization), vượt quyền theo chiều dọc. V1 còn cho phép để minh họa giới hạn; V2 chặn bằng role/action.
+
+V2 vẫn kiểm tra người dùng có tham gia project, sau đó mới xét vai trò của họ có được thực hiện thao tác đang yêu cầu hay không. Vì vậy, người ngoài vẫn bị chặn, còn thành viên chỉ được dùng các chức năng phù hợp với vai trò.
 
 Vera sửa A1 chuyển 200 → 403; Bob vẫn sửa A1 được nhưng không được xóa project hay quản lý members. Bob cũng vẫn sửa được A2 Closed, A3 chưa giao và A4 giao cho Alice: RBAC cho phép theo nhóm Member, chưa xét từng task. Giới hạn này dẫn tới V3.
 
 ### V2 → V3: giữ ACL/RBAC, thêm assignee và trạng thái
 
-Member chỉ được sửa task được giao cho mình và hiện còn Open. Role Member không đủ để suy ra hai điều kiện đó.
+V2 vẫn cho Member sửa mọi task trong project. V3 tiếp tục áp dụng **least privilege**: Member chỉ sửa task được giao cho mình và hiện còn Open. Role Member chưa đủ để đáp ứng hai điều kiện này.
 
-Sau membership và role, PDP kiểm tra quan hệ `task.assigneeId === principal.id` (ReBAC) rồi kiểm tra status hiện tại là Open (ABAC). Dữ liệu lấy từ server; không xét quyền bằng status mà client muốn ghi. Owner giữ quyền sửa rộng đã có từ V2; điều kiện mới chỉ dành cho Member.
+Sau bước kiểm tra thành viên và vai trò, V3 yêu cầu người sửa phải là người được giao task (ReBAC), đồng thời task đang Open (ABAC). Trạng thái được đọc từ database trước khi sửa. Hai điều kiện mới chỉ áp dụng với Member; Owner giữ quyền sửa rộng đã có từ V2.
 
 Bob sửa A1 Open được; A2/A3/A4 chuyển từ 200 ở V2 sang 403 ở V3. Bob mất membership vẫn bị chặn dù còn là assignee. V3 giải quyết quyền theo task nhưng chưa có tenant boundary riêng hoặc quyền quản trị cấp tenant; đó là phạm vi mở rộng của V4.
 
@@ -125,7 +129,7 @@ V4 có hai yêu cầu: cách ly dữ liệu nghiệp vụ giữa các tổ chứ
 
 V3 xét quyền theo membership, role và task, chưa kiểm tra trực tiếp tenant. Alice đã không đọc được B1 vì thiếu membership, nên ca này chưa cho thấy một lỗi truy cập khác tenant ở V3. V4 bổ sung kiểm tra tenant riêng để ranh giới giữa hai tổ chức không chỉ phụ thuộc vào danh sách thành viên của từng project.
 
-V4 so sánh tenant của caller và project trước. Khác tenant thì dừng với `TENANT_MISMATCH`; cùng tenant mới xét cờ admin từ server. Admin hợp lệ có quyền tương đương Owner. Caller không phải admin tiếp tục qua membership → role → assignee/status như V3. Khi thêm thành viên, route còn kiểm tra user đích cùng tenant với project.
+V4 kiểm tra người dùng và project có cùng tổ chức trước. Nếu khác, request bị từ chối ngay. Nếu cùng tổ chức, admin được quyền tương đương Owner; người dùng thường tiếp tục qua các kiểm tra của V3. Khi thêm thành viên, server cũng kiểm tra người được thêm có cùng tổ chức với project.
 
 Admin Alpha chưa có membership bị từ chối khi mở Alpha ở V3 (403), nhưng được phép ở V4 (200); mở Beta vẫn bị từ chối (403). Kết quả thay đổi vì V4 thêm quyền quản trị trong tenant. Quyền này vẫn chịu kiểm tra tenant, dữ liệu đầu vào và quy tắc Owner cố định. Riêng danh mục tên project được giữ mở để phục vụ demo như giải thích ở mục 07.
 
@@ -148,7 +152,14 @@ Schema và dữ liệu mẫu có sẵn role, assignee, status và tenant để c
 
 ## 06. Một lần sửa task đi qua những bước nào?
 
-Xét Bob gửi `PATCH /api/v3/tasks/A1` với body `{"status":"Closed"}`. Token chứng minh danh tính demo; quyết định sửa vẫn dựa vào project, membership, assignee và trạng thái hiện tại lấy từ server.
+Ví dụ Bob yêu cầu đóng A1 ở V3. Server xét quyền dựa trên:
+
+- **Người thao tác (principal):** Bob, được xác định qua token.
+- **Hành động (action):** sửa task; API ánh xạ thành `edit`.
+- **Tài nguyên (resource):** A1 và project chứa A1.
+- **Điều kiện:** Bob còn là thành viên, có role Member, được giao A1 và A1 đang Open.
+
+Các điều kiện lấy từ database; tenant chỉ được xét từ V4. API cho thao tác này là `PATCH /api/v3/tasks/A1`.
 
 ```mermaid
 flowchart TB
@@ -163,15 +174,15 @@ flowchart TB
 
 ### Vì sao đọc, xét quyền và ghi trong cùng transaction?
 
-Wrapper `endpoint()` đưa các thao tác khác GET vào `transaction(db, execute)`. `BEGIN IMMEDIATE` bắt đầu transaction ghi trước khi tải tài nguyên và membership. Các truy vấn tiếp theo, lời gọi PDP và câu UPDATE chạy đồng bộ trên cùng connection. Thành công thì `COMMIT`; ném lỗi ở bất kỳ bước nào trong callback thì `ROLLBACK`.
+Server đọc dữ liệu, xét quyền và ghi trong cùng một transaction trên cùng connection. Nếu được phép và dữ liệu hợp lệ, thay đổi được lưu; nếu bị từ chối hoặc gặp lỗi, transaction hủy thay đổi.
 
-Nhờ vậy, quyết định dựa trên trạng thái vừa đọc trong transaction ghi; không có bước `await` ra ngoài giữa xét quyền và cập nhật. SQLite chỉ cho một writer tại một thời điểm. `busy_timeout = 3000` cho phép chờ khóa trong giới hạn cấu hình, không chứng minh khả năng chịu tải đồng thời.
+Trong code, transaction bắt đầu bằng `BEGIN IMMEDIATE`, kết thúc bằng `COMMIT` hoặc `ROLLBACK`; không có bước chờ bất đồng bộ giữa xét quyền và cập nhật. SQLite chỉ cho một bên ghi tại một thời điểm và được cấu hình chờ khóa tối đa 3 giây. Khả năng chịu tải ghi đồng thời chưa được kiểm thử.
 
 ### Không xét quyền bằng trạng thái người dùng muốn ghi
 
-A1 đang Open, Bob là Member và assignee nên được đóng task. Ở request tiếp theo, dù Bob gửi `{"status":"Open"}`, PDP vẫn nhìn thấy A1 đang Closed trong database và từ chối. Nếu xét theo status trong body, caller có thể tự khai Open để vượt điều kiện.
+A1 đang Open và được giao cho Bob, nên Bob có thể đóng task. Sau đó, Bob không thể tự mở lại: server đọc thấy A1 đã Closed và từ chối. Trạng thái muốn ghi trong request không thể thay thế trạng thái hiện tại trong database để vượt kiểm tra quyền.
 
-`PATCH` chỉ nhận `title`, `description`, `status`; không nhận `assigneeId`, `projectId`, `tenantId` hoặc role. Sau khi được cấp quyền, route kiểm tra field hợp lệ rồi mới UPDATE. Caller thiếu quyền có thể nhận 403 trước khi lỗi field được đánh giá; lỗi JSON hỏng được middleware bắt sớm hơn.
+API sửa task chỉ nhận tiêu đề, mô tả và trạng thái. Người dùng không thể qua API này đổi người được giao, project, tenant hay vai trò. Server xét quyền trước rồi mới kiểm tra các trường cần sửa; riêng JSON sai cú pháp bị chặn ngay khi nhận request.
 
 **Đọc dữ liệu:** GET tải tài nguyên và membership rồi xét quyền trước khi trả nội dung, nhưng không được bọc trong transaction ghi này. Chưa kiểm thử tranh chấp nhiều process; không suy rộng cơ chế local thành bảo đảm cho hệ thống phân tán.
 
@@ -196,9 +207,11 @@ Danh mục cố ý trả ID/tên mọi project đang tồn tại cho người đ
 
 Đây là quyết định phục vụ demo, có đánh đổi là tên project được khám phá ngoài phạm vi tenant. Nếu triển khai thật, cần quyết định lại danh mục có phải lọc theo quyền hay không; không mặc nhiên giữ ngoại lệ này.
 
-### Kết quả có cùng khuôn dạng
+### Cấu trúc phản hồi API
 
-Response API dùng `{ data, error, trace, requestId }`. Khi bị từ chối, `data` là `null`; trace ghi những bước đã thực sự chạy và lý do dừng. Trace không chứa bearer token hoặc nội dung task bị chặn. `requestId` là UUID cho request, chưa có kho audit log bền vững để tra cứu lại.
+Mỗi phản hồi gồm dữ liệu, lỗi nếu có, các bước xét quyền và mã request. Khi bị từ chối, phần dữ liệu để trống; phần xét quyền cho biết request dừng ở đâu và vì sao. Token và nội dung task bị chặn không xuất hiện trong phần này.
+
+Các trường tương ứng trong JSON là `data`, `error`, `trace` và `requestId`. Mã request là UUID để phân biệt từng lần gọi; hiện chưa có kho nhật ký lưu lâu dài để tra cứu lại.
 
 | HTTP status | Khi nào xuất hiện |
 | --- | --- |
@@ -217,7 +230,7 @@ Xóa hiện trả **200 kèm JSON**, không trả 204. Phân biệt 403 và 404 
 
 Express phục vụ cả UI và API để bài lab có thể chạy bằng một lệnh. UI gọi đường dẫn tương đối `/api/...`, nên frontend và backend cùng origin. Cách tổ chức này giảm phần cấu hình khi chạy thử và giúp việc theo dõi request dễ hơn.
 
-`server.js` mở app tại loopback; `createApp()` gắn router API và middleware phục vụ thư mục `public`. Node dùng ESM, Express 5, SQLite tích hợp qua `node:sqlite`; không có bước build UI.
+Server chỉ lắng nghe trên máy local. Express phục vụ các API và các file giao diện trong thư mục `public`. Ứng dụng dùng Node.js, Express 5 và SQLite tích hợp sẵn trong Node; giao diện không cần bước build riêng.
 
 UI tự quản lý DOM, form và trạng thái; database đồng bộ có thể chặn event loop khi truy vấn lâu. React với API tách riêng hoặc PostgreSQL có thể phù hợp khi nhu cầu tăng, nhưng thêm cấu hình mà bài lab hiện chưa cần.
 
@@ -225,9 +238,9 @@ UI tự quản lý DOM, form và trạng thái; database đồng bộ có thể 
 
 Các version dùng cùng người dùng và tài nguyên để kết quả so sánh chỉ ra được ảnh hưởng của policy. Nếu mỗi version có dữ liệu mẫu hoặc route khác nhau, sẽ khó xác định vì sao cùng một thao tác lại cho kết quả khác.
 
-Middleware đọc `:version`, chỉ chấp nhận năm giá trị khai báo; routes gọi cùng `authorize(version, principal, action, context)`. Dữ liệu sửa ở V1 cũng được thấy ở V4 vì không có database riêng theo version.
+Server chọn policy theo version trong URL. Tất cả các bản đều gọi chung một hàm xét quyền và dùng chung database, nên dữ liệu sửa ở V1 cũng xuất hiện khi chuyển sang V4.
 
-Các version dùng chung schema và file `data/lab.sqlite`. Bảng `tenants`, trường `tenantId` và cờ `isAdmin` đã có trong dữ liệu mẫu từ đầu, nhưng **chỉ V4 dùng chúng để kiểm tra tenant và cấp quyền tenant admin**. Vì vậy, cùng một request Alice đọc B1, V1 từ chối do thiếu membership còn V4 từ chối do khác tenant.
+Thông tin tổ chức và tài khoản admin đã có trong dữ liệu mẫu từ đầu, nhưng **chỉ V4 dùng để kiểm tra tenant và cấp quyền tenant admin**. Cùng một yêu cầu Alice đọc B1, V1 từ chối do thiếu membership còn V4 từ chối do khác tenant.
 
 Khi đổi version, UI đổi prefix request, chẳng hạn `/api/v1/tasks/B1` thành `/api/v4/tasks/B1`, xóa nội dung và lịch sử cũ trên màn hình rồi tải lại. Server chọn policy theo URL; database và dữ liệu đang lưu vẫn giữ nguyên. Thao tác này không chạy migration hay reset, nên bài lab chưa mô phỏng bước bổ sung schema tenant khi nâng cấp lên V4.
 
@@ -237,19 +250,21 @@ Do dùng chung database, cần reset trước khi so sánh các ca sửa trạng
 
 Các điều kiện phân quyền được gom vào một hàm để tránh lặp ở từng route. Khi cần sửa quyền của một role, có thể đối chiếu bảng quyền với `authorize()` tại một chỗ.
 
-`endpoint(action, kind, work)` tải tài nguyên theo ID, tìm project chứa nó và membership của caller, rồi gọi PDP. Chỉ khi `allowed` mới chạy `work`. Kết quả PDP kèm `checks`, nên trace phản ánh nhánh thực tế, kể cả các bước bị bỏ qua ở Starter.
+Mỗi API nghiệp vụ đi qua hàm bọc route để tải tài nguyên, tìm project và đọc tư cách thành viên của người gửi. Hàm này hỏi PDP rồi chỉ cho chạy nghiệp vụ khi được phép. Các bước đã kiểm tra được ghi lại để hiển thị trên giao diện.
 
-Khi thêm route, vẫn phải gọi wrapper và truyền đúng action. Một route bỏ qua wrapper sẽ không được PDP kiểm tra. Danh mục tên project hiện được viết riêng theo ngoại lệ của lab. Với ứng dụng một process này, policy nằm ngay trong server; chưa cần một dịch vụ phân quyền riêng.
+Hiện các test kiểm chứng việc chặn quyền tại API. Nếu thêm route hoặc đường gọi service khác, đường đó cũng phải kiểm tra quyền trước khi chạy nghiệp vụ và dùng chung PDP. Viết tập trung policy không tự bảo vệ những đường gọi bỏ qua kiểm tra. Danh mục tên project là ngoại lệ riêng của lab.
+
+Mỗi request đều đọc lại danh sách thành viên. Vì vậy, nếu Bob bị xóa khỏi project, request tiếp theo của Bob sẽ bị chặn. Hiện chưa lưu tạm quyết định quyền (cache policy). Nếu bổ sung cache này, phải xóa hoặc cập nhật khi quyền thay đổi; chỉ dẫn `Cache-Control: no-store` cho cache HTTP không giải quyết việc đó.
 
 ## 09. Deny by default và least privilege được áp dụng ra sao?
 
 ### Chỉ cấp quyền khi policy nhận diện và cho phép
 
-Trước khi sửa, PDP cho phép edit khi role khác Viewer và xử lý action khác read/edit theo quyền Owner. Vì vậy, một lời gọi trực tiếp với role hoặc action lạ vẫn có thể được cho phép. Các route và ràng buộc database đã hạn chế đầu vào qua HTTP, nhưng bản thân PDP còn thiếu bước kiểm tra này.
+Trước khi sửa, cách kiểm tra còn quá rộng: role khác Viewer có thể được sửa task, còn thao tác chưa biết có thể được cho phép nếu người gọi là Owner. Các API và database đã giới hạn đầu vào, nhưng gọi trực tiếp hàm xét quyền với giá trị lạ vẫn có nguy cơ được cho phép.
 
-Sau khi sửa, `authorize()` kiểm tra version, action và role membership có nằm trong danh sách hợp lệ hay không trước khi xét các nhánh Starter, V1 và tenant admin. Từ V2, quyền được liệt kê cụ thể: Viewer `[read]`, Member `[read, edit]`, Owner `[read, edit, delete, members]`. Action chưa khai báo bị từ chối ngay cả khi người gọi là Owner hoặc admin.
+Sau khi sửa, server từ chối version, hành động hoặc role không được nhận diện trước khi xét các nhánh Starter, V1 và admin. Từ V2, quyền được liệt kê rõ: Viewer chỉ đọc; Member đọc và sửa; Owner được đọc, sửa, xóa project và quản lý thành viên. Thao tác chưa khai báo luôn bị từ chối, kể cả với Owner hoặc admin. Đây là **deny by default**: chỉ cấp quyền khi có quy tắc cho phép rõ ràng.
 
-PDP còn chặn thiếu danh tính/project, hoặc edit thiếu task hay task không thuộc project đã truyền. PEP chỉ gọi nghiệp vụ khi `decision.allowed === true`. HTTP vẫn trả 401 cho token thiếu/sai, 404 cho version/route lạ và 403 cho deny từ PDP; response từ chối không chứa nội dung tài nguyên.
+Hàm xét quyền cũng từ chối khi thiếu người dùng, project hoặc task cần sửa, hay task không thuộc project đã cung cấp. Phần nghiệp vụ chỉ chạy khi nhận quyết định cho phép rõ ràng. Qua HTTP, token thiếu/sai trả 401, version hoặc route lạ trả 404, còn thiếu quyền trả 403.
 
 ### Quyền tối thiểu tăng dần theo yêu cầu nghiệp vụ
 
@@ -265,9 +280,9 @@ Starter vẫn bỏ qua quyền trên đối tượng, còn V1 chưa phân biệt
 
 ### 4. SQLite bền vững, SQL trực tiếp có tham số
 
-Cần chứng minh thay đổi được lưu qua restart và các quan hệ được ràng buộc, nhưng không cần một database server riêng. Dữ liệu RAM/JSON đơn giản hơn nhưng không cung cấp cùng cơ chế transaction và foreign key.
+SQLite giữ dữ liệu sau khi khởi động lại ứng dụng và hỗ trợ transaction, khóa ngoại mà không cần cài database server riêng. Những tính năng này phù hợp với bài lab cần thử cả lưu dữ liệu lẫn phân quyền.
 
-`DatabaseSync` mở `data/lab.sqlite`, bật foreign keys và tạo schema nếu chưa có. Giá trị nhận từ request được truyền qua tham số `?` trong prepared statement. Index hỗ trợ tìm membership theo user và task theo project; khóa chính ghép `(projectId, userId)` ngăn trùng thành viên.
+Khi khởi động, ứng dụng mở file database và tạo các bảng nếu chưa có. Các truy vấn nhận giá trị qua tham số, không ghép trực tiếp dữ liệu request vào SQL. Chỉ mục hỗ trợ tìm thành viên và task; khóa chính ghép giữa project và người dùng ngăn thêm trùng thành viên.
 
 SQL do ứng dụng tự quản lý; chưa có hệ migration schema có version. Truy vấn đồng bộ và khả năng ghi của một file SQLite phù hợp với lab nhỏ; chưa đo hiệu năng hay tải ghi đồng thời.
 
@@ -275,15 +290,15 @@ SQL do ứng dụng tự quản lý; chưa có hệ migration schema có version
 
 Policy phải dùng dữ liệu hiện tại, còn ghi dữ liệu phải toàn vẹn. Chỉ có foreign key không trả lời được “Bob có được sửa A2 không”; chỉ có policy cũng không ngăn được mọi lỗi quan hệ dữ liệu.
 
-Transaction bao cả đọc–authorize–write như mục 06. Xóa project dùng `ON DELETE CASCADE` để xóa task và membership liên quan. `CHECK` giới hạn role/status; unique index `one_owner` cho phép tối đa một Owner trong project. Route không cho thêm role Owner hoặc đổi/xóa Owner đang có, nên Owner seed được giữ cố định.
+Như mục 06, transaction bao cả đọc dữ liệu, xét quyền và ghi. Khi xóa project, database tự xóa các task và membership liên quan nhờ khóa ngoại có cascade. Database cũng giới hạn giá trị role, trạng thái và số Owner; API không cho thêm Owner hoặc đổi/xóa Owner đang có.
 
-Unique index chỉ đảm bảo **tối đa** một Owner, không tự bảo đảm project luôn có Owner. Quy tắc Owner cố định vẫn cần code ứng dụng. V4 kiểm tra tenant người được thêm ở route; foreign key đơn lẻ không tự áp đặt quan hệ cùng tenant.
+Ràng buộc số Owner chỉ bảo đảm **tối đa một người**, chưa bảo đảm project luôn có Owner. Ứng dụng vẫn phải chặn việc đổi/xóa Owner. Tương tự, ở V4, server phải kiểm tra thành viên mới cùng tổ chức; chỉ có khóa ngoại thì chưa đủ.
 
 ### 6. Seed khi khởi tạo; reset là thao tác riêng
 
 Restart phải giữ kết quả sửa để minh họa persistence, đồng thời cần cách đưa bài demo về trạng thái có thể lặp lại.
 
-`openDatabase()` seed khi bảng tenants rỗng; với dữ liệu bình thường, mở lại file giữ nguyên thay đổi. Reset xóa và nạp lại seed trong một transaction. Năm version cùng nhìn thấy kết quả reset. Kiểm tra dùng file SQLite tạm riêng, không dùng `data/lab.sqlite` đang demo.
+Lần đầu chạy, ứng dụng nạp dữ liệu mẫu khi bảng tổ chức còn rỗng. Những lần khởi động sau giữ nguyên dữ liệu đã lưu. Nút reset mới xóa và nạp lại dữ liệu mẫu cho tất cả version. Các test dùng database tạm riêng để không sửa dữ liệu đang demo.
 
 Reset ghi đè dữ liệu lab. Endpoint reset không yêu cầu đăng nhập; chỉ từ chối Origin được gửi khác origin hiện tại, vẫn nhận request không có Origin. Đây là tiện ích local, không phải cơ chế bảo vệ quản trị đầy đủ.
 
@@ -305,7 +320,7 @@ Nút vẫn cho bấm dù caller không đủ quyền, vì mục đích là gửi
 
 Response cho Starter có thể về sau khi người dùng đã chuyển V1. Nếu tiếp tục hiển thị nó, UI có thể đưa nội dung từ ngữ cảnh cũ trở lại màn hình.
 
-Mỗi lần đổi ngữ cảnh, bộ đếm `generation` tăng và UI dọn nội dung/form cũ. `api()` giữ giá trị đếm lúc gửi; sau khi nhận response, nếu giá trị đã đổi thì ném `Stale` trước khi lưu lịch sử hoặc cập nhật màn hình. Đổi tài khoản/version còn xóa lịch sử kỹ thuật và dữ liệu bảo vệ. Khi một lần lưu bị từ chối trong cùng ngữ cảnh, form giữ bản nháp để người dùng sửa tiếp.
+UI đánh dấu mỗi lần đổi tài khoản, version hoặc ngữ cảnh đang xem. Khi phản hồi về, UI chỉ hiển thị nếu dấu này còn khớp với lúc gửi; phản hồi cũ bị bỏ qua. Đổi tài khoản/version cũng xóa dữ liệu và lịch sử cũ trên màn hình. Nếu chỉ lưu thất bại trong cùng ngữ cảnh, form vẫn giữ bản nháp để người dùng sửa tiếp.
 
 Cơ chế này loại kết quả hiển thị đã cũ, không hủy hay đảo ngược request đã tới server. Quyền ghi vẫn do server quyết định tại thời điểm xử lý.
 
@@ -326,7 +341,7 @@ Khôi phục seed trước khi so sánh các thao tác ghi, nhất là đóng ta
 
 Một API trả 403 vẫn có thể đã ghi sai nếu thứ tự xử lý có lỗi. Kiểm tra status đơn lẻ không đủ để chứng minh thao tác bị từ chối an toàn.
 
-Các test HTTP dùng `node:test` để khởi tạo Express trên cổng tạm, rồi gửi request bằng `fetch`. Mỗi fixture có SQLite tạm riêng. Test kiểm tra cả status, body, trace và dữ liệu sau request. Với ca IDOR, Starter phải đọc được B1 còn V1–V4 phải từ chối; đây đều là kết quả mong đợi trong bộ test mặc định.
+Các test HTTP chạy server với database tạm rồi gửi request thật. Mỗi nhóm thử có dữ liệu riêng để tránh ảnh hưởng lẫn nhau. Test kiểm tra cả mã phản hồi, nội dung trả về, các bước xét quyền và dữ liệu sau request. Trong ca IDOR, Starter đọc được B1 còn V1–V4 bị chặn là các kết quả mong đợi.
 
 ### Kết quả chạy tại workspace ngày 29/10/2026
 
