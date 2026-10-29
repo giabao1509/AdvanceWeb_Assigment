@@ -1,302 +1,332 @@
 Command: node --test (npm.cmd test)
-Started: 2026-10-29T09:02:59.965Z
+Started: 2026-10-29T14:43:08.594Z
 Expected exit: 0
 Actual exit: 0
 
 STDOUT
 TAP version 13
-# (node:12888) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (node:35468) ExperimentalWarning: SQLite is an experimental feature and might change at any time
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: Starter reproduces IDOR; V1–V4 reject cross-project access without leaking content
 ok 1 - Starter reproduces IDOR; V1–V4 reject cross-project access without leaking content
   ---
-  duration_ms: 296.4264
+  duration_ms: 177.9691
   type: 'test'
   ...
 # Subtest: Every version requires a valid bearer token
 ok 2 - Every version requires a valid bearer token
   ---
-  duration_ms: 712.0886
+  duration_ms: 431.9741
   type: 'test'
   ...
 # Subtest: starter: alice uses every endpoint under authentication/membership policy
 ok 3 - starter: alice uses every endpoint under authentication/membership policy
   ---
-  duration_ms: 137.4984
+  duration_ms: 79.3715
   type: 'test'
   ...
 # Subtest: starter: bob uses every endpoint under authentication/membership policy
 ok 4 - starter: bob uses every endpoint under authentication/membership policy
   ---
-  duration_ms: 136.3409
+  duration_ms: 79.3195
   type: 'test'
   ...
 # Subtest: starter: vera uses every endpoint under authentication/membership policy
 ok 5 - starter: vera uses every endpoint under authentication/membership policy
   ---
-  duration_ms: 197.7977
+  duration_ms: 79.1453
   type: 'test'
   ...
 # Subtest: starter: charlie uses every endpoint under authentication/membership policy
 ok 6 - starter: charlie uses every endpoint under authentication/membership policy
   ---
-  duration_ms: 131.4711
+  duration_ms: 84.4816
   type: 'test'
   ...
 # Subtest: v1: alice uses every endpoint under authentication/membership policy
 ok 7 - v1: alice uses every endpoint under authentication/membership policy
   ---
-  duration_ms: 126.9626
+  duration_ms: 79.8458
   type: 'test'
   ...
 # Subtest: v1: bob uses every endpoint under authentication/membership policy
 ok 8 - v1: bob uses every endpoint under authentication/membership policy
   ---
-  duration_ms: 117.2316
+  duration_ms: 82.9793
   type: 'test'
   ...
 # Subtest: v1: vera uses every endpoint under authentication/membership policy
 ok 9 - v1: vera uses every endpoint under authentication/membership policy
   ---
-  duration_ms: 120.0117
+  duration_ms: 83.5834
   type: 'test'
   ...
 # Subtest: v1: charlie uses every endpoint under authentication/membership policy
 ok 10 - v1: charlie uses every endpoint under authentication/membership policy
   ---
-  duration_ms: 108.6514
+  duration_ms: 67.8417
   type: 'test'
   ...
 # Subtest: v2: project RBAC read/edit matrix
 ok 11 - v2: project RBAC read/edit matrix
   ---
-  duration_ms: 136.5028
+  duration_ms: 76.9083
   type: 'test'
   ...
 # Subtest: v2: alice delete-project permission and cascade
 ok 12 - v2: alice delete-project permission and cascade
   ---
-  duration_ms: 53.2443
+  duration_ms: 33.6136
   type: 'test'
   ...
 # Subtest: v2: bob delete-project permission and cascade
 ok 13 - v2: bob delete-project permission and cascade
   ---
-  duration_ms: 45.1658
+  duration_ms: 30.4037
   type: 'test'
   ...
 # Subtest: v2: vera delete-project permission and cascade
 ok 14 - v2: vera delete-project permission and cascade
   ---
-  duration_ms: 49.4056
+  duration_ms: 32.3435
   type: 'test'
   ...
 # Subtest: v2: charlie delete-project permission and cascade
 ok 15 - v2: charlie delete-project permission and cascade
   ---
-  duration_ms: 48.0912
+  duration_ms: 30.4502
   type: 'test'
   ...
 # Subtest: v2: alice permission for every membership endpoint
 ok 16 - v2: alice permission for every membership endpoint
   ---
-  duration_ms: 102.7183
+  duration_ms: 55.2926
   type: 'test'
   ...
 # Subtest: v2: bob permission for every membership endpoint
 ok 17 - v2: bob permission for every membership endpoint
   ---
-  duration_ms: 88.9476
+  duration_ms: 50.5398
   type: 'test'
   ...
 # Subtest: v2: vera permission for every membership endpoint
 ok 18 - v2: vera permission for every membership endpoint
   ---
-  duration_ms: 79.6565
+  duration_ms: 48.1266
   type: 'test'
   ...
 # Subtest: v2: charlie permission for every membership endpoint
 ok 19 - v2: charlie permission for every membership endpoint
   ---
-  duration_ms: 81.4423
+  duration_ms: 46.5154
   type: 'test'
   ...
 # Subtest: v3: project RBAC read/edit matrix
 ok 20 - v3: project RBAC read/edit matrix
   ---
-  duration_ms: 127.8232
+  duration_ms: 75.0567
   type: 'test'
   ...
 # Subtest: v3: alice delete-project permission and cascade
 ok 21 - v3: alice delete-project permission and cascade
   ---
-  duration_ms: 49.9611
+  duration_ms: 34.2366
   type: 'test'
   ...
 # Subtest: v3: bob delete-project permission and cascade
 ok 22 - v3: bob delete-project permission and cascade
   ---
-  duration_ms: 44.6852
+  duration_ms: 30.2639
   type: 'test'
   ...
 # Subtest: v3: vera delete-project permission and cascade
 ok 23 - v3: vera delete-project permission and cascade
   ---
-  duration_ms: 43.8227
+  duration_ms: 31.8991
   type: 'test'
   ...
 # Subtest: v3: charlie delete-project permission and cascade
 ok 24 - v3: charlie delete-project permission and cascade
   ---
-  duration_ms: 44.5463
+  duration_ms: 31.3734
   type: 'test'
   ...
 # Subtest: v3: alice permission for every membership endpoint
 ok 25 - v3: alice permission for every membership endpoint
   ---
-  duration_ms: 105.8979
+  duration_ms: 61.8721
   type: 'test'
   ...
 # Subtest: v3: bob permission for every membership endpoint
 ok 26 - v3: bob permission for every membership endpoint
   ---
-  duration_ms: 81.017
+  duration_ms: 50.7211
   type: 'test'
   ...
 # Subtest: v3: vera permission for every membership endpoint
 ok 27 - v3: vera permission for every membership endpoint
   ---
-  duration_ms: 81.5838
+  duration_ms: 53.3223
   type: 'test'
   ...
 # Subtest: v3: charlie permission for every membership endpoint
 ok 28 - v3: charlie permission for every membership endpoint
   ---
-  duration_ms: 82.7185
+  duration_ms: 229.9448
   type: 'test'
   ...
 # Subtest: v4: project RBAC read/edit matrix
 ok 29 - v4: project RBAC read/edit matrix
   ---
-  duration_ms: 121.3019
+  duration_ms: 74.5503
   type: 'test'
   ...
 # Subtest: v4: alice delete-project permission and cascade
 ok 30 - v4: alice delete-project permission and cascade
   ---
-  duration_ms: 51.433
+  duration_ms: 35.5077
   type: 'test'
   ...
 # Subtest: v4: bob delete-project permission and cascade
 ok 31 - v4: bob delete-project permission and cascade
   ---
-  duration_ms: 44.8452
+  duration_ms: 31.1252
   type: 'test'
   ...
 # Subtest: v4: vera delete-project permission and cascade
 ok 32 - v4: vera delete-project permission and cascade
   ---
-  duration_ms: 46.3819
+  duration_ms: 33.6785
   type: 'test'
   ...
 # Subtest: v4: charlie delete-project permission and cascade
 ok 33 - v4: charlie delete-project permission and cascade
   ---
-  duration_ms: 44.0506
+  duration_ms: 33.9534
   type: 'test'
   ...
 # Subtest: v4: alice permission for every membership endpoint
 ok 34 - v4: alice permission for every membership endpoint
   ---
-  duration_ms: 80.8354
+  duration_ms: 58.914
   type: 'test'
   ...
 # Subtest: v4: bob permission for every membership endpoint
 ok 35 - v4: bob permission for every membership endpoint
   ---
-  duration_ms: 74.1228
+  duration_ms: 48.8256
   type: 'test'
   ...
 # Subtest: v4: vera permission for every membership endpoint
 ok 36 - v4: vera permission for every membership endpoint
   ---
-  duration_ms: 72.3195
+  duration_ms: 51.7803
   type: 'test'
   ...
 # Subtest: v4: charlie permission for every membership endpoint
 ok 37 - v4: charlie permission for every membership endpoint
   ---
-  duration_ms: 73.1994
+  duration_ms: 51.4629
   type: 'test'
   ...
 # Subtest: V2 Member can edit unassigned/closed/other-assignee tasks inside project
 ok 38 - V2 Member can edit unassigned/closed/other-assignee tasks inside project
   ---
-  duration_ms: 69.9819
+  duration_ms: 52.5734
   type: 'test'
   ...
 # Subtest: v3: membership, assignee and current status all enforced
 ok 39 - v3: membership, assignee and current status all enforced
   ---
-  duration_ms: 156.051
+  duration_ms: 106.827
   type: 'test'
   ...
 # Subtest: v4: membership, assignee and current status all enforced
 ok 40 - v4: membership, assignee and current status all enforced
   ---
-  duration_ms: 147.5303
+  duration_ms: 112.8413
   type: 'test'
   ...
 # Subtest: V4 admin permissions: positive within tenant; negative across every resource/action
 ok 41 - V4 admin permissions: positive within tenant; negative across every resource/action
   ---
-  duration_ms: 200.7419
+  duration_ms: 173.3343
   type: 'test'
   ...
 # Subtest: Spoofing and validation cannot change identity, tenant, role, project or assignee
 ok 42 - Spoofing and validation cannot change identity, tenant, role, project or assignee
   ---
-  duration_ms: 739.6026
+  duration_ms: 624.6035
   type: 'test'
   ...
 # Subtest: Malformed JSON, static UI and local reset endpoint work over HTTP
 ok 43 - Malformed JSON, static UI and local reset endpoint work over HTTP
   ---
-  duration_ms: 114.7809
+  duration_ms: 75.5604
   type: 'test'
   ...
 # Subtest: SQLite persists across reopen; reset restores seed and foreign keys cascade
 ok 44 - SQLite persists across reopen; reset restores seed and foreign keys cascade
   ---
-  duration_ms: 40.5428
+  duration_ms: 34.7872
   type: 'test'
   ...
 # Subtest: Project directory exposes only discoverable names; detail/list enforce every version
 ok 45 - Project directory exposes only discoverable names; detail/list enforce every version
   ---
-  duration_ms: 668.8542
+  duration_ms: 514.7677
   type: 'test'
   ...
 # Subtest: Live directory/task list follow mutation, revoked membership, deletion and reset
 ok 46 - Live directory/task list follow mutation, revoked membership, deletion and reset
   ---
-  duration_ms: 145.0762
+  duration_ms: 127.4194
   type: 'test'
   ...
 # Subtest: Trace separates authorization, fixed-owner business rule and final HTTP outcome
 ok 47 - Trace separates authorization, fixed-owner business rule and final HTTP outcome
   ---
-  duration_ms: 157.9396
+  duration_ms: 137.3269
   type: 'test'
   ...
-1..47
-# tests 47
+# Subtest: PDP rejects unknown versions even for an owner or tenant admin
+ok 48 - PDP rejects unknown versions even for an owner or tenant admin
+  ---
+  duration_ms: 2.0842
+  type: 'test'
+  ...
+# Subtest: PDP rejects unknown actions before Starter, V1 or tenant admin can allow
+ok 49 - PDP rejects unknown actions before Starter, V1 or tenant admin can allow
+  ---
+  duration_ms: 0.4309
+  type: 'test'
+  ...
+# Subtest: PDP rejects unknown membership roles for every action and version
+ok 50 - PDP rejects unknown membership roles for every action and version
+  ---
+  duration_ms: 0.4924
+  type: 'test'
+  ...
+# Subtest: PDP rejects missing identity or resource context instead of allowing or throwing
+ok 51 - PDP rejects missing identity or resource context instead of allowing or throwing
+  ---
+  duration_ms: 0.1808
+  type: 'test'
+  ...
+# Subtest: Explicit RBAC allowlist grants only documented role/action pairs in V2–V4
+ok 52 - Explicit RBAC allowlist grants only documented role/action pairs in V2–V4
+  ---
+  duration_ms: 0.3009
+  type: 'test'
+  ...
+1..52
+# tests 52
 # suites 0
-# pass 47
+# pass 52
 # fail 0
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 7071.988
+# duration_ms 4997.5528
 
 STDERR

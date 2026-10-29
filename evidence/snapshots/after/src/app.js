@@ -59,7 +59,7 @@ export function createApp({ db = openDatabase() } = {}) {
         const membership = db.prepare('SELECT * FROM project_memberships WHERE projectId = ? AND userId = ?').get(project.id, req.principal.id);
         const decision = authorize(req.params.version, req.principal, action, { project, task, membership });
         req.trace.push(...decision.checks, { name: 'Authorization decision', result: decision.allowed ? 'ALLOW' : 'DENY', reason: decision.reason });
-        if (!decision.allowed) fail(403, decision.reason);
+        if (decision.allowed !== true) fail(403, decision.reason);
         return work(req, { task, project });
       };
       const output = req.method === 'GET' ? execute() : transaction(db, execute);

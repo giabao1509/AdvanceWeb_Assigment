@@ -92,7 +92,7 @@ function makeSnapshots() {
   const end = current.indexOf('        return work(req, { task, project });', begin);
   assert.ok(begin >= 0 && end > begin, 'Authorization wrapper changed; review snapshot reconstruction before proceeding');
   const protectedBlock = current.slice(begin, end);
-  assert.ok(protectedBlock.includes('authorize(req.params.version') && protectedBlock.includes("if (!decision.allowed) fail(403"));
+  assert.ok(protectedBlock.includes('authorize(req.params.version') && protectedBlock.includes("if (decision.allowed !== true) fail(403"));
   const before = (current.slice(0, begin) + "        req.trace.push({ name: 'Object authorization', result: 'SKIPPED', reason: 'RECONSTRUCTED_AUTHENTICATION_ONLY' });\n" + current.slice(end))
     .replace("import { authorize, versions } from './policy.js';", "import { versions } from './policy.js';");
   for (const stage of ['before', 'after']) {
@@ -145,7 +145,7 @@ try {
   manifest.status = 'FAIL'; manifest.error = error.message; process.exitCode = 1;
   console.error(error.message);
 } finally {
-  for (const file of ['src/app.js', 'src/policy.js', 'src/auth.js', 'src/db.js', 'src/schema.sql', 'test/authorization.test.js', 'scripts/idor-regression.js', 'scripts/lab-fixture.js', 'scripts/collect-evidence.js', 'scripts/ui-smoke.js', 'public/app.js', 'public/index.html', 'public/styles.css', 'package.json']) manifest.sourceSha256[file] = hash(join(root, file));
+  for (const file of ['src/app.js', 'src/policy.js', 'src/auth.js', 'src/db.js', 'src/schema.sql', 'test/authorization.test.js', 'test/policy.test.js', 'scripts/idor-regression.js', 'scripts/lab-fixture.js', 'scripts/collect-evidence.js', 'scripts/ui-smoke.js', 'public/app.js', 'public/index.html', 'public/styles.css', 'package.json']) manifest.sourceSha256[file] = hash(join(root, file));
   const git = await run('git', ['rev-parse', 'HEAD'], { label: 'git rev-parse HEAD' });
   manifest.gitHead = git.stdout.trim();
   const state = await run('git', ['status', '--porcelain'], { label: 'git status --porcelain' });
@@ -159,4 +159,4 @@ try {
   manifest.finishedAt = new Date().toISOString();
   writeJson('manifest.json', manifest);
 }
-if (manifest.status === 'PASS') console.log(`Evidence PASS: ${manifest.fullSuite.pass}/${manifest.fullSuite.tests} HTTP tests and browser smoke; see evidence/README.md.`);
+if (manifest.status === 'PASS') console.log(`Evidence PASS: ${manifest.fullSuite.pass}/${manifest.fullSuite.tests} policy/HTTP tests and browser smoke; see evidence/README.md.`);

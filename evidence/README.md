@@ -46,12 +46,12 @@ Các JSON chỉ lưu actor, đường dẫn và headers đã bỏ bearer token; 
 
 `policy.js` được sao chép giống nhau vào hai snapshot; wrapper before không gọi hàm authorize. Các module khác giữ nguyên để không đưa khác biệt fixture/route vào so sánh. Vì vậy snapshot before tái hiện **ranh giới auth-only**, không khẳng định đây là source Starter gốc của giảng viên. Các rule nghiệp vụ như Owner cố định vẫn giữ nguyên.
 
-Diff bổ sung membership lookup từ database, truyền version/principal/action/context vào PDP và thực thi `if (!decision.allowed) fail(403, ...)` trước `work(...)`. Quy tắc membership V1 nằm trong `src/policy.js` của snapshot after. Hai regression snapshot chọn `--version=v1` trên cùng route, lần lượt thất bại/thành công. Script còn chạy `git apply --check -p2 ../../authorization.diff` từ thư mục `evidence/snapshots/before` để xác nhận patch áp dụng được; không sửa snapshot sau khi kiểm tra.
+Diff bổ sung membership lookup từ database, truyền version/principal/action/context vào PDP và thực thi `if (decision.allowed !== true) fail(403, ...)` trước `work(...)`. Quy tắc membership V1 nằm trong `src/policy.js` của snapshot after. Hai regression snapshot chọn `--version=v1` trên cùng route, lần lượt thất bại/thành công. Script còn chạy `git apply --check -p2 ../../authorization.diff` từ thư mục `evidence/snapshots/before` để xác nhận patch áp dụng được; không sửa snapshot sau khi kiểm tra.
 
 ## Đối chiếu yêu cầu bài nộp
 
 - Bảng quyền: `../POLICY.md` (roles/actions, ngoại lệ Owner và tenant admin).
-- Automated positive/negative tests: `../test/authorization.test.js`, `../scripts/idor-regression.js` và `../scripts/ui-smoke.js`.
+- Automated positive/negative tests: `../test/authorization.test.js`, `../test/policy.test.js`, `../scripts/idor-regression.js` và `../scripts/ui-smoke.js`. PDP tests kiểm tra version/action/role lạ, thiếu context và ma trận quyền tường minh; HTTP tests kiểm tra enforcement trên request thật.
 - Evidence trước/sau: JSON response và regression logs trong thư mục này.
 - Code diff enforcement: `authorization.diff`, hai snapshot và log regression tương ứng.
 - Giải thích ACL/RBAC/ABAC/ReBAC, trust boundary và giới hạn: `../report.md`, `../report.html`, `../POLICY.md`.

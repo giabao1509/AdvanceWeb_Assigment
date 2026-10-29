@@ -1,7 +1,7 @@
 [
   {
     "id": "starter-idor",
-    "capturedAt": "2026-10-29T09:02:56.351Z",
+    "capturedAt": "2026-10-29T14:43:06.621Z",
     "request": {
       "method": "GET",
       "path": "/api/starter/tasks/B1",
@@ -13,7 +13,7 @@
     "expectedStatus": 200,
     "response": {
       "status": 200,
-      "durationMs": 59,
+      "durationMs": 33,
       "body": {
         "data": {
           "id": "B1",
@@ -46,7 +46,7 @@
             "reason": "HTTP_200"
           }
         ],
-        "requestId": "c5941f26-9150-47fc-964c-57113081cb39"
+        "requestId": "1bf96cca-d117-4f6f-ab36-8299f84f7600"
       }
     },
     "verification": {
@@ -56,7 +56,7 @@
   },
   {
     "id": "v1-idor",
-    "capturedAt": "2026-10-29T09:02:56.369Z",
+    "capturedAt": "2026-10-29T14:43:06.631Z",
     "request": {
       "method": "GET",
       "path": "/api/v1/tasks/B1",
@@ -68,7 +68,7 @@
     "expectedStatus": 403,
     "response": {
       "status": 403,
-      "durationMs": 17,
+      "durationMs": 9,
       "body": {
         "data": null,
         "error": {
@@ -96,7 +96,7 @@
             "reason": "NOT_PROJECT_MEMBER"
           }
         ],
-        "requestId": "0ac89bfb-e0a0-4d5c-a6a6-352340bafd9f"
+        "requestId": "7596366f-76c2-4c3c-a8d8-5ce800dd612c"
       }
     },
     "verification": {
@@ -107,7 +107,7 @@
   },
   {
     "id": "anonymous",
-    "capturedAt": "2026-10-29T09:02:56.381Z",
+    "capturedAt": "2026-10-29T14:43:06.639Z",
     "request": {
       "method": "GET",
       "path": "/api/v1/tasks/A1",
@@ -117,7 +117,7 @@
     "expectedStatus": 401,
     "response": {
       "status": 401,
-      "durationMs": 11,
+      "durationMs": 7,
       "body": {
         "data": null,
         "error": {
@@ -135,7 +135,7 @@
             "reason": "UNAUTHENTICATED"
           }
         ],
-        "requestId": "6c32b2c7-2f18-42be-8092-cc49605fe537"
+        "requestId": "aac58111-6f0e-48c7-acda-8bcb440f8159"
       }
     },
     "verification": {
@@ -146,7 +146,7 @@
   },
   {
     "id": "alice-legitimate",
-    "capturedAt": "2026-10-29T09:02:56.393Z",
+    "capturedAt": "2026-10-29T14:43:06.645Z",
     "request": {
       "method": "GET",
       "path": "/api/v1/tasks/A1",
@@ -158,7 +158,7 @@
     "expectedStatus": 200,
     "response": {
       "status": 200,
-      "durationMs": 11,
+      "durationMs": 6,
       "body": {
         "data": {
           "id": "A1",
@@ -191,7 +191,7 @@
             "reason": "HTTP_200"
           }
         ],
-        "requestId": "47e45396-797c-408e-a9c6-23f2352539cd"
+        "requestId": "5f2a5190-60ef-49b7-ab96-855b1e1e1d6b"
       }
     },
     "verification": {
@@ -201,7 +201,7 @@
   },
   {
     "id": "charlie-legitimate",
-    "capturedAt": "2026-10-29T09:02:56.406Z",
+    "capturedAt": "2026-10-29T14:43:06.653Z",
     "request": {
       "method": "GET",
       "path": "/api/v1/tasks/B1",
@@ -213,7 +213,7 @@
     "expectedStatus": 200,
     "response": {
       "status": 200,
-      "durationMs": 12,
+      "durationMs": 7,
       "body": {
         "data": {
           "id": "B1",
@@ -246,7 +246,7 @@
             "reason": "HTTP_200"
           }
         ],
-        "requestId": "f0f27fe3-1565-4f1d-aaa4-3d4e9c1941f0"
+        "requestId": "af7272e6-7532-4ff5-bf25-48762fad347b"
       }
     },
     "verification": {
@@ -256,7 +256,7 @@
   },
   {
     "id": "member-not-assigned",
-    "capturedAt": "2026-10-29T09:02:56.438Z",
+    "capturedAt": "2026-10-29T14:43:06.670Z",
     "request": {
       "method": "PATCH",
       "path": "/api/v3/tasks/A4",
@@ -272,7 +272,7 @@
     "expectedStatus": 403,
     "response": {
       "status": 403,
-      "durationMs": 31,
+      "durationMs": 17,
       "body": {
         "data": null,
         "error": {
@@ -310,7 +310,7 @@
             "reason": "NOT_ASSIGNEE"
           }
         ],
-        "requestId": "43da0c16-d295-435a-b7f8-78661f668b4f"
+        "requestId": "d99a351d-1eda-4d2b-b345-215e0f3745e4"
       }
     },
     "verification": {
@@ -321,7 +321,7 @@
   },
   {
     "id": "member-task-closed",
-    "capturedAt": "2026-10-29T09:02:56.452Z",
+    "capturedAt": "2026-10-29T14:43:06.679Z",
     "request": {
       "method": "PATCH",
       "path": "/api/v3/tasks/A2",
@@ -337,7 +337,7 @@
     "expectedStatus": 403,
     "response": {
       "status": 403,
-      "durationMs": 13,
+      "durationMs": 9,
       "body": {
         "data": null,
         "error": {
@@ -380,7 +380,7 @@
             "reason": "TASK_CLOSED"
           }
         ],
-        "requestId": "3aca901b-666c-4c7b-8e1e-f19bdb9aef46"
+        "requestId": "e6450a0d-61fb-4708-ab49-558b0d273115"
       }
     },
     "verification": {
@@ -391,7 +391,7 @@
   },
   {
     "id": "spoofed-role",
-    "capturedAt": "2026-10-29T09:02:56.464Z",
+    "capturedAt": "2026-10-29T14:43:06.685Z",
     "request": {
       "method": "DELETE",
       "path": "/api/v2/projects/alpha?role=Admin",
@@ -404,7 +404,7 @@
     "expectedStatus": 403,
     "response": {
       "status": 403,
-      "durationMs": 12,
+      "durationMs": 6,
       "body": {
         "data": null,
         "error": {
@@ -437,7 +437,7 @@
             "reason": "ROLE_DENIED"
           }
         ],
-        "requestId": "ee6c28bf-f430-4bdb-925e-9811345842dd"
+        "requestId": "56b6612f-e1e6-4537-ac18-6429ee280cb0"
       }
     },
     "verification": {
@@ -448,7 +448,7 @@
   },
   {
     "id": "admin-cross-tenant",
-    "capturedAt": "2026-10-29T09:02:56.477Z",
+    "capturedAt": "2026-10-29T14:43:06.693Z",
     "request": {
       "method": "GET",
       "path": "/api/v4/tasks/B1?tenantId=beta&role=Admin",
@@ -462,7 +462,7 @@
     "expectedStatus": 403,
     "response": {
       "status": 403,
-      "durationMs": 12,
+      "durationMs": 7,
       "body": {
         "data": null,
         "error": {
@@ -490,7 +490,7 @@
             "reason": "TENANT_MISMATCH"
           }
         ],
-        "requestId": "0f53211b-407e-4d0a-a1c2-c4fb67127217"
+        "requestId": "8fef7159-568f-4f41-a5cf-6c8a5537872c"
       }
     },
     "verification": {
@@ -501,7 +501,7 @@
   },
   {
     "id": "admin-own-tenant",
-    "capturedAt": "2026-10-29T09:02:56.488Z",
+    "capturedAt": "2026-10-29T14:43:06.699Z",
     "request": {
       "method": "GET",
       "path": "/api/v4/tasks/A1",
@@ -513,7 +513,7 @@
     "expectedStatus": 200,
     "response": {
       "status": 200,
-      "durationMs": 10,
+      "durationMs": 6,
       "body": {
         "data": {
           "id": "A1",
@@ -551,7 +551,7 @@
             "reason": "HTTP_200"
           }
         ],
-        "requestId": "3508a9e0-3bd5-4285-9ca1-c17dee9bfaae"
+        "requestId": "534d3511-da9b-4ae3-b006-a0db66d91683"
       }
     },
     "verification": {
@@ -561,7 +561,7 @@
   },
   {
     "id": "member-assigned-open",
-    "capturedAt": "2026-10-29T09:02:56.528Z",
+    "capturedAt": "2026-10-29T14:43:06.709Z",
     "request": {
       "method": "PATCH",
       "path": "/api/v3/tasks/A1",
@@ -577,7 +577,7 @@
     "expectedStatus": 200,
     "response": {
       "status": 200,
-      "durationMs": 40,
+      "durationMs": 9,
       "body": {
         "data": {
           "id": "A1",
@@ -625,7 +625,7 @@
             "reason": "HTTP_200"
           }
         ],
-        "requestId": "0ed236ec-2ae4-4606-95a7-34a2e7cb2f27"
+        "requestId": "65a29a4f-e56c-4a87-95f8-a5fa316c9e03"
       }
     },
     "verification": {

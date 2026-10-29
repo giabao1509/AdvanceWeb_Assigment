@@ -1,6 +1,6 @@
 # Kế hoạch triển khai minilab Task Management API
 
-> Đã triển khai Starter–V4, UI web app và SQLite. Bộ evidence local đã được thu thập bằng `npm.cmd run evidence`: 11 ca HTTP, regression đỏ/xanh, 47/47 tests, browser smoke và diff tái dựng có kiểm chứng. Seed/reset nằm trong `db.js`; routes/trace nằm trong `app.js`. Chi tiết artifact và giới hạn tại `evidence/README.md`; chưa có nghiệm thu giảng viên hoặc hosted CI.
+> Đã triển khai Starter–V4, UI web app và SQLite. Bộ evidence local đã được thu thập bằng `npm.cmd run evidence`: 11 ca HTTP, regression đỏ/xanh, 52/52 tests, browser smoke và diff tái dựng có kiểm chứng. Seed/reset nằm trong `db.js`; routes/trace nằm trong `app.js`. Chi tiết artifact và giới hạn tại `evidence/README.md`; chưa có nghiệm thu giảng viên hoặc hosted CI.
 
 ## 1. Mục tiêu và phạm vi
 

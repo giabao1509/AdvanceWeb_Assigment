@@ -1,6 +1,6 @@
 {
   "id": "starter-idor",
-  "capturedAt": "2026-10-29T09:02:56.351Z",
+  "capturedAt": "2026-10-29T14:43:06.621Z",
   "request": {
     "method": "GET",
     "path": "/api/starter/tasks/B1",
@@ -12,7 +12,7 @@
   "expectedStatus": 200,
   "response": {
     "status": 200,
-    "durationMs": 59,
+    "durationMs": 33,
     "body": {
       "data": {
         "id": "B1",
@@ -45,7 +45,7 @@
           "reason": "HTTP_200"
         }
       ],
-      "requestId": "c5941f26-9150-47fc-964c-57113081cb39"
+      "requestId": "1bf96cca-d117-4f6f-ab36-8299f84f7600"
     }
   },
   "verification": {
