@@ -1,0 +1,18 @@
+{
+  "id": "code_expired",
+  "mode": "secure",
+  "at": "2026-10-22T02:38:36.238Z",
+  "protected": true,
+  "conclusion": "Các kiểm tra trong case đã bảo vệ được luồng.",
+  "steps": [
+    {
+      "service": "Wallet AS",
+      "endpoint": "POST /token",
+      "status": 400,
+      "response": {
+        "error": "invalid_grant"
+      },
+      "explanation": "Đã chờ thật 61 giây; code TTL 60 giây."
+    }
+  ]
+}

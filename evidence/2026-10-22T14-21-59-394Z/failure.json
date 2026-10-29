@@ -1,0 +1,5 @@
+{
+  "status": "FAIL",
+  "message": "Lab servers not ready. Check ports and npm run dev.",
+  "at": "2026-10-22T14:22:42.309Z"
+}

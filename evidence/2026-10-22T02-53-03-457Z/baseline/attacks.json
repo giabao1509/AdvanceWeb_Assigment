@@ -1,0 +1,329 @@
+[
+  {
+    "id": "redirect",
+    "mode": "baseline",
+    "at": "2026-10-22T02:53:10.657Z",
+    "protected": false,
+    "conclusion": "AS chấp nhận thao tác mà full security cần chặn. Xem phản hồi từng bước.",
+    "steps": [
+      {
+        "service": "Wallet AS",
+        "endpoint": "GET /authorize",
+        "status": 302,
+        "response": {
+          "error": null,
+          "redirected": true,
+          "redirect_origin": "https://attacker.invalid",
+          "code_issued": true,
+          "code": "[REDACTED]",
+          "state_returned": true
+        },
+        "explanation": "URI lạ phải bị giữ lỗi tại AS. Script chỉ đọc Location, không truy cập attacker.invalid."
+      }
+    ]
+  },
+  {
+    "id": "pkce",
+    "mode": "baseline",
+    "at": "2026-10-22T02:53:10.956Z",
+    "protected": false,
+    "conclusion": "AS chấp nhận thao tác mà full security cần chặn. Xem phản hồi từng bước.",
+    "steps": [
+      {
+        "service": "Wallet AS",
+        "endpoint": "GET /authorize",
+        "status": 302,
+        "response": {
+          "error": null,
+          "redirected": true,
+          "redirect_origin": "http://localhost:6103",
+          "code_issued": true,
+          "code": "[REDACTED]",
+          "state_returned": true
+        },
+        "explanation": "Client không có challenge S256 phải nhận invalid_request tại callback hợp lệ."
+      }
+    ]
+  },
+  {
+    "id": "code_replay",
+    "mode": "baseline",
+    "at": "2026-10-22T02:53:11.286Z",
+    "protected": false,
+    "conclusion": "AS chấp nhận thao tác mà full security cần chặn. Xem phản hồi từng bước.",
+    "steps": [
+      {
+        "service": "Wallet AS",
+        "endpoint": "POST /token",
+        "status": 200,
+        "response": {
+          "grant": "authorization_code",
+          "token_type": "Bearer",
+          "expires_in": 120,
+          "refresh_token": true,
+          "sub": "alice",
+          "aud": "wallet-api",
+          "scope": "offline_access wallet:charge wallet:read",
+          "principal_type": "user",
+          "exp": 1792637711,
+          "tokens": "[REDACTED]"
+        },
+        "explanation": "Lần đầu hợp lệ: AS cấp token."
+      },
+      {
+        "service": "Wallet AS",
+        "endpoint": "POST /token",
+        "status": 200,
+        "response": {
+          "grant": "authorization_code",
+          "token_type": "Bearer",
+          "expires_in": 120,
+          "refresh_token": true,
+          "sub": "alice",
+          "aud": "wallet-api",
+          "scope": "offline_access wallet:charge wallet:read",
+          "principal_type": "user",
+          "exp": 1792637711,
+          "tokens": "[REDACTED]"
+        },
+        "explanation": "Dùng lại cùng code: AS full từ chối và thu hồi grant."
+      },
+      {
+        "service": "Wallet API",
+        "endpoint": "GET /wallet/balance",
+        "status": 200,
+        "response": {
+          "user": "alice",
+          "balance": 955000,
+          "currency": "VND"
+        },
+        "explanation": "Kiểm token lần đầu sau replay; full phải từ chối grant đã thu hồi."
+      }
+    ]
+  },
+  {
+    "id": "wrong_verifier",
+    "mode": "baseline",
+    "at": "2026-10-22T02:53:11.574Z",
+    "protected": false,
+    "conclusion": "AS chấp nhận thao tác mà full security cần chặn. Xem phản hồi từng bước.",
+    "steps": [
+      {
+        "service": "Wallet AS",
+        "endpoint": "POST /token",
+        "status": 200,
+        "response": {
+          "grant": "authorization_code",
+          "token_type": "Bearer",
+          "expires_in": 120,
+          "refresh_token": true,
+          "sub": "alice",
+          "aud": "wallet-api",
+          "scope": "offline_access wallet:charge wallet:read",
+          "principal_type": "user",
+          "exp": 1792637711,
+          "tokens": "[REDACTED]"
+        },
+        "explanation": "Verifier không khớp challenge đã gắn với code."
+      }
+    ]
+  },
+  {
+    "id": "wrong_secret",
+    "mode": "baseline",
+    "at": "2026-10-22T02:53:11.859Z",
+    "protected": false,
+    "conclusion": "AS chấp nhận thao tác mà full security cần chặn. Xem phản hồi từng bước.",
+    "steps": [
+      {
+        "service": "Wallet AS",
+        "endpoint": "POST /token",
+        "status": 200,
+        "response": {
+          "grant": "authorization_code",
+          "token_type": "Bearer",
+          "expires_in": 120,
+          "refresh_token": true,
+          "sub": "alice",
+          "aud": "wallet-api",
+          "scope": "offline_access wallet:charge wallet:read",
+          "principal_type": "user",
+          "exp": 1792637711,
+          "tokens": "[REDACTED]"
+        },
+        "explanation": "Secret không đúng: full phải trả 401 invalid_client."
+      }
+    ]
+  },
+  {
+    "id": "other_client",
+    "mode": "baseline",
+    "at": "2026-10-22T02:53:12.182Z",
+    "protected": false,
+    "conclusion": "AS chấp nhận thao tác mà full security cần chặn. Xem phản hồi từng bước.",
+    "steps": [
+      {
+        "service": "Wallet AS",
+        "endpoint": "POST /token",
+        "status": 200,
+        "response": {
+          "grant": "authorization_code",
+          "token_type": "Bearer",
+          "expires_in": 120,
+          "refresh_token": true,
+          "sub": "alice",
+          "aud": "wallet-api",
+          "scope": "offline_access wallet:charge wallet:read",
+          "principal_type": "user",
+          "exp": 1792637712,
+          "tokens": "[REDACTED]"
+        },
+        "explanation": "Client khác có secret hợp lệ vẫn không được đổi code của taxi-web."
+      }
+    ]
+  },
+  {
+    "id": "refresh_replay",
+    "mode": "baseline",
+    "at": "2026-10-22T02:53:12.578Z",
+    "protected": false,
+    "conclusion": "AS chấp nhận thao tác mà full security cần chặn. Xem phản hồi từng bước.",
+    "steps": [
+      {
+        "service": "Wallet AS",
+        "endpoint": "POST /token",
+        "status": 200,
+        "response": {
+          "grant": "authorization_code",
+          "token_type": "Bearer",
+          "expires_in": 120,
+          "refresh_token": true,
+          "sub": "alice",
+          "aud": "wallet-api",
+          "scope": "offline_access wallet:charge wallet:read",
+          "principal_type": "user",
+          "exp": 1792637712,
+          "tokens": "[REDACTED]"
+        },
+        "explanation": "Đổi code có offline_access để lấy refresh token fixture."
+      },
+      {
+        "service": "Wallet AS",
+        "endpoint": "POST /token",
+        "status": 200,
+        "response": {
+          "grant": "refresh_token",
+          "token_type": "Bearer",
+          "expires_in": 120,
+          "refresh_token": true,
+          "sub": "alice",
+          "aud": "wallet-api",
+          "scope": "offline_access wallet:charge wallet:read",
+          "principal_type": "user",
+          "exp": 1792637712,
+          "tokens": "[REDACTED]"
+        },
+        "explanation": "Refresh lần đầu: full xoay sang token mới."
+      },
+      {
+        "service": "Wallet AS",
+        "endpoint": "POST /token",
+        "status": 200,
+        "response": {
+          "grant": "refresh_token",
+          "token_type": "Bearer",
+          "expires_in": 120,
+          "refresh_token": true,
+          "sub": "alice",
+          "aud": "wallet-api",
+          "scope": "offline_access wallet:charge wallet:read",
+          "principal_type": "user",
+          "exp": 1792637712,
+          "tokens": "[REDACTED]"
+        },
+        "explanation": "Replay token cũ: full thu hồi cả family."
+      },
+      {
+        "service": "Wallet AS",
+        "endpoint": "POST /token",
+        "status": 200,
+        "response": {
+          "grant": "refresh_token",
+          "token_type": "Bearer",
+          "expires_in": 120,
+          "refresh_token": true,
+          "sub": "alice",
+          "aud": "wallet-api",
+          "scope": "offline_access wallet:charge wallet:read",
+          "principal_type": "user",
+          "exp": 1792637712,
+          "tokens": "[REDACTED]"
+        },
+        "explanation": "Token mới cùng family cũng phải bị từ chối sau reuse."
+      }
+    ]
+  },
+  {
+    "id": "other_refresh",
+    "mode": "baseline",
+    "at": "2026-10-22T02:53:12.937Z",
+    "protected": false,
+    "conclusion": "AS chấp nhận thao tác mà full security cần chặn. Xem phản hồi từng bước.",
+    "steps": [
+      {
+        "service": "Wallet AS",
+        "endpoint": "POST /token",
+        "status": 200,
+        "response": {
+          "grant": "authorization_code",
+          "token_type": "Bearer",
+          "expires_in": 120,
+          "refresh_token": true,
+          "sub": "alice",
+          "aud": "wallet-api",
+          "scope": "offline_access wallet:charge wallet:read",
+          "principal_type": "user",
+          "exp": 1792637712,
+          "tokens": "[REDACTED]"
+        },
+        "explanation": "Đổi code có offline_access để lấy refresh token fixture."
+      },
+      {
+        "service": "Wallet AS",
+        "endpoint": "POST /token",
+        "status": 200,
+        "response": {
+          "grant": "refresh_token",
+          "token_type": "Bearer",
+          "expires_in": 120,
+          "refresh_token": true,
+          "sub": "alice",
+          "aud": "wallet-api",
+          "scope": "offline_access wallet:charge wallet:read",
+          "principal_type": "user",
+          "exp": 1792637712,
+          "tokens": "[REDACTED]"
+        },
+        "explanation": "Client khác không sở hữu refresh token."
+      },
+      {
+        "service": "Wallet AS",
+        "endpoint": "POST /token",
+        "status": 200,
+        "response": {
+          "grant": "refresh_token",
+          "token_type": "Bearer",
+          "expires_in": 120,
+          "refresh_token": true,
+          "sub": "alice",
+          "aud": "wallet-api",
+          "scope": "offline_access wallet:charge wallet:read",
+          "principal_type": "user",
+          "exp": 1792637712,
+          "tokens": "[REDACTED]"
+        },
+        "explanation": "Đúng client vẫn dùng được token: request sai client không phá family."
+      }
+    ]
+  }
+]

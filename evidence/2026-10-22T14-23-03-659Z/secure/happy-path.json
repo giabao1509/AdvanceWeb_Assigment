@@ -1,0 +1,874 @@
+{
+  "mode": "secure",
+  "trace": {
+    "status": "authorized",
+    "trace": [
+      {
+        "service": "Wallet AS",
+        "from": "Người dùng",
+        "endpoint": "GET /authorize",
+        "status": 200,
+        "request": {
+          "query": {
+            "response_type": "code",
+            "redirect_uri": "http://localhost:7103/oauth/callback",
+            "scope": "wallet:read wallet:charge offline_access",
+            "state": "[REDACTED]",
+            "code_challenge": "[REDACTED]",
+            "code_challenge_method": "S256",
+            "client_id": "taxi-web"
+          }
+        },
+        "response": {
+          "body": {
+            "page": "Đăng nhập ví"
+          }
+        },
+        "explanation": "Request/response thực tế của trình duyệt tại Wallet AS; mật khẩu, code và state đã che."
+      },
+      {
+        "service": "Wallet AS",
+        "from": "Người dùng",
+        "endpoint": "POST /login",
+        "status": 302,
+        "request": {
+          "body": {
+            "username": "alice",
+            "password": "[REDACTED]",
+            "csrf": "[REDACTED]",
+            "request": "[REDACTED]"
+          }
+        },
+        "response": {
+          "headers": {
+            "location": "http://localhost:7101/consent?request=%5BREDACTED%5D"
+          },
+          "body": {
+            "result": "redirect"
+          }
+        },
+        "explanation": "Request/response thực tế của trình duyệt tại Wallet AS; mật khẩu, code và state đã che."
+      },
+      {
+        "service": "Wallet AS",
+        "from": "Người dùng",
+        "endpoint": "GET /consent",
+        "status": 200,
+        "request": {
+          "query": {
+            "request": "[REDACTED]"
+          }
+        },
+        "response": {
+          "body": {
+            "page": "Đồng ý cấp quyền cho Taxi"
+          }
+        },
+        "explanation": "Request/response thực tế của trình duyệt tại Wallet AS; mật khẩu, code và state đã che."
+      },
+      {
+        "service": "Wallet AS",
+        "from": "Người dùng",
+        "endpoint": "POST /consent",
+        "status": 302,
+        "request": {
+          "body": {
+            "csrf": "[REDACTED]",
+            "request": "[REDACTED]",
+            "decision": "allow"
+          }
+        },
+        "response": {
+          "headers": {
+            "location": "http://localhost:7103/oauth/callback?code=%5BREDACTED%5D&state=%5BREDACTED%5D"
+          },
+          "body": {
+            "result": "redirect"
+          }
+        },
+        "explanation": "Người dùng quyết định cấp quyền tại Wallet AS. Chỉ khi đồng ý, AS mới cấp authorization code."
+      },
+      {
+        "service": "Taxi server",
+        "from": "Người dùng",
+        "endpoint": "GET /oauth/callback",
+        "status": 302,
+        "request": {
+          "query": {
+            "state": "[REDACTED]",
+            "code": "[REDACTED]"
+          }
+        },
+        "response": {
+          "headers": {
+            "location": "/?notice=linked"
+          }
+        },
+        "children": [
+          {
+            "service": "Wallet AS",
+            "endpoint": "POST /token",
+            "status": 200,
+            "request": {
+              "headers": {
+                "authorization": "Basic [REDACTED] (taxi-web)",
+                "content-type": "application/x-www-form-urlencoded"
+              },
+              "body": {
+                "grant_type": "authorization_code",
+                "code": "[REDACTED]",
+                "redirect_uri": "http://localhost:7103/oauth/callback",
+                "code_verifier": "[REDACTED]"
+              }
+            },
+            "response": {
+              "grant": "authorization_code",
+              "token_type": "bearer",
+              "expires_in": 120,
+              "refresh_token": true,
+              "sub": "alice",
+              "aud": "wallet-api",
+              "scope": "offline_access wallet:charge wallet:read",
+              "principal_type": "user",
+              "exp": 1792679112,
+              "tokens": "[REDACTED]"
+            },
+            "explanation": "Sau khi người dùng đồng ý, Taxi đổi code lấy access token và refresh token. Token chỉ lưu mã hóa ở server."
+          }
+        ],
+        "explanation": "Taxi kiểm session/state, consume attempt một lần, rồi đổi authorization code bằng PKCE qua kênh server."
+      }
+    ]
+  },
+  "balance": {
+    "steps": [
+      {
+        "service": "Taxi server",
+        "from": "Người dùng",
+        "endpoint": "POST /api/wallet/balance",
+        "status": 200,
+        "request": {
+          "body": {
+            "csrf": "[REDACTED]"
+          }
+        },
+        "response": {},
+        "children": [
+          {
+            "service": "Wallet API",
+            "endpoint": "GET /wallet/balance",
+            "status": 200,
+            "request": {
+              "headers": {
+                "authorization": "Bearer [REDACTED]"
+              },
+              "body": null
+            },
+            "response": {
+              "user": "alice",
+              "balance": 1000000,
+              "currency": "VND"
+            },
+            "explanation": "API tự kiểm JWT qua JWKS, scope và principal trước khi xử lý dữ liệu ví."
+          }
+        ],
+        "explanation": "API nghiệp vụ Taxi thực thi thao tác. Token và client secret chỉ nằm phía server."
+      },
+      {
+        "service": "Wallet API",
+        "endpoint": "GET /wallet/balance",
+        "status": 200,
+        "request": {
+          "headers": {
+            "authorization": "Bearer [REDACTED]"
+          },
+          "body": null
+        },
+        "response": {
+          "user": "alice",
+          "balance": 1000000,
+          "currency": "VND"
+        },
+        "explanation": "API tự kiểm JWT qua JWKS, scope và principal trước khi xử lý dữ liệu ví."
+      }
+    ],
+    "trace": [
+      {
+        "service": "Taxi server",
+        "from": "Người dùng",
+        "endpoint": "POST /api/wallet/balance",
+        "status": 200,
+        "request": {
+          "body": {
+            "csrf": "[REDACTED]"
+          }
+        },
+        "response": {},
+        "children": [
+          {
+            "service": "Wallet API",
+            "endpoint": "GET /wallet/balance",
+            "status": 200,
+            "request": {
+              "headers": {
+                "authorization": "Bearer [REDACTED]"
+              },
+              "body": null
+            },
+            "response": {
+              "user": "alice",
+              "balance": 1000000,
+              "currency": "VND"
+            },
+            "explanation": "API tự kiểm JWT qua JWKS, scope và principal trước khi xử lý dữ liệu ví."
+          }
+        ],
+        "explanation": "API nghiệp vụ Taxi thực thi thao tác. Token và client secret chỉ nằm phía server."
+      }
+    ]
+  },
+  "charge": {
+    "job": "IMpbhoqfMI3w4r0Z8J4V9gnOVHL9n-lxb8oODroX1-c",
+    "status": "completed",
+    "booking": {
+      "ticket_id": "VE-4cZ2txepPtl-biep",
+      "trip_id": "trip_4cZ2txepPtl-biep",
+      "from": "Bến Thành",
+      "to": "Sân bay Tân Sơn Nhất",
+      "passenger": "alice",
+      "amount": 45000
+    },
+    "result": {
+      "charge_id": "DM6Ql66Z9SerBFooUdVDvNP7g_X6XxkAAj9optCVL7k",
+      "amount": 45000,
+      "trip_id": "trip_4cZ2txepPtl-biep",
+      "duplicate": false,
+      "charge_count": 1
+    },
+    "steps": [
+      {
+        "service": "Taxi server",
+        "from": "Người dùng",
+        "endpoint": "POST /api/bookings",
+        "status": 201,
+        "request": {
+          "body": {
+            "csrf": "[REDACTED]",
+            "intent_id": "GQNfUZ4j90gXwZPJ9hC-smxkbiEg5jHt2cmKSnKL9KM"
+          }
+        },
+        "response": {
+          "job": "IMpbhoqfMI3w4r0Z8J4V9gnOVHL9n-lxb8oODroX1-c",
+          "status": "completed",
+          "booking": {
+            "ticket_id": "VE-4cZ2txepPtl-biep",
+            "trip_id": "trip_4cZ2txepPtl-biep",
+            "from": "Bến Thành",
+            "to": "Sân bay Tân Sơn Nhất",
+            "passenger": "alice",
+            "amount": 45000
+          },
+          "result": {
+            "charge_id": "DM6Ql66Z9SerBFooUdVDvNP7g_X6XxkAAj9optCVL7k",
+            "amount": 45000,
+            "trip_id": "trip_4cZ2txepPtl-biep",
+            "duplicate": false,
+            "charge_count": 1
+          }
+        },
+        "children": [
+          {
+            "service": "Taxi server",
+            "endpoint": "Tạo vé và chuyến",
+            "status": 201,
+            "request": {
+              "body": {
+                "ticket_id": "VE-4cZ2txepPtl-biep",
+                "trip_id": "trip_4cZ2txepPtl-biep",
+                "from": "Bến Thành",
+                "to": "Sân bay Tân Sơn Nhất",
+                "passenger": "alice",
+                "amount": 45000
+              }
+            },
+            "response": {
+              "ticket_id": "VE-4cZ2txepPtl-biep",
+              "trip_id": "trip_4cZ2txepPtl-biep",
+              "from": "Bến Thành",
+              "to": "Sân bay Tân Sơn Nhất",
+              "passenger": "alice",
+              "amount": 45000,
+              "status": "pending_payment"
+            },
+            "explanation": "Sau callback OAuth thành công, Taxi tạo và lưu vé/chuyến. Vé chỉ xác nhận khi Wallet API thanh toán thành công."
+          },
+          {
+            "service": "Wallet API",
+            "endpoint": "POST /wallet/charges",
+            "status": 201,
+            "request": {
+              "headers": {
+                "authorization": "Bearer [REDACTED]",
+                "content-type": "application/json",
+                "idempotency-key": "trip_4cZ2txepPtl-biep"
+              },
+              "body": {
+                "amount": 45000,
+                "trip_id": "trip_4cZ2txepPtl-biep"
+              }
+            },
+            "response": {
+              "charge_id": "DM6Ql66Z9SerBFooUdVDvNP7g_X6XxkAAj9optCVL7k",
+              "amount": 45000,
+              "trip_id": "trip_4cZ2txepPtl-biep",
+              "duplicate": false,
+              "charge_count": 1
+            },
+            "explanation": "API tự kiểm JWT qua JWKS, scope và principal trước khi xử lý dữ liệu ví."
+          }
+        ],
+        "explanation": "API nghiệp vụ Taxi thực thi thao tác. Token và client secret chỉ nằm phía server."
+      },
+      {
+        "service": "Taxi server",
+        "endpoint": "Tạo vé và chuyến",
+        "status": 201,
+        "request": {
+          "body": {
+            "ticket_id": "VE-4cZ2txepPtl-biep",
+            "trip_id": "trip_4cZ2txepPtl-biep",
+            "from": "Bến Thành",
+            "to": "Sân bay Tân Sơn Nhất",
+            "passenger": "alice",
+            "amount": 45000
+          }
+        },
+        "response": {
+          "ticket_id": "VE-4cZ2txepPtl-biep",
+          "trip_id": "trip_4cZ2txepPtl-biep",
+          "from": "Bến Thành",
+          "to": "Sân bay Tân Sơn Nhất",
+          "passenger": "alice",
+          "amount": 45000,
+          "status": "pending_payment"
+        },
+        "explanation": "Sau callback OAuth thành công, Taxi tạo và lưu vé/chuyến. Vé chỉ xác nhận khi Wallet API thanh toán thành công."
+      },
+      {
+        "service": "Wallet API",
+        "endpoint": "POST /wallet/charges",
+        "status": 201,
+        "request": {
+          "headers": {
+            "authorization": "Bearer [REDACTED]",
+            "content-type": "application/json",
+            "idempotency-key": "trip_4cZ2txepPtl-biep"
+          },
+          "body": {
+            "amount": 45000,
+            "trip_id": "trip_4cZ2txepPtl-biep"
+          }
+        },
+        "response": {
+          "charge_id": "DM6Ql66Z9SerBFooUdVDvNP7g_X6XxkAAj9optCVL7k",
+          "amount": 45000,
+          "trip_id": "trip_4cZ2txepPtl-biep",
+          "duplicate": false,
+          "charge_count": 1
+        },
+        "explanation": "API tự kiểm JWT qua JWKS, scope và principal trước khi xử lý dữ liệu ví."
+      }
+    ],
+    "trace": [
+      {
+        "service": "Taxi server",
+        "from": "Người dùng",
+        "endpoint": "POST /api/booking-intents",
+        "status": 200,
+        "request": {
+          "body": {
+            "trip_id": "ben-thanh-airport",
+            "payment_mode": "immediate",
+            "csrf": "[REDACTED]"
+          }
+        },
+        "response": {
+          "intent_id": "GQNfUZ4j90gXwZPJ9hC-smxkbiEg5jHt2cmKSnKL9KM",
+          "status": "awaiting_consent",
+          "next": "Wallet AS /authorize"
+        },
+        "explanation": "Taxi chỉ lưu ý định đặt vé. Chưa có vé, chuyến hoặc khoản trừ tiền; phải chờ người dùng cấp quyền tại AS."
+      },
+      {
+        "service": "Wallet AS",
+        "from": "Người dùng",
+        "endpoint": "GET /authorize",
+        "status": 302,
+        "request": {
+          "query": {
+            "response_type": "code",
+            "redirect_uri": "http://localhost:7103/oauth/callback",
+            "scope": "wallet:read wallet:charge offline_access",
+            "state": "[REDACTED]",
+            "code_challenge": "[REDACTED]",
+            "code_challenge_method": "S256",
+            "client_id": "taxi-web"
+          }
+        },
+        "response": {
+          "headers": {
+            "location": "http://localhost:7101/consent?request=%5BREDACTED%5D"
+          },
+          "body": {
+            "result": "redirect"
+          }
+        },
+        "explanation": "Request/response thực tế của trình duyệt tại Wallet AS; mật khẩu, code và state đã che."
+      },
+      {
+        "service": "Wallet AS",
+        "from": "Người dùng",
+        "endpoint": "GET /consent",
+        "status": 200,
+        "request": {
+          "query": {
+            "request": "[REDACTED]"
+          }
+        },
+        "response": {
+          "body": {
+            "page": "Đồng ý cấp quyền cho Taxi"
+          }
+        },
+        "explanation": "Request/response thực tế của trình duyệt tại Wallet AS; mật khẩu, code và state đã che."
+      },
+      {
+        "service": "Wallet AS",
+        "from": "Người dùng",
+        "endpoint": "POST /consent",
+        "status": 302,
+        "request": {
+          "body": {
+            "csrf": "[REDACTED]",
+            "request": "[REDACTED]",
+            "decision": "allow"
+          }
+        },
+        "response": {
+          "headers": {
+            "location": "http://localhost:7103/oauth/callback?code=%5BREDACTED%5D&state=%5BREDACTED%5D"
+          },
+          "body": {
+            "result": "redirect"
+          }
+        },
+        "explanation": "Người dùng quyết định cấp quyền tại Wallet AS. Chỉ khi đồng ý, AS mới cấp authorization code."
+      },
+      {
+        "service": "Taxi server",
+        "from": "Người dùng",
+        "endpoint": "GET /oauth/callback",
+        "status": 302,
+        "request": {
+          "query": {
+            "state": "[REDACTED]",
+            "code": "[REDACTED]"
+          }
+        },
+        "response": {
+          "headers": {
+            "location": "/?notice=booking_authorized&intent=GQNfUZ4j90gXwZPJ9hC-smxkbiEg5jHt2cmKSnKL9KM"
+          }
+        },
+        "children": [
+          {
+            "service": "Wallet AS",
+            "endpoint": "POST /token",
+            "status": 200,
+            "request": {
+              "headers": {
+                "authorization": "Basic [REDACTED] (taxi-web)",
+                "content-type": "application/x-www-form-urlencoded"
+              },
+              "body": {
+                "grant_type": "authorization_code",
+                "code": "[REDACTED]",
+                "redirect_uri": "http://localhost:7103/oauth/callback",
+                "code_verifier": "[REDACTED]"
+              }
+            },
+            "response": {
+              "grant": "authorization_code",
+              "token_type": "bearer",
+              "expires_in": 120,
+              "refresh_token": true,
+              "sub": "alice",
+              "aud": "wallet-api",
+              "scope": "offline_access wallet:charge wallet:read",
+              "principal_type": "user",
+              "exp": 1792679113,
+              "tokens": "[REDACTED]"
+            },
+            "explanation": "Sau khi người dùng đồng ý, Taxi đổi code lấy access token và refresh token. Token chỉ lưu mã hóa ở server."
+          }
+        ],
+        "explanation": "Taxi kiểm session/state, consume attempt một lần, rồi đổi authorization code bằng PKCE qua kênh server."
+      },
+      {
+        "service": "Taxi server",
+        "from": "Người dùng",
+        "endpoint": "POST /api/bookings",
+        "status": 201,
+        "request": {
+          "body": {
+            "csrf": "[REDACTED]",
+            "intent_id": "GQNfUZ4j90gXwZPJ9hC-smxkbiEg5jHt2cmKSnKL9KM"
+          }
+        },
+        "response": {
+          "job": "IMpbhoqfMI3w4r0Z8J4V9gnOVHL9n-lxb8oODroX1-c",
+          "status": "completed",
+          "booking": {
+            "ticket_id": "VE-4cZ2txepPtl-biep",
+            "trip_id": "trip_4cZ2txepPtl-biep",
+            "from": "Bến Thành",
+            "to": "Sân bay Tân Sơn Nhất",
+            "passenger": "alice",
+            "amount": 45000
+          },
+          "result": {
+            "charge_id": "DM6Ql66Z9SerBFooUdVDvNP7g_X6XxkAAj9optCVL7k",
+            "amount": 45000,
+            "trip_id": "trip_4cZ2txepPtl-biep",
+            "duplicate": false,
+            "charge_count": 1
+          }
+        },
+        "children": [
+          {
+            "service": "Taxi server",
+            "endpoint": "Tạo vé và chuyến",
+            "status": 201,
+            "request": {
+              "body": {
+                "ticket_id": "VE-4cZ2txepPtl-biep",
+                "trip_id": "trip_4cZ2txepPtl-biep",
+                "from": "Bến Thành",
+                "to": "Sân bay Tân Sơn Nhất",
+                "passenger": "alice",
+                "amount": 45000
+              }
+            },
+            "response": {
+              "ticket_id": "VE-4cZ2txepPtl-biep",
+              "trip_id": "trip_4cZ2txepPtl-biep",
+              "from": "Bến Thành",
+              "to": "Sân bay Tân Sơn Nhất",
+              "passenger": "alice",
+              "amount": 45000,
+              "status": "pending_payment"
+            },
+            "explanation": "Sau callback OAuth thành công, Taxi tạo và lưu vé/chuyến. Vé chỉ xác nhận khi Wallet API thanh toán thành công."
+          },
+          {
+            "service": "Wallet API",
+            "endpoint": "POST /wallet/charges",
+            "status": 201,
+            "request": {
+              "headers": {
+                "authorization": "Bearer [REDACTED]",
+                "content-type": "application/json",
+                "idempotency-key": "trip_4cZ2txepPtl-biep"
+              },
+              "body": {
+                "amount": 45000,
+                "trip_id": "trip_4cZ2txepPtl-biep"
+              }
+            },
+            "response": {
+              "charge_id": "DM6Ql66Z9SerBFooUdVDvNP7g_X6XxkAAj9optCVL7k",
+              "amount": 45000,
+              "trip_id": "trip_4cZ2txepPtl-biep",
+              "duplicate": false,
+              "charge_count": 1
+            },
+            "explanation": "API tự kiểm JWT qua JWKS, scope và principal trước khi xử lý dữ liệu ví."
+          }
+        ],
+        "explanation": "API nghiệp vụ Taxi thực thi thao tác. Token và client secret chỉ nằm phía server."
+      }
+    ]
+  },
+  "retry": {
+    "job": "IMpbhoqfMI3w4r0Z8J4V9gnOVHL9n-lxb8oODroX1-c",
+    "status": "completed",
+    "booking": {
+      "ticket_id": "VE-4cZ2txepPtl-biep",
+      "trip_id": "trip_4cZ2txepPtl-biep",
+      "from": "Bến Thành",
+      "to": "Sân bay Tân Sơn Nhất",
+      "passenger": "alice",
+      "amount": 45000
+    },
+    "result": {
+      "charge_id": "DM6Ql66Z9SerBFooUdVDvNP7g_X6XxkAAj9optCVL7k",
+      "amount": 45000,
+      "trip_id": "trip_4cZ2txepPtl-biep",
+      "duplicate": true,
+      "charge_count": 1
+    },
+    "steps": [
+      {
+        "service": "Taxi server",
+        "from": "Người dùng",
+        "endpoint": "POST /api/bookings/IMpbhoqfMI3w4r0Z8J4V9gnOVHL9n-lxb8oODroX1-c/retry",
+        "status": 200,
+        "request": {
+          "body": {
+            "csrf": "[REDACTED]"
+          }
+        },
+        "response": {
+          "job": "IMpbhoqfMI3w4r0Z8J4V9gnOVHL9n-lxb8oODroX1-c",
+          "status": "completed",
+          "booking": {
+            "ticket_id": "VE-4cZ2txepPtl-biep",
+            "trip_id": "trip_4cZ2txepPtl-biep",
+            "from": "Bến Thành",
+            "to": "Sân bay Tân Sơn Nhất",
+            "passenger": "alice",
+            "amount": 45000
+          },
+          "result": {
+            "charge_id": "DM6Ql66Z9SerBFooUdVDvNP7g_X6XxkAAj9optCVL7k",
+            "amount": 45000,
+            "trip_id": "trip_4cZ2txepPtl-biep",
+            "duplicate": true,
+            "charge_count": 1
+          }
+        },
+        "children": [
+          {
+            "service": "Wallet API",
+            "endpoint": "POST /wallet/charges",
+            "status": 200,
+            "request": {
+              "headers": {
+                "authorization": "Bearer [REDACTED]",
+                "content-type": "application/json",
+                "idempotency-key": "trip_4cZ2txepPtl-biep"
+              },
+              "body": {
+                "amount": 45000,
+                "trip_id": "trip_4cZ2txepPtl-biep"
+              }
+            },
+            "response": {
+              "charge_id": "DM6Ql66Z9SerBFooUdVDvNP7g_X6XxkAAj9optCVL7k",
+              "amount": 45000,
+              "trip_id": "trip_4cZ2txepPtl-biep",
+              "duplicate": true,
+              "charge_count": 1
+            },
+            "explanation": "API tự kiểm JWT qua JWKS, scope và principal trước khi xử lý dữ liệu ví."
+          }
+        ],
+        "explanation": "API nghiệp vụ Taxi thực thi thao tác. Token và client secret chỉ nằm phía server."
+      },
+      {
+        "service": "Wallet API",
+        "endpoint": "POST /wallet/charges",
+        "status": 200,
+        "request": {
+          "headers": {
+            "authorization": "Bearer [REDACTED]",
+            "content-type": "application/json",
+            "idempotency-key": "trip_4cZ2txepPtl-biep"
+          },
+          "body": {
+            "amount": 45000,
+            "trip_id": "trip_4cZ2txepPtl-biep"
+          }
+        },
+        "response": {
+          "charge_id": "DM6Ql66Z9SerBFooUdVDvNP7g_X6XxkAAj9optCVL7k",
+          "amount": 45000,
+          "trip_id": "trip_4cZ2txepPtl-biep",
+          "duplicate": true,
+          "charge_count": 1
+        },
+        "explanation": "API tự kiểm JWT qua JWKS, scope và principal trước khi xử lý dữ liệu ví."
+      }
+    ],
+    "trace": [
+      {
+        "service": "Taxi server",
+        "from": "Người dùng",
+        "endpoint": "POST /api/bookings/IMpbhoqfMI3w4r0Z8J4V9gnOVHL9n-lxb8oODroX1-c/retry",
+        "status": 200,
+        "request": {
+          "body": {
+            "csrf": "[REDACTED]"
+          }
+        },
+        "response": {
+          "job": "IMpbhoqfMI3w4r0Z8J4V9gnOVHL9n-lxb8oODroX1-c",
+          "status": "completed",
+          "booking": {
+            "ticket_id": "VE-4cZ2txepPtl-biep",
+            "trip_id": "trip_4cZ2txepPtl-biep",
+            "from": "Bến Thành",
+            "to": "Sân bay Tân Sơn Nhất",
+            "passenger": "alice",
+            "amount": 45000
+          },
+          "result": {
+            "charge_id": "DM6Ql66Z9SerBFooUdVDvNP7g_X6XxkAAj9optCVL7k",
+            "amount": 45000,
+            "trip_id": "trip_4cZ2txepPtl-biep",
+            "duplicate": true,
+            "charge_count": 1
+          }
+        },
+        "children": [
+          {
+            "service": "Wallet API",
+            "endpoint": "POST /wallet/charges",
+            "status": 200,
+            "request": {
+              "headers": {
+                "authorization": "Bearer [REDACTED]",
+                "content-type": "application/json",
+                "idempotency-key": "trip_4cZ2txepPtl-biep"
+              },
+              "body": {
+                "amount": 45000,
+                "trip_id": "trip_4cZ2txepPtl-biep"
+              }
+            },
+            "response": {
+              "charge_id": "DM6Ql66Z9SerBFooUdVDvNP7g_X6XxkAAj9optCVL7k",
+              "amount": 45000,
+              "trip_id": "trip_4cZ2txepPtl-biep",
+              "duplicate": true,
+              "charge_count": 1
+            },
+            "explanation": "API tự kiểm JWT qua JWKS, scope và principal trước khi xử lý dữ liệu ví."
+          }
+        ],
+        "explanation": "API nghiệp vụ Taxi thực thi thao tác. Token và client secret chỉ nằm phía server."
+      }
+    ]
+  },
+  "m2m": {
+    "id": "m2m",
+    "mode": "secure",
+    "at": "2026-10-22T14:23:13.940Z",
+    "protected": true,
+    "conclusion": "Hệ thống đã chặn đúng thao tác không hợp lệ trong tình huống này.",
+    "steps": [
+      {
+        "service": "Wallet AS",
+        "endpoint": "POST /token",
+        "status": 200,
+        "request": {
+          "headers": {
+            "authorization": "Basic [REDACTED] (taxi-m2m)",
+            "content-type": "application/x-www-form-urlencoded"
+          },
+          "body": {
+            "grant_type": "client_credentials",
+            "scope": "rates:read"
+          }
+        },
+        "response": {
+          "grant": "client_credentials",
+          "token_type": "Bearer",
+          "expires_in": 120,
+          "refresh_token": false,
+          "sub": "taxi-m2m",
+          "aud": "wallet-api",
+          "scope": "rates:read",
+          "principal_type": "client",
+          "exp": 1792679113,
+          "tokens": "[REDACTED]"
+        },
+        "explanation": "Client taxi-m2m chỉ đại diện ứng dụng, không đại diện Alice."
+      },
+      {
+        "service": "Wallet API",
+        "endpoint": "GET /public/rates",
+        "status": 200,
+        "request": {
+          "headers": {
+            "authorization": "Bearer [REDACTED]"
+          },
+          "body": null
+        },
+        "response": {
+          "currency": "VND",
+          "base_fare": 15000,
+          "per_km": 12000,
+          "principal_type": "client"
+        },
+        "explanation": "Token client được đọc bảng giá."
+      },
+      {
+        "service": "Wallet API",
+        "endpoint": "POST /wallet/charges",
+        "status": 403,
+        "request": {
+          "headers": {
+            "authorization": "Bearer [REDACTED]",
+            "content-type": "application/json",
+            "idempotency-key": "nAzVnF_CrGe7zrz6qBOgEg5ItsDn9CNrbiTXvk_mlo0"
+          },
+          "body": {
+            "amount": 1000,
+            "trip_id": "m2m-denied"
+          }
+        },
+        "response": {
+          "error": "insufficient_scope",
+          "required_scope": "wallet:charge",
+          "requires_user": true
+        },
+        "explanation": "API kiểm scope và principal; client không được charge ví."
+      },
+      {
+        "service": "Wallet AS",
+        "endpoint": "POST /token",
+        "status": 400,
+        "request": {
+          "headers": {
+            "authorization": "Basic [REDACTED] (taxi-m2m)",
+            "content-type": "application/x-www-form-urlencoded"
+          },
+          "body": {
+            "grant_type": "client_credentials",
+            "scope": "wallet:charge"
+          }
+        },
+        "response": {
+          "error": "invalid_scope"
+        },
+        "explanation": "Thử xin scope không được cấp cho taxi-m2m."
+      }
+    ]
+  },
+  "passed": true,
+  "checks": [
+    "actual Taxi password authentication",
+    "no create before consent",
+    "deny creates no booking or debit",
+    "CSRF and session binding",
+    "actual consent trace before booking",
+    "confirmed booking accessible through primary API",
+    "unknown trip rejected",
+    "same intent creates once",
+    "same ticket retry charges once",
+    "other user cannot read or retry ticket",
+    "callback replay rejected without booking",
+    "demo routes absent"
+  ]
+}

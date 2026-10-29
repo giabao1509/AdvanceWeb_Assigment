@@ -1,0 +1,16 @@
+{
+  "status": "PASS",
+  "at": "2026-10-22T02:53:12.365Z",
+  "browser": "155.0.4283.62",
+  "checks": [
+    "two mode dashboards",
+    "missing PKCE before/after",
+    "real browser login/consent/callback",
+    "idempotent charge",
+    "mobile no horizontal overflow",
+    "no browser token endpoint/token response",
+    "no JavaScript or CSP errors"
+  ],
+  "errors": [],
+  "leaks": []
+}

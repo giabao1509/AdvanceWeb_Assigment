@@ -1,0 +1,76 @@
+{
+  "token_exp_before": 1792637717,
+  "scheduled": {
+    "job": "1P-p43_TYLqYeumXYKvOkfJfYrxC1UFyGfTWG_47KD8",
+    "due_at": 1792637719,
+    "explanation": "Job chờ access token hết hạn thật rồi refresh. Bấm Đăng xuất Taxi; dashboard vẫn xem được tiến độ.",
+    "steps": [
+      {
+        "service": "Taxi server",
+        "endpoint": "POST /demo/schedule",
+        "status": 200,
+        "response": {
+          "mode": "baseline",
+          "action": "schedule",
+          "status": "completed",
+          "job": "1P-p43_TYLqYeumXYKvOkfJfYrxC1UFyGfTWG_47KD8"
+        },
+        "explanation": "Taxi điều phối thao tác ở server. Browser chỉ nhận kết quả đã che; token và client secret không được gửi về giao diện."
+      }
+    ]
+  },
+  "observed_at": 1792637720,
+  "job": {
+    "id": "1P-p43_TYLqYeumXYKvOkfJfYrxC1UFyGfTWG_47KD8",
+    "user_id": "alice",
+    "trip_id": "trip_NDmXDbkmdHENpXRK",
+    "due_at": 1792637719,
+    "status": "completed",
+    "detail": {
+      "steps": [
+        {
+          "service": "Wallet AS",
+          "endpoint": "POST /token · refresh_token",
+          "status": 200,
+          "response": {
+            "grant": "refresh_token",
+            "token_type": "bearer",
+            "expires_in": 120,
+            "refresh_token": true,
+            "sub": "alice",
+            "aud": "wallet-api",
+            "scope": "offline_access wallet:charge wallet:read",
+            "principal_type": "user",
+            "exp": 1792637839,
+            "tokens": "[REDACTED]"
+          },
+          "explanation": "Taxi refresh phía server và lưu token mới trước khi nhả khóa theo người dùng."
+        },
+        {
+          "service": "Wallet API",
+          "endpoint": "POST /wallet/charges",
+          "status": 201,
+          "response": {
+            "charge_id": "fTpUGR2nh0rh3WHl0scFcSHGp09WfKrUgLs2oO9Ueqo",
+            "amount": 45000,
+            "trip_id": "trip_NDmXDbkmdHENpXRK",
+            "duplicate": false,
+            "charge_count": 2
+          },
+          "explanation": "API tự kiểm JWT qua JWKS, scope và principal trước khi xử lý dữ liệu ví."
+        }
+      ],
+      "active_taxi_sessions": 0,
+      "result": {
+        "charge_id": "fTpUGR2nh0rh3WHl0scFcSHGp09WfKrUgLs2oO9Ueqo",
+        "amount": 45000,
+        "trip_id": "trip_NDmXDbkmdHENpXRK",
+        "duplicate": false,
+        "charge_count": 2
+      }
+    },
+    "attempts": 1
+  },
+  "charge_count_before": 1,
+  "charge_count_after": 2
+}

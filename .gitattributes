@@ -1,0 +1,7 @@
+# Preserve exact bytes for files covered by evidence SHA-256 manifests.
+apps/** -text
+shared/** -text
+scripts/** -text
+public/** -text
+evidence/** -text
+package-lock.json -text

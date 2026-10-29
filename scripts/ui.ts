@@ -1,0 +1,154 @@
+import { chromium, expect } from '@playwright/test';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+const out = resolve(process.env.UI_EVIDENCE_DIR || 'evidence/ui'); mkdirSync(out, { recursive: true });
+const offset = Number(process.env.LAB_PORT_OFFSET || 0);
+const taxiUrl = (port: number) => `http://localhost:${port + offset}`;
+const browser = await chromium.launch({ channel: 'msedge', headless: true });
+const context = await browser.newContext({ viewport: { width: 1440, height: 1100 } });
+const page = await context.newPage(), errors: string[] = [], leaks: string[] = [], responses: unknown[] = [];
+page.on('pageerror', error => errors.push(error.message));
+page.on('console', message => { if (message.type() === 'error' && /Content Security Policy|Refused to/.test(message.text())) errors.push(message.text()); });
+page.on('request', request => { if (new URL(request.url()).pathname === '/token') leaks.push('Browser called token endpoint'); });
+page.on('response', async response => {
+  responses.push({ path: new URL(response.url()).pathname, status: response.status(), method: response.request().method(), origin: response.request().headers().origin });
+  if (response.headers()['content-type']?.includes('json')) {
+    const text = await response.text().catch(() => '');
+    if (/"(?:access_token|refresh_token)"\s*:\s*"(?!\[REDACTED\])/.test(text)) leaks.push('Token value exposed to browser response');
+  }
+});
+try {
+  for (const [mode, port] of [['baseline', 4103], ['secure', 5103]] as const) {
+    await page.goto(taxiUrl(port));
+    await expect(page.locator('#mode-notice')).toContainText(mode === 'secure' ? 'Full security' : 'Baseline');
+    await page.locator('#session-button').click();
+    await page.getByLabel('Mật khẩu Taxi', { exact: true }).fill('Taxi-alice-2026!');
+    await page.getByRole('button', { name: 'Đăng nhập Taxi', exact: true }).click();
+    await expect(page.locator('#session-label')).toContainText('Taxi session: alice');
+    await page.screenshot({ path: resolve(out, `${mode}-dashboard.png`), fullPage: true });
+    await page.locator('[data-id="pkce"]').click();
+    await expect(page.locator('#result')).toContainText(mode === 'secure' ? 'Đã từ chối yêu cầu thiếu PKCE' : 'AS chấp nhận');
+    await expect(page.locator('#result pre')).toHaveCount(0);
+    await expect(page.getByRole('tab', { name: 'Thông báo', exact: true })).toHaveAttribute('aria-selected', 'true');
+    await expect(page.locator('#sequence-panel')).toBeHidden();
+    await page.getByRole('tab', { name: 'Sequence diagram', exact: true }).click();
+    await expect(page.locator('#message-panel')).toBeHidden();
+    await page.locator('[data-message]').filter({ hasText: '/authorize' }).first().click();
+    await expect(page.getByRole('dialog')).toBeVisible();
+    await expect(page.locator('#payload-detail')).toContainText('client_id');
+    const position = await page.evaluate(() => {
+      const popup = document.getElementById('payload-detail')!.getBoundingClientRect();
+      const arrow = document.querySelector('[data-message][aria-pressed="true"]')!.getBoundingClientRect();
+      return { left: popup.left, right: popup.right, top: popup.top, bottom: popup.bottom, arrowTop: arrow.top, width: innerWidth, height: innerHeight };
+    });
+    expect(position.left).toBeGreaterThanOrEqual(0); expect(position.right).toBeLessThanOrEqual(position.width);
+    expect(position.top).toBeGreaterThanOrEqual(0); expect(position.bottom).toBeLessThanOrEqual(position.height);
+    await page.screenshot({ path: resolve(out, `${mode}-payload-popup.png`) });
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('dialog')).toBeHidden();
+    await expect(page.locator('[data-message]').filter({ hasText: '/authorize' }).first()).toBeFocused();
+    await page.locator('[data-message]').filter({ hasText: '/authorize' }).last().focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#payload-detail')).toContainText(mode === 'secure' ? 'invalid_request' : 'code_issued');
+    await page.getByRole('button', { name: 'Đóng payload' }).click();
+    await expect(page.getByRole('dialog')).toBeHidden();
+    await page.getByRole('tab', { name: 'Thông báo', exact: true }).click();
+    for (const id of ['redirect', 'code_replay', 'refresh_replay', 'wrong_secret', 'm2m']) {
+      await page.locator(`[data-id="${id}"]`).click();
+      await expect(page.locator(`[data-id="${id}"]`)).toBeEnabled();
+      await expect(page.locator('.result-banner')).toBeVisible();
+      await expect(page.locator('#result pre')).toHaveCount(0);
+    }
+  }
+  // A fresh Taxi browser session starts the complete booking flow without manual prerequisites.
+  await page.locator('#session-button').click();
+  await expect(page.locator('#session-label')).toContainText('Chưa đăng nhập');
+  await page.locator('[data-action="book"]').click();
+  await expect(page.getByRole('heading', { name: 'Đăng nhập Taxi', exact: true })).toBeVisible();
+  await page.getByLabel('Mật khẩu Taxi', { exact: true }).fill('Taxi-alice-2026!');
+  await page.getByRole('button', { name: 'Đăng nhập Taxi', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Đăng nhập ví' })).toBeVisible();
+  await page.getByLabel('Mật khẩu', { exact: true }).fill('Alice-demo-2026!');
+  await page.getByRole('button', { name: 'Đăng nhập Wallet' }).click();
+  await expect(page.getByRole('heading', { name: 'Cho Taxi dùng ví?' })).toBeVisible();
+  await page.screenshot({ path: resolve(out, 'consent.png'), fullPage: true });
+  await page.getByRole('button', { name: 'Đồng ý liên kết' }).click();
+  await expect(page.locator('#link-status')).toContainText('Đã liên kết');
+  await expect(page.locator('#result')).toContainText('Đặt vé thành công!');
+  await expect(page.locator('#toast')).not.toHaveClass(/error/);
+  await expect(page.locator('#result')).toContainText('Bến Thành');
+  await expect(page.locator('#result pre')).toHaveCount(0);
+  const ticket = await page.locator('.ticket-summary').textContent();
+  await page.getByRole('tab', { name: 'Sequence diagram', exact: true }).click();
+  const creation = page.locator('[data-message]').filter({ hasText: 'Đã tạo vé và chuyến' });
+  await expect(creation).toHaveCount(1);
+  const sequenceLabels = await page.locator('[data-message]').allTextContents();
+  const consentIndex = sequenceLabels.findIndex(label => label.includes('POST /consent'));
+  const creationIndex = sequenceLabels.findIndex(label => label.includes('Đã tạo vé và chuyến'));
+  expect(consentIndex).toBeGreaterThanOrEqual(0);
+  expect(creationIndex).toBeGreaterThan(consentIndex);
+  await expect(page.locator('[data-message]').filter({ hasText: 'POST /login' }).first()).toBeVisible();
+  await page.locator('[data-message]').filter({ hasText: 'POST /consent' }).first().click();
+  await expect(page.locator('#payload-detail')).toContainText('"decision": "allow"');
+  await creation.click();
+  await expect(page.locator('#payload-detail')).toContainText('Xử lý nội bộ');
+  await expect(page.locator('#payload-detail')).toContainText('pending_payment');
+  await page.locator('[data-message]').filter({ hasText: '/wallet/charges' }).first().click();
+  await expect(page.locator('#payload-detail')).toContainText('idempotency-key');
+  await expect(page.locator('#payload-detail')).toContainText('45000');
+  await page.locator('[data-message]').filter({ hasText: '/wallet/charges' }).last().click();
+  await expect(page.locator('#payload-detail')).toContainText('charge_id');
+  const count = await page.locator('#charge-count').textContent();
+  const firstJob = await page.locator('[data-job]').first().getAttribute('data-job');
+  await page.screenshot({ path: resolve(out, 'booking-confirmed.png'), fullPage: true });
+  await page.locator('[data-action="retry"]').click();
+  await expect(page.locator('#result')).toContainText('không trừ thêm tiền');
+  await expect(page.locator('.ticket-summary')).toHaveText(ticket!);
+  await page.getByRole('tab', { name: 'Sequence diagram', exact: true }).click();
+  await page.locator('[data-message]').filter({ hasText: '/wallet/charges' }).last().click();
+  await expect(page.locator('#payload-detail')).toContainText('"duplicate": true');
+  await expect(page.locator('#charge-count')).toHaveText(count!);
+  await page.screenshot({ path: resolve(out, 'secure-response.png'), fullPage: true });
+  await page.locator('#trip-choice').selectOption('ben-thanh-mien-dong');
+  await page.locator('[data-action="book"]').click();
+  await expect(page.getByRole('heading', { name: 'Cho Taxi dùng ví?' })).toBeVisible();
+  await page.getByRole('button', { name: 'Đồng ý liên kết' }).click();
+  await expect(page.locator('#result')).toContainText('Đặt vé thành công!');
+  expect(await page.locator('.ticket-summary').textContent()).not.toBe(ticket);
+  await expect(page.locator('.ticket-summary')).toContainText('Bến xe Miền Đông');
+  await expect(page.locator('.ticket-summary')).toContainText('35.000');
+  await expect(page.locator('#charge-count')).toHaveText(String(Number(count) + 1));
+  await page.locator(`[data-job="${firstJob}"]`).click();
+  await expect(page.locator('.ticket-summary')).toHaveText(ticket!);
+  await page.locator('[data-action="retry"]').click();
+  await expect(page.locator('#result')).toContainText('không trừ thêm tiền');
+  await expect(page.locator('.ticket-summary')).toHaveText(ticket!);
+  await expect(page.locator('#charge-count')).toHaveText(String(Number(count) + 1));
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(taxiUrl(5103));
+  await expect(page.locator('#mode-notice')).toContainText('Full security');
+  await page.locator('[data-id="pkce"]').click();
+  await page.getByRole('tab', { name: 'Thông báo', exact: true }).focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(page.getByRole('tab', { name: 'Sequence diagram', exact: true })).toHaveAttribute('aria-selected', 'true');
+  await expect(page.locator('[data-message]').first()).toBeVisible();
+  await page.locator('[data-message]').filter({ hasText: '/authorize' }).first().click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  const popupBounds = await page.getByRole('dialog').boundingBox();
+  expect(popupBounds!.x).toBeGreaterThanOrEqual(0); expect(popupBounds!.x + popupBounds!.width).toBeLessThanOrEqual(390);
+  await page.screenshot({ path: resolve(out, 'mobile-payload-popup.png') });
+  await page.getByRole('tab', { name: 'Thông báo', exact: true }).click();
+  await expect(page.getByRole('dialog')).toBeHidden();
+  const width = await page.evaluate(() => ({ content: document.documentElement.scrollWidth, viewport: innerWidth }));
+  expect(width.content).toBeLessThanOrEqual(width.viewport);
+  await page.screenshot({ path: resolve(out, 'mobile.png'), fullPage: true });
+  expect(errors).toEqual([]); expect(leaks).toEqual([]);
+  await page.locator('#session-button').click();
+  writeFileSync(resolve(out, 'result.json'), JSON.stringify({ status: 'PASS', at: new Date().toISOString(), browser: await browser.version(),
+    checks: ['actual Taxi password login', 'two mode dashboards', 'all six security cases on actual AS/API endpoints', 'natural-language PKCE outcome before/after', 'payload hidden until arrow selected', 'keyboard arrow selection', 'full booking through explicit Wallet consent', 'trace shows consent before creation', 'consent arrow contains actual allow decision', 'request and response arrow payloads', 'retry same ticket and trip without new debit', 'new booking requests consent and creates a distinct ticket', 'select historical ticket and retry that exact ticket', 'mobile diagram without page horizontal overflow', 'no browser token endpoint/token response', 'no JavaScript or CSP errors'], errors, leaks }, null, 2));
+  console.log(`UI PASS: two modes, six cases, full booking, same-ticket retry, mobile, no token leaks. Screenshots: ${out}`);
+} catch (error) {
+  console.error(JSON.stringify({ errors, responses: responses.slice(-14), current_path: new URL(page.url()).pathname, visible: (await page.locator('body').innerText()).slice(0, 300) }, null, 2));
+  throw error;
+} finally { await context.close(); await browser.close(); }

@@ -1,0 +1,263 @@
+[
+  {
+    "id": "redirect",
+    "mode": "secure",
+    "at": "2026-10-22T02:37:32.133Z",
+    "protected": true,
+    "conclusion": "Các kiểm tra trong case đã bảo vệ được luồng.",
+    "steps": [
+      {
+        "service": "Wallet AS",
+        "endpoint": "GET /authorize",
+        "status": 400,
+        "response": {
+          "error": "invalid_request",
+          "redirected": false,
+          "code_issued": false,
+          "code": "[REDACTED]",
+          "state_returned": false
+        },
+        "explanation": "URI lạ phải bị giữ lỗi tại AS. Script chỉ đọc Location, không truy cập attacker.invalid."
+      }
+    ]
+  },
+  {
+    "id": "pkce",
+    "mode": "secure",
+    "at": "2026-10-22T02:37:32.144Z",
+    "protected": true,
+    "conclusion": "Các kiểm tra trong case đã bảo vệ được luồng.",
+    "steps": [
+      {
+        "service": "Wallet AS",
+        "endpoint": "GET /authorize",
+        "status": 302,
+        "response": {
+          "error": "invalid_request",
+          "redirected": true,
+          "redirect_origin": "http://localhost:7103",
+          "code_issued": false,
+          "code": "[REDACTED]",
+          "state_returned": true
+        },
+        "explanation": "Client không có challenge S256 phải nhận invalid_request tại callback hợp lệ."
+      }
+    ]
+  },
+  {
+    "id": "code_replay",
+    "mode": "secure",
+    "at": "2026-10-22T02:37:32.631Z",
+    "protected": true,
+    "conclusion": "Các kiểm tra trong case đã bảo vệ được luồng.",
+    "steps": [
+      {
+        "service": "Wallet AS",
+        "endpoint": "POST /token",
+        "status": 200,
+        "response": {
+          "grant": "authorization_code",
+          "token_type": "Bearer",
+          "expires_in": 120,
+          "refresh_token": true,
+          "sub": "alice",
+          "aud": "wallet-api",
+          "scope": "offline_access wallet:charge wallet:read",
+          "principal_type": "user",
+          "exp": 1792636772,
+          "tokens": "[REDACTED]"
+        },
+        "explanation": "Lần đầu hợp lệ: AS cấp token."
+      },
+      {
+        "service": "Wallet AS",
+        "endpoint": "POST /token",
+        "status": 400,
+        "response": {
+          "error": "invalid_grant"
+        },
+        "explanation": "Dùng lại cùng code: AS full từ chối và thu hồi grant."
+      },
+      {
+        "service": "Wallet API",
+        "endpoint": "GET /wallet/balance",
+        "status": 401,
+        "response": {
+          "error": "invalid_token"
+        },
+        "explanation": "Kiểm token lần đầu sau replay; full phải từ chối grant đã thu hồi."
+      }
+    ]
+  },
+  {
+    "id": "wrong_verifier",
+    "mode": "secure",
+    "at": "2026-10-22T02:37:32.997Z",
+    "protected": true,
+    "conclusion": "Các kiểm tra trong case đã bảo vệ được luồng.",
+    "steps": [
+      {
+        "service": "Wallet AS",
+        "endpoint": "POST /token",
+        "status": 400,
+        "response": {
+          "error": "invalid_grant"
+        },
+        "explanation": "Verifier không khớp challenge đã gắn với code."
+      }
+    ]
+  },
+  {
+    "id": "wrong_secret",
+    "mode": "secure",
+    "at": "2026-10-22T02:37:33.337Z",
+    "protected": true,
+    "conclusion": "Các kiểm tra trong case đã bảo vệ được luồng.",
+    "steps": [
+      {
+        "service": "Wallet AS",
+        "endpoint": "POST /token",
+        "status": 401,
+        "response": {
+          "error": "invalid_client"
+        },
+        "explanation": "Secret không đúng: full phải trả 401 invalid_client."
+      }
+    ]
+  },
+  {
+    "id": "other_client",
+    "mode": "secure",
+    "at": "2026-10-22T02:37:33.641Z",
+    "protected": true,
+    "conclusion": "Các kiểm tra trong case đã bảo vệ được luồng.",
+    "steps": [
+      {
+        "service": "Wallet AS",
+        "endpoint": "POST /token",
+        "status": 400,
+        "response": {
+          "error": "invalid_grant"
+        },
+        "explanation": "Client khác có secret hợp lệ vẫn không được đổi code của taxi-web."
+      }
+    ]
+  },
+  {
+    "id": "refresh_replay",
+    "mode": "secure",
+    "at": "2026-10-22T02:37:34.255Z",
+    "protected": true,
+    "conclusion": "Các kiểm tra trong case đã bảo vệ được luồng.",
+    "steps": [
+      {
+        "service": "Wallet AS",
+        "endpoint": "POST /token",
+        "status": 200,
+        "response": {
+          "grant": "authorization_code",
+          "token_type": "Bearer",
+          "expires_in": 120,
+          "refresh_token": true,
+          "sub": "alice",
+          "aud": "wallet-api",
+          "scope": "offline_access wallet:charge wallet:read",
+          "principal_type": "user",
+          "exp": 1792636773,
+          "tokens": "[REDACTED]"
+        },
+        "explanation": "Đổi code có offline_access để lấy refresh token fixture."
+      },
+      {
+        "service": "Wallet AS",
+        "endpoint": "POST /token",
+        "status": 200,
+        "response": {
+          "grant": "refresh_token",
+          "token_type": "Bearer",
+          "expires_in": 120,
+          "refresh_token": true,
+          "sub": "alice",
+          "aud": "wallet-api",
+          "scope": "offline_access wallet:charge wallet:read",
+          "principal_type": "user",
+          "exp": 1792636774,
+          "tokens": "[REDACTED]"
+        },
+        "explanation": "Refresh lần đầu: full xoay sang token mới."
+      },
+      {
+        "service": "Wallet AS",
+        "endpoint": "POST /token",
+        "status": 400,
+        "response": {
+          "error": "invalid_grant"
+        },
+        "explanation": "Replay token cũ: full thu hồi cả family."
+      },
+      {
+        "service": "Wallet AS",
+        "endpoint": "POST /token",
+        "status": 400,
+        "response": {
+          "error": "invalid_grant"
+        },
+        "explanation": "Token mới cùng family cũng phải bị từ chối sau reuse."
+      }
+    ]
+  },
+  {
+    "id": "other_refresh",
+    "mode": "secure",
+    "at": "2026-10-22T02:37:34.850Z",
+    "protected": true,
+    "conclusion": "Các kiểm tra trong case đã bảo vệ được luồng.",
+    "steps": [
+      {
+        "service": "Wallet AS",
+        "endpoint": "POST /token",
+        "status": 200,
+        "response": {
+          "grant": "authorization_code",
+          "token_type": "Bearer",
+          "expires_in": 120,
+          "refresh_token": true,
+          "sub": "alice",
+          "aud": "wallet-api",
+          "scope": "offline_access wallet:charge wallet:read",
+          "principal_type": "user",
+          "exp": 1792636774,
+          "tokens": "[REDACTED]"
+        },
+        "explanation": "Đổi code có offline_access để lấy refresh token fixture."
+      },
+      {
+        "service": "Wallet AS",
+        "endpoint": "POST /token",
+        "status": 400,
+        "response": {
+          "error": "invalid_grant"
+        },
+        "explanation": "Client khác không sở hữu refresh token."
+      },
+      {
+        "service": "Wallet AS",
+        "endpoint": "POST /token",
+        "status": 200,
+        "response": {
+          "grant": "refresh_token",
+          "token_type": "Bearer",
+          "expires_in": 120,
+          "refresh_token": true,
+          "sub": "alice",
+          "aud": "wallet-api",
+          "scope": "offline_access wallet:charge wallet:read",
+          "principal_type": "user",
+          "exp": 1792636774,
+          "tokens": "[REDACTED]"
+        },
+        "explanation": "Đúng client vẫn dùng được token: request sai client không phá family."
+      }
+    ]
+  }
+]

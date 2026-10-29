@@ -1,0 +1,162 @@
+{
+  "mode": "baseline",
+  "trace": {
+    "at": "2026-10-22T02:37:28.242Z",
+    "redirects": [
+      {
+        "from": "Taxi",
+        "to": "Wallet AS /authorize",
+        "status": 200,
+        "transport": "Dashboard receives navigation URL",
+        "query": [
+          "client_id",
+          "redirect_uri",
+          "scope",
+          "state=[REDACTED]",
+          "code_challenge",
+          "code_challenge_method=S256"
+        ]
+      },
+      {
+        "from": "Wallet AS login",
+        "to": "Wallet AS consent",
+        "status": 302
+      },
+      {
+        "from": "Wallet AS consent",
+        "to": "Taxi /oauth/callback",
+        "status": 302,
+        "code": "[REDACTED]",
+        "state": "[REDACTED]"
+      },
+      {
+        "from": "Taxi callback",
+        "to": "/?notice=linked",
+        "status": 302,
+        "token_exchange": "openid-client, backchannel only"
+      }
+    ]
+  },
+  "balance": {
+    "steps": [
+      {
+        "service": "Wallet API",
+        "endpoint": "GET /wallet/balance",
+        "status": 200,
+        "response": {
+          "user": "alice",
+          "balance": 1000000,
+          "currency": "VND"
+        },
+        "explanation": "API tự kiểm JWT qua JWKS, scope và principal trước khi xử lý dữ liệu ví."
+      }
+    ]
+  },
+  "charge": {
+    "job": "nwhuCFN16dts1dZo4kLZkyHiLMhMNMrPatcdiB52L6U",
+    "status": "completed",
+    "steps": [
+      {
+        "service": "Wallet API",
+        "endpoint": "POST /wallet/charges",
+        "status": 201,
+        "response": {
+          "charge_id": "MHy4VMmt7My9_fkPVZIo9cNCEgO0y6kAwAcAXCrU1Tg",
+          "amount": 45000,
+          "trip_id": "trip__l05suN9Xkx1Jxnm",
+          "duplicate": false,
+          "charge_count": 1
+        },
+        "explanation": "API tự kiểm JWT qua JWKS, scope và principal trước khi xử lý dữ liệu ví."
+      }
+    ]
+  },
+  "retry": {
+    "job": "nwhuCFN16dts1dZo4kLZkyHiLMhMNMrPatcdiB52L6U",
+    "status": "completed",
+    "steps": [
+      {
+        "service": "Wallet API",
+        "endpoint": "POST /wallet/charges",
+        "status": 200,
+        "response": {
+          "charge_id": "MHy4VMmt7My9_fkPVZIo9cNCEgO0y6kAwAcAXCrU1Tg",
+          "amount": 45000,
+          "trip_id": "trip__l05suN9Xkx1Jxnm",
+          "duplicate": true,
+          "charge_count": 1
+        },
+        "explanation": "API tự kiểm JWT qua JWKS, scope và principal trước khi xử lý dữ liệu ví."
+      }
+    ]
+  },
+  "m2m": {
+    "id": "m2m",
+    "mode": "baseline",
+    "at": "2026-10-22T02:37:28.551Z",
+    "protected": false,
+    "conclusion": "AS chấp nhận thao tác mà full security cần chặn. Xem phản hồi từng bước.",
+    "steps": [
+      {
+        "service": "Wallet AS",
+        "endpoint": "POST /token",
+        "status": 200,
+        "response": {
+          "grant": "client_credentials",
+          "token_type": "Bearer",
+          "expires_in": 120,
+          "refresh_token": false,
+          "sub": "taxi-m2m",
+          "aud": "wallet-api",
+          "scope": "rates:read",
+          "principal_type": "client",
+          "exp": 1792636768,
+          "tokens": "[REDACTED]"
+        },
+        "explanation": "Client taxi-m2m chỉ đại diện ứng dụng, không đại diện Alice."
+      },
+      {
+        "service": "Wallet API",
+        "endpoint": "GET /public/rates",
+        "status": 200,
+        "response": {
+          "currency": "VND",
+          "base_fare": 15000,
+          "per_km": 12000,
+          "principal_type": "client"
+        },
+        "explanation": "Token client được đọc bảng giá."
+      },
+      {
+        "service": "Wallet API",
+        "endpoint": "POST /wallet/charges",
+        "status": 403,
+        "response": {
+          "error": "insufficient_scope",
+          "required_scope": "wallet:charge",
+          "requires_user": true
+        },
+        "explanation": "API kiểm scope và principal; client không được charge ví."
+      },
+      {
+        "service": "Wallet AS",
+        "endpoint": "POST /token",
+        "status": 200,
+        "response": {
+          "grant": "client_credentials",
+          "token_type": "Bearer",
+          "expires_in": 120,
+          "refresh_token": false,
+          "sub": "taxi-m2m",
+          "aud": "wallet-api",
+          "scope": "wallet:charge",
+          "principal_type": "client",
+          "exp": 1792636768,
+          "tokens": "[REDACTED]"
+        },
+        "explanation": "Thử xin scope không được cấp cho taxi-m2m."
+      }
+    ]
+  },
+  "passed": true
+}

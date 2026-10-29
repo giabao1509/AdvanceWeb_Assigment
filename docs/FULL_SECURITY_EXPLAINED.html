@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Full security bảo vệ luồng Taxi – Wallet thế nào?</title>
+  <style>
+    :root{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#243247;background:#f3f5f9;font-size:15px;line-height:1.65}
+    *{box-sizing:border-box}body{margin:0}main{max-width:1040px;margin:auto;padding:48px 24px 30px}
+    header{margin-bottom:28px}.eyebrow{font-size:11px;letter-spacing:2px;font-weight:700;color:#395fce}
+    h1{font-size:clamp(28px,4vw,42px);line-height:1.2;letter-spacing:-1.3px;max-width:760px;margin:13px 0 17px}
+    h2{font-size:23px;letter-spacing:-.6px;margin:0 0 9px}h3{font-size:17px;line-height:1.4;margin:9px 0}
+    p{margin:8px 0}.lead,.muted{color:#63728a}.lead{max-width:850px}.tag{display:inline-block;background:#e8f5ed;color:#24764e;border-radius:5px;padding:3px 8px;font-size:10px;font-weight:700;letter-spacing:.5px}
+    section{margin:30px 0}.flow{display:grid;grid-template-columns:1fr 28px 1fr 28px 1fr;align-items:center;margin-top:18px}
+    .role{background:white;border:1px solid #e0e6ef;border-radius:12px;padding:18px;height:100%}.role b{display:block;color:#3159c9}.role p{font-size:13px;color:#65748b;margin-bottom:0}.arrow{text-align:center;color:#9aaac1;font-size:20px}
+    .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:15px;margin-top:18px}.card{background:#fff;border:1px solid #e0e6ef;border-radius:12px;padding:20px}.number{font-size:11px;color:#4c70cf;font-weight:700;letter-spacing:1px}
+    .card p{font-size:13px}.card strong{color:#26394e}.effect{border-top:1px solid #edf0f5;padding-top:10px;margin-top:12px!important;color:#317351}
+    code{font:12px/1.5 Consolas,monospace;background:#eef2f8;padding:2px 5px;border-radius:4px;overflow-wrap:anywhere}
+    .note{background:#fff8ec;border:1px solid #eedfc1;border-radius:10px;padding:16px 19px;font-size:13px;color:#825d2a}
+    .table-wrap{overflow-x:auto;background:white;border:1px solid #e0e6ef;border-radius:12px;margin-top:16px}table{border-collapse:collapse;width:100%;font-size:13px;min-width:580px}th,td{text-align:left;padding:13px 17px;border-bottom:1px solid #e8edf4;vertical-align:top}th{background:#edf2fa;color:#45607c;font-size:12px}tr:last-child td{border:0}td:first-child{width:25%;font-weight:600}
+    .example{background:#eaf2ff;border:1px solid #d7e3f8;border-radius:12px;padding:21px}.example ol{padding-left:23px;font-size:14px;margin-bottom:0}.example li{margin:8px 0}.example code{background:#fff}
+    .policy{background:white;border-left:4px solid #3d8c6b;padding:16px 20px;border-radius:0 9px 9px 0;font-size:13px;margin-top:15px}
+    footer{border-top:1px solid #dfe5ee;padding-top:18px;color:#73829a;font-size:11px}a{color:#3159c9;text-underline-offset:3px}.sources{display:flex;gap:16px;flex-wrap:wrap;margin:10px 0}b,strong{font-weight:650}
+    @media(max-width:650px){main{padding:28px 17px}.grid{grid-template-columns:1fr}.flow{grid-template-columns:1fr}.arrow{transform:rotate(90deg);padding:3px}.role{padding:15px}h2{font-size:21px}.card{padding:18px}}
+    @media print{body{background:white}main{max-width:none;padding:0}h1{font-size:29px}.card,.role,.example,.policy,tr{break-inside:avoid}.grid{gap:10px}.card{padding:13px}section{margin:22px 0}a{color:inherit}footer{margin-top:20px}}
+  </style>
+</head>
+<body><main>
+  <header>
+    <div class="eyebrow">BLOCK 05 · GIẢI THÍCH CƠ CHẾ</div>
+    <h1>Full security bảo vệ luồng Taxi – Wallet thế nào?</h1>
+    <p class="lead">Alice đồng ý cho Taxi dùng ví. Full security kiểm tra <b>ai đang xin quyền, được làm gì, code/token còn dùng được không</b> trước khi cấp hoặc chấp nhận quyền truy cập.</p>
+    <span class="tag">BÁM VÀO MÃ HIỆN TẠI · HTTP LOCALHOST</span>
+  </header>
+
+  <section aria-labelledby="roles">
+    <h2 id="roles">Ba thành phần, ba trách nhiệm</h2>
+    <div class="flow">
+      <div class="role"><b>Taxi server · bên xin quyền</b><p>Đưa Alice sang Wallet đăng nhập, giữ token phía server và chạy job thanh toán.</p></div><span class="arrow" aria-hidden="true">→</span>
+      <div class="role"><b>Wallet AS · bên cấp quyền</b><p>AS là Authorization Server: xác thực, xin consent, kiểm code và cấp/refresh token.</p></div><span class="arrow" aria-hidden="true">→</span>
+      <div class="role"><b>Wallet API · bên giữ ví</b><p>Taxi gửi token đến API. API kiểm token và quyền trước khi đọc số dư hoặc charge.</p></div>
+    </div>
+    <p class="muted">Mật khẩu Wallet chỉ nhập tại AS. Sau consent, browser mang code về Taxi; Taxi đổi code lấy token qua kết nối giữa các server.</p>
+  </section>
+
+  <section aria-labelledby="added">
+    <h2 id="added">Những kiểm tra Full bổ sung so với Baseline</h2>
+    <p class="muted">Baseline cố ý bỏ các kiểm tra dưới đây để so sánh. Cùng một request sai, Full sẽ dừng tại bước tương ứng.</p>
+    <div class="grid">
+      <article class="card"><div class="number">01 / ĐÚNG NƠI NHẬN</div><h3>Khớp chính xác redirect URI</h3><p><strong>Cơ chế:</strong> AS đối chiếu toàn bộ địa chỉ callback với địa chỉ đã đăng ký. Sai thì hiện lỗi tại AS, không chuyển hướng.</p><p class="effect">Chặn gửi code về website của kẻ tấn công. Địa chỉ gần giống vẫn bị từ chối.</p></article>
+      <article class="card"><div class="number">02 / ĐÚNG ỨNG DỤNG</div><h3>Xác thực client bằng secret</h3><p><strong>Cơ chế:</strong> Taxi gửi client ID và secret bằng HTTP Basic tới <code>/token</code>. AS kiểm secret với bản băm Argon2id đã lưu.</p><p class="effect">Biết tên <code>taxi-web</code> chưa đủ để mạo danh Taxi. Sai secret → <code>401 invalid_client</code>. Basic chỉ là cách đóng gói, không mã hóa đường truyền.</p></article>
+      <article class="card"><div class="number">03 / CODE CẦN THÊM BẰNG CHỨNG</div><h3>PKCE S256</h3><p><strong>Cơ chế:</strong> Taxi giữ chuỗi ngẫu nhiên <code>verifier</code>, gửi bản biến đổi <code>challenge = BASE64URL(SHA256(verifier))</code> khi xin code. Lúc đổi code, AS tính lại từ verifier và so khớp.</p><p class="effect">Lấy được code vẫn chưa đủ: kẻ lấy trộm còn phải có verifier đúng của lần liên kết đó.</p></article>
+      <article class="card"><div class="number">04 / ĐÚNG QUYỀN ĐƯỢC CẤP</div><h3>Giới hạn scope và grant</h3><p><strong>Cơ chế:</strong> AS kiểm loại luồng được phép dùng (<code>grant</code>) và danh sách quyền (<code>scope</code>). Refresh chỉ giữ hoặc thu hẹp quyền; không tự thêm quyền mới.</p><p class="effect"><code>taxi-m2m</code> chỉ được xin <code>rates:read</code>. Xin <code>wallet:charge</code> → <code>invalid_scope</code>.</p></article>
+      <article class="card"><div class="number">05 / CODE CÓ CHỦ VÀ CÓ HẠN</div><h3>Gắn code với đúng lần ủy quyền</h3><p><strong>Cơ chế:</strong> Code được gắn với client, callback, user, scope và PKCE challenge. Khi đổi, AS kiểm client/callback/verifier và hạn <b>60 giây</b>.</p><p class="effect">Code có trong database vẫn chưa chắc dùng được. Sai binding hoặc hết hạn → <code>invalid_grant</code>.</p></article>
+      <article class="card"><div class="number">06 / KHÔNG ĐỔI MỘT CODE HAI LẦN</div><h3>One-time code + transaction</h3><p><strong>Cơ chế:</strong> Kiểm trạng thái, đánh dấu code đã dùng và lưu thông tin token trong cùng transaction — một lần cập nhật trọn vẹn. Hai request đồng thời chỉ có một request thành công.</p><p class="effect">Replay code đúng binding làm AS từ chối và thu hồi grant. API tra danh sách thu hồi nên token cũ của grant cũng bị chặn.</p></article>
+      <article class="card"><div class="number">07 / REFRESH TOKEN LUÔN THAY MỚI</div><h3>Rotation + phát hiện dùng lại</h3><p><strong>Cơ chế:</strong> Refresh bằng R1 → cấp R2, đánh dấu R1 đã dùng. Nếu R1 xuất hiện lại với đúng client, AS thu hồi cả <b>family</b>: nhóm token sinh từ cùng lần cấp quyền.</p><p class="effect">R2 cũng bị vô hiệu sau khi phát hiện reuse. AS kiểm đúng client và hạn tối đa <b>7 ngày</b>; client khác không được dùng token này.</p></article>
+      <article class="card"><div class="number">08 / CHỦ VÍ CÓ THỂ DỪNG QUYỀN</div><h3>Kiểm consent khi refresh</h3><p><strong>Cơ chế:</strong> Alice gỡ quyền tại AS → consent và refresh family bị đánh dấu revoked. Full kiểm các cờ này trước khi refresh; Taxi nhận lỗi rồi xóa vault của liên kết.</p><p class="effect">Taxi không thể tiếp tục xin access token mới. Baseline có ghi revoked nhưng cố ý chưa kiểm khi refresh.</p></article>
+    </div>
+  </section>
+
+  <section class="example" aria-labelledby="example">
+    <h2 id="example">Ví dụ dễ quan sát: replay refresh token</h2>
+    <p>R1/R2 dưới đây là nhãn minh họa, không phải token thật.</p>
+    <ol>
+      <li>Taxi dùng <b>R1</b> → AS trả <code>200</code>, cấp access token mới và <b>R2</b>.</li>
+      <li>Kẻ khác dùng lại <b>R1</b> với credential của đúng client → AS trả <code>400 invalid_grant</code>, thu hồi family và grant.</li>
+      <li>Taxi dùng <b>R2</b> → cũng bị từ chối vì cùng family. Người dùng cần liên kết lại.</li>
+    </ol>
+    <p><b>Để tránh tự kích hoạt cơ chế này:</b> Taxi xếp hàng refresh theo từng user, không refresh song song và không gửi lại token cũ một cách mù quáng khi mất phản hồi.</p>
+  </section>
+
+  <section aria-labelledby="shared">
+    <h2 id="shared">Các lớp bảo vệ có sẵn ở cả hai bản</h2>
+    <p class="muted">Chúng cũng bảo vệ Full, nhưng không phải phần khác biệt với Baseline.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Biện pháp</th><th>Cơ chế và tác dụng</th></tr></thead>
+      <tbody>
+        <tr><td>JWT ES256 + JWKS</td><td>AS ký token bằng private key; API lấy public key từ JWKS đã cấu hình để kiểm chữ ký, issuer, audience và hạn <b>120 giây</b>. Sửa nội dung token sẽ làm chữ ký sai. <b>Ký không có nghĩa là mã hóa nội dung.</b> Full thêm bước tra grant đã thu hồi.</td></tr>
+        <tr><td>Scope + principal tại API</td><td>API kiểm token cho phép hành động nào và đại diện <b>user hay client</b>. Token client vẫn không được charge ví dù có scope charge. Ví được chọn theo <code>sub</code> đã verify, không theo user ID tùy ý trong body.</td></tr>
+        <tr><td>State + CSRF + session</td><td><code>state</code> gắn callback với lần liên kết của browser; Taxi dùng library để tạo/kiểm. Form cần CSRF token gắn session và kiểm Origin khi có. SID đổi sau login; cookie HttpOnly hạn chế JavaScript đọc session, SameSite=Lax giảm gửi cookie trong request từ site khác.</td></tr>
+        <tr><td>Băm và mã hóa đúng chỗ</td><td>Password/secret lưu bằng <b>Argon2id</b>. Code/refresh token ngẫu nhiên lưu hash <b>SHA-256</b> tại AS: so hash thay vì lưu bản gốc. Taxi cần dùng lại token nên lưu bằng <b>AES-256-GCM</b>, với khóa tách khỏi DB, nonce mới mỗi lần và kiểm tính toàn vẹn.</td></tr>
+        <tr><td>Idempotency + transaction</td><td>Mỗi chuyến có một key. Cùng key và dữ liệu → trả charge cũ, không trừ thêm. Cùng key nhưng dữ liệu khác → 409. Cập nhật số dư và ghi charge trong cùng transaction để tránh xử lý dang dở.</td></tr>
+        <tr><td>Giảm lỗi từ web và dữ liệu</td><td>Validate input, SQL có tham số, escape HTML, CSP hạn chế nguồn script và chặn nhúng trang. Login/token có rate limit; form/query từ chối tham số lặp. Log theo trường đã chọn, che code/token/secret; response token có <code>no-store</code>.</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section aria-labelledby="policy">
+    <h2 id="policy">Hai tình huống thu hồi có hành vi khác nhau</h2>
+    <div class="policy"><b>Alice chủ động gỡ consent:</b> refresh bị chặn, nhưng access token đã cấp vẫn dùng được đến <code>exp</code> ban đầu. Đây là policy của bài; không phải có thêm 120 giây tính từ lúc gỡ quyền.</div>
+    <div class="policy"><b>Phát hiện replay code/refresh:</b> Full ghi grant vào revocation store SQLite. API verify JWT rồi tra store read-only, từ chối token của grant sau khi việc thu hồi đã commit. Nếu không đọc được store, API trả 503 thay vì bỏ qua bước kiểm.</div>
+  </section>
+
+  <aside class="note"><b>Phạm vi “Full security”:</b> đầy đủ các kiểm tra OAuth đã triển khai trong bài. Ứng dụng dùng <b>HTTP loopback theo yêu cầu</b>, không bảo vệ đường truyền bằng TLS và cookie không có Secure. Diagnostic routes phục vụ quan sát dữ liệu giả. Đây là AS lab một host; chưa có HA, quản lý/rotate khóa production hay kiểm toán bảo mật độc lập.</aside>
+  <footer>
+    <p>Đối chiếu mã và tài liệu trong repo · 22/10/2026. File tự chứa, mở trực tiếp không cần server hoặc Internet.</p>
+    <div class="sources"><a href="AS_CHECKLIST.md">Bảng kiểm AS</a><a href="TOKEN_CONTRACT.md">Contract token/API</a><a href="REVOCATION_POLICY.md">Policy thu hồi</a><a href="TRADEOFFS.md">Giới hạn thiết kế</a></div>
+    <p>Trên dashboard, thử cùng case ở Baseline và Full: thiếu PKCE, sai secret, dùng lại code, replay refresh và M2M xin quyền charge.</p>
+  </footer>
+</main></body></html>

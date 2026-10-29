@@ -1,0 +1,190 @@
+{
+  "balance_after_revoke": {
+    "steps": [
+      {
+        "service": "Taxi server",
+        "from": "Người dùng",
+        "endpoint": "POST /api/wallet/balance",
+        "status": 200,
+        "request": {
+          "body": {
+            "csrf": "[REDACTED]"
+          }
+        },
+        "response": {},
+        "children": [
+          {
+            "service": "Wallet API",
+            "endpoint": "GET /wallet/balance",
+            "status": 200,
+            "request": {
+              "headers": {
+                "authorization": "Bearer [REDACTED]"
+              },
+              "body": null
+            },
+            "response": {
+              "user": "alice",
+              "balance": 910000,
+              "currency": "VND"
+            },
+            "explanation": "API tự kiểm JWT qua JWKS, scope và principal trước khi xử lý dữ liệu ví."
+          }
+        ],
+        "explanation": "API nghiệp vụ Taxi thực thi thao tác. Token và client secret chỉ nằm phía server."
+      },
+      {
+        "service": "Wallet API",
+        "endpoint": "GET /wallet/balance",
+        "status": 200,
+        "request": {
+          "headers": {
+            "authorization": "Bearer [REDACTED]"
+          },
+          "body": null
+        },
+        "response": {
+          "user": "alice",
+          "balance": 910000,
+          "currency": "VND"
+        },
+        "explanation": "API tự kiểm JWT qua JWKS, scope và principal trước khi xử lý dữ liệu ví."
+      }
+    ],
+    "trace": [
+      {
+        "service": "Taxi server",
+        "from": "Người dùng",
+        "endpoint": "POST /api/wallet/balance",
+        "status": 200,
+        "request": {
+          "body": {
+            "csrf": "[REDACTED]"
+          }
+        },
+        "response": {},
+        "children": [
+          {
+            "service": "Wallet API",
+            "endpoint": "GET /wallet/balance",
+            "status": 200,
+            "request": {
+              "headers": {
+                "authorization": "Bearer [REDACTED]"
+              },
+              "body": null
+            },
+            "response": {
+              "user": "alice",
+              "balance": 910000,
+              "currency": "VND"
+            },
+            "explanation": "API tự kiểm JWT qua JWKS, scope và principal trước khi xử lý dữ liệu ví."
+          }
+        ],
+        "explanation": "API nghiệp vụ Taxi thực thi thao tác. Token và client secret chỉ nằm phía server."
+      }
+    ]
+  },
+  "refresh_after_revoke": {
+    "status": 409,
+    "body": {
+      "error": "invalid_grant",
+      "steps": [
+        {
+          "service": "Taxi server",
+          "from": "Người dùng",
+          "endpoint": "POST /api/wallet/refresh",
+          "status": 409,
+          "request": {
+            "body": {
+              "csrf": "[REDACTED]"
+            }
+          },
+          "response": {
+            "error": "invalid_grant"
+          },
+          "children": [
+            {
+              "service": "Wallet AS",
+              "endpoint": "POST /token · refresh_token",
+              "status": 400,
+              "request": {
+                "headers": {
+                  "authorization": "Basic [REDACTED] (taxi-web)",
+                  "content-type": "application/x-www-form-urlencoded"
+                },
+                "body": {
+                  "grant_type": "refresh_token",
+                  "refresh_token": "[REDACTED]"
+                }
+              },
+              "response": {
+                "error": "invalid_grant"
+              },
+              "explanation": "Taxi ngừng dùng refresh token và chuyển về chưa liên kết; không retry token cũ vô hạn."
+            }
+          ],
+          "explanation": "API nghiệp vụ Taxi thực thi thao tác. Token và client secret chỉ nằm phía server."
+        },
+        {
+          "service": "Wallet AS",
+          "endpoint": "POST /token · refresh_token",
+          "status": 400,
+          "request": {
+            "headers": {
+              "authorization": "Basic [REDACTED] (taxi-web)",
+              "content-type": "application/x-www-form-urlencoded"
+            },
+            "body": {
+              "grant_type": "refresh_token",
+              "refresh_token": "[REDACTED]"
+            }
+          },
+          "response": {
+            "error": "invalid_grant"
+          },
+          "explanation": "Taxi ngừng dùng refresh token và chuyển về chưa liên kết; không retry token cũ vô hạn."
+        }
+      ],
+      "trace": [
+        {
+          "service": "Taxi server",
+          "from": "Người dùng",
+          "endpoint": "POST /api/wallet/refresh",
+          "status": 409,
+          "request": {
+            "body": {
+              "csrf": "[REDACTED]"
+            }
+          },
+          "response": {
+            "error": "invalid_grant"
+          },
+          "children": [
+            {
+              "service": "Wallet AS",
+              "endpoint": "POST /token · refresh_token",
+              "status": 400,
+              "request": {
+                "headers": {
+                  "authorization": "Basic [REDACTED] (taxi-web)",
+                  "content-type": "application/x-www-form-urlencoded"
+                },
+                "body": {
+                  "grant_type": "refresh_token",
+                  "refresh_token": "[REDACTED]"
+                }
+              },
+              "response": {
+                "error": "invalid_grant"
+              },
+              "explanation": "Taxi ngừng dùng refresh token và chuyển về chưa liên kết; không retry token cũ vô hạn."
+            }
+          ],
+          "explanation": "API nghiệp vụ Taxi thực thi thao tác. Token và client secret chỉ nằm phía server."
+        }
+      ]
+    }
+  }
+}

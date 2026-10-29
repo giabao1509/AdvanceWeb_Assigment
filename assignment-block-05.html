@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bài tập Block 5: Ủy quyền OAuth2 giữa Taxi và Wallet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600&family=Lora:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #faf6f0;
+    --paper-2: #f3ece1;
+    --card: #fffdf9;
+    --ink: #2a1f1a;
+    --ink-2: #5c4a40;
+    --coffee: #644a40;
+    --coffee-dark: #3f2c24;
+    --cream: #ffdfb5;
+    --cream-ink: #582d1d;
+    --rule: #dccfbe;
+    --font-body: 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-head: 'Lora', Georgia, 'Times New Roman', serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.7;
+  }
+
+  .wrap { max-width: 880px; margin: 0 auto; padding: 0 24px; }
+
+  .hero {
+    background: var(--coffee-dark);
+    color: var(--paper);
+    padding: 56px 0 48px;
+    border-bottom: 6px solid var(--cream);
+  }
+  .eyebrow {
+    margin: 0 0 12px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--cream);
+  }
+  h1, h2, h3 { font-family: var(--font-head); line-height: 1.25; }
+  h1 { margin: 0 0 16px; font-size: 40px; font-weight: 700; }
+  .hero p { margin: 0; max-width: 680px; color: #eadfd2; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; padding: 0; list-style: none; }
+  .chips li {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 14px;
+    background: rgba(255, 223, 181, 0.14);
+    border: 1px solid rgba(255, 223, 181, 0.4);
+    border-radius: 999px;
+    font-size: 14px;
+  }
+
+  section { padding: 36px 0 0; }
+  h2 {
+    display: flex; align-items: center; gap: 10px;
+    margin: 0 0 14px;
+    font-size: 26px; font-weight: 700;
+    color: var(--coffee-dark);
+  }
+  h2 .ic { width: 26px; height: 26px; color: var(--coffee); }
+  p { margin: 0 0 12px; }
+
+  .ic { width: 1.25em; height: 1.25em; flex: none; vertical-align: -0.2em; }
+
+  figure {
+    margin: 20px 0 0;
+    padding: 16px;
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+  }
+  figure svg { display: block; width: 100%; height: auto; }
+  figcaption { margin-top: 8px; font-size: 14px; color: var(--ink-2); }
+
+  .box { fill: var(--card); stroke: var(--coffee); stroke-width: 2; }
+  .box-soft { fill: var(--paper-2); stroke: var(--rule); stroke-width: 2; }
+  .box-hot { fill: var(--cream); stroke: var(--coffee); stroke-width: 2; }
+  .link { stroke: var(--coffee); stroke-width: 2; fill: none; }
+  .link-dash { stroke: var(--ink-2); stroke-width: 2; stroke-dasharray: 6 5; fill: none; }
+  .svg-text { font-family: var(--font-body); font-size: 15px; fill: var(--ink); }
+  .svg-small { font-family: var(--font-body); font-size: 13px; fill: var(--ink-2); }
+  .svg-bold { font-weight: 600; }
+  .svg-ic { fill: none; stroke: var(--coffee); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  .cards { display: grid; gap: 16px; margin-top: 8px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-left: 5px solid var(--coffee);
+    border-radius: 6px;
+    padding: 16px 20px;
+  }
+  .card h3 { display: flex; align-items: center; gap: 10px; margin: 0 0 6px; font-size: 19px; color: var(--coffee-dark); }
+  .card h3 .ic { color: var(--coffee); }
+  .card p { margin: 0; color: var(--ink); }
+
+  ul.plain, ol.plain { margin: 0; padding-left: 22px; }
+  ul.plain li, ol.plain li { margin-bottom: 6px; }
+  ol.plain li::marker { font-weight: 600; color: var(--coffee); }
+
+  .note {
+    margin-top: 14px;
+    padding: 12px 16px;
+    background: var(--cream);
+    color: var(--cream-ink);
+    border-radius: 6px;
+    font-size: 15px;
+  }
+
+  footer { margin-top: 48px; padding: 20px 0 40px; border-top: 1px solid var(--rule); font-size: 14px; color: var(--ink-2); }
+
+  @media print {
+    .hero { color: #000; background: #fff; border-bottom: 2px solid #000; }
+    .hero p, .eyebrow { color: #000; }
+    .chips li { border-color: #000; background: none; }
+  }
+
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.92em; background: var(--paper-2); padding: 1px 5px; border-radius: 4px; }
+</style>
+</head>
+
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Web nâng cao, Tuần 3, Block 5</p>
+    <h1>Bài tập: ủy quyền OAuth2 giữa Taxi và Wallet</h1>
+    <p>Taxi muốn trừ tiền ví Wallet của Alice sau mỗi chuyến đi, kể cả khi Alice đã thoát app. Nhóm dựng cả ba ứng dụng: Wallet AS cấp token bằng Authorization Code + PKCE, refresh token và Client Credentials; Wallet API kiểm token và trừ tiền; Taxi liên kết ví và chạy job thanh toán. Trọng tâm là Wallet AS: AS phải kiểm những gì để code và token không rơi vào tay bên khác.</p>
+    <ul class="chips">
+      <li><span data-icon="target"></span>Làm theo nhóm</li>
+      <li><span data-icon="gauge"></span>65 phút thực hành</li>
+      <li><span data-icon="presentation"></span>Trình bày sau phần thực hành</li>
+      <li><span data-icon="bot"></span>Tự dựng toàn bộ với coding agent</li>
+    </ul>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section>
+    <h2><span data-icon="shield-check"></span>Bối cảnh</h2>
+    <p>Wallet là dịch vụ giả định mô phỏng ví điện tử, không tái hiện API của ví thực nào. Alice là resource owner, Taxi là client, Wallet AS cấp token, Wallet API giữ số dư và trừ tiền. Taxi không được thấy mật khẩu ví của Alice và chỉ làm được những việc trong scope Alice đã đồng ý.</p>
+    <p>Nhóm dựng bốn thành phần bằng coding agent:</p>
+    <ul class="plain">
+      <li><strong>Wallet AS:</strong> user Alice và Bob với mật khẩu băm bằng argon2id hoặc bcrypt, trang login và trang consent, cặp khóa ES256 có <code>kid</code> tự sinh và nạp qua biến môi trường, route <code>/.well-known/jwks.json</code>, route <code>/authorize</code> và <code>/token</code>. Bảng <code>clients</code>, <code>auth_codes</code>, <code>consents</code> và <code>refresh_tokens</code> (hash, family_id, client_id, scope, expires_at, revoked_at, replaced_by). Dùng library cho JWT, băm và sinh số ngẫu nhiên; phần nhóm tự viết là logic giao thức.</li>
+      <li><strong>Hai client đăng ký trong AS:</strong> <code>taxi-web</code> (confidential, secret lưu dạng hash, một <code>redirect_uri</code>, scope được phép <code>wallet:read</code>, <code>wallet:charge</code>, <code>offline_access</code>) và <code>taxi-m2m</code> (confidential, chỉ grant <code>client_credentials</code>, chỉ scope <code>rates:read</code>).</li>
+      <li><strong>Wallet API:</strong> kiểm access token qua JWKS theo contract bên dưới. <code>GET /wallet/balance</code> cần <code>wallet:read</code>; <code>POST /wallet/charges</code> cần <code>wallet:charge</code> và <code>principal_type=user</code>; <code>GET /public/rates</code> cần <code>rates:read</code>. Có bộ đếm số lần trừ tiền và idempotency key tối giản (lưu key đã xử lý).</li>
+      <li><strong>Taxi tối giản:</strong> nút liên kết ví, callback, session, kho refresh token phía server tách khỏi log, job thanh toán chạy khi Alice không có phiên và chỉ refresh tuần tự theo từng người dùng. Taxi dùng library OAuth client chuẩn (ví dụ <code>openid-client</code> cho Node.js hoặc Authlib cho Python) cho <code>state</code> và PKCE, không tự viết phần client của giao thức. Library chuẩn chạy được với AS của nhóm là một phép kiểm tra: AS đã nói đúng giao thức ở những phần library kiểm.</li>
+      <li><strong>Script tấn công:</strong> gọi thẳng AS bằng HTTP cho từng trường hợp phải từ chối, in status và mã lỗi OAuth nhận được.</li>
+    </ul>
+    <p>Contract access token: JWT ký ES256, <code>iss</code> là URL của Wallet AS, <code>aud</code> = <code>wallet-api</code>, có <code>sub</code>, <code>client_id</code>, <code>scope</code>, <code>exp</code> sau 120 giây và <code>principal_type</code> = <code>user</code> hoặc <code>client</code>. Cấu hình lab: code sống 60 giây, access token 120 giây, refresh token 7 ngày. AS của bài tập chỉ dùng trong lab; production dùng AS đã được kiểm chứng như Keycloak.</p>
+
+    <figure>
+      <svg viewBox="0 0 880 330" role="img" aria-labelledby="diagram-title">
+        <title id="diagram-title">Bốn thành phần nhóm dựng và các luồng giữa chúng</title>
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+            <path d="M0 0L10 5L0 10z" fill="#644a40"></path>
+          </marker>
+          <marker id="arrow-dash" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+            <path d="M0 0L10 5L0 10z" fill="#5c4a40"></path>
+          </marker>
+        </defs>
+
+        <rect class="box-soft" x="10" y="20" width="170" height="80" rx="8"></rect>
+        <text class="svg-text svg-bold" x="95" y="55" text-anchor="middle">Trình duyệt</text>
+        <text class="svg-small" x="95" y="77" text-anchor="middle">của Alice</text>
+
+        <rect class="box" x="10" y="220" width="170" height="90" rx="8"></rect>
+        <text class="svg-text svg-bold" x="95" y="260" text-anchor="middle">Taxi server</text>
+        <text class="svg-small" x="95" y="282" text-anchor="middle">client</text>
+
+        <rect class="box-soft" x="350" y="14" width="180" height="58" rx="8"></rect>
+        <text class="svg-text svg-bold" x="440" y="39" text-anchor="middle">Script tấn công</text>
+        <text class="svg-small" x="440" y="59" text-anchor="middle">gọi thẳng AS</text>
+
+        <rect class="box-hot" x="650" y="20" width="220" height="100" rx="8"></rect>
+        <text class="svg-text svg-bold" x="760" y="58" text-anchor="middle">Wallet AS</text>
+        <text class="svg-small" x="760" y="80" text-anchor="middle">trọng tâm bài tập</text>
+        <text class="svg-small" x="760" y="100" text-anchor="middle">/authorize, /token</text>
+
+        <rect class="box" x="650" y="220" width="220" height="90" rx="8"></rect>
+        <text class="svg-text svg-bold" x="760" y="260" text-anchor="middle">Wallet API</text>
+        <text class="svg-small" x="760" y="282" text-anchor="middle">resource server</text>
+
+        <path class="link-dash" d="M530 43 L650 43" marker-end="url(#arrow-dash)"></path>
+
+        <path class="link-dash" d="M180 95 L650 95" marker-end="url(#arrow-dash)"></path>
+        <text class="svg-small" x="415" y="115" text-anchor="middle">đăng nhập, consent, nhận code</text>
+
+        <path class="link" d="M95 100 L95 220" marker-end="url(#arrow)"></path>
+        <text class="svg-small" x="105" y="165">liên kết ví</text>
+
+        <path class="link" d="M180 232 L650 112" marker-end="url(#arrow)"></path>
+        <text class="svg-small" x="470" y="192">/token: code + verifier, refresh</text>
+
+        <path class="link" d="M180 268 L650 268" marker-end="url(#arrow)"></path>
+        <text class="svg-small" x="415" y="256" text-anchor="middle">Bearer access token</text>
+
+        <path class="link-dash" d="M760 220 L760 120" marker-end="url(#arrow-dash)"></path>
+        <text class="svg-small" x="770" y="175">JWKS</text>
+      </svg>
+      <figcaption>Nhóm dựng cả bốn thành phần. Wallet AS là trọng tâm; Taxi, Wallet API và script tấn công dùng để kiểm AS: Taxi phải liên kết ví và thanh toán được, Wallet API phải nhận token, script tấn công phải bị từ chối.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <h2><span data-icon="target"></span>Mục tiêu</h2>
+    <div class="cards">
+      <article class="card">
+        <h3><span data-icon="route"></span>Dựng khung và baseline</h3>
+        <p>Dựng Wallet AS với user, client, khóa và JWKS; Wallet API kiểm token theo contract; Taxi tối giản; script tấn công. Chạy script tấn công lần đầu khi AS chưa có các kiểm tra bên dưới và ghi kết quả, để so với kết quả sau khi hiện thực.</p>
+      </article>
+      <article class="card">
+        <h3><span data-icon="log-in"></span>Endpoint /authorize</h3>
+        <p><code>client_id</code> phải đã đăng ký và <code>redirect_uri</code> phải khớp chính xác chuỗi đã đăng ký; sai thì AS hiện lỗi tại trang của mình và không redirect, vì redirect tới URI lạ là gửi code cho người khác. Scope phải nằm trong danh sách được phép của client, và request phải có <code>code_challenge</code> với method <code>S256</code>; sai thì redirect về client với <code>invalid_scope</code> hoặc <code>invalid_request</code>. Alice đăng nhập và xem consent trên trang của AS; từ chối thì redirect với <code>access_denied</code>. Đồng ý thì AS lưu consent, sinh code ngẫu nhiên, lưu hash của code cùng client, <code>redirect_uri</code>, user, scope và <code>code_challenge</code>. Mọi redirect về client mang lại nguyên giá trị <code>state</code>.</p>
+      </article>
+      <article class="card">
+        <h3><span data-icon="key-round"></span>Đổi code lấy token</h3>
+        <p><code>/token</code> xác thực client bằng HTTP Basic và so với secret đã băm; sai thì 401 <code>invalid_client</code>. Với <code>grant_type=authorization_code</code>, code phải tồn tại, chưa dùng, còn hạn, cấp cho đúng client, <code>redirect_uri</code> trùng với lúc authorize và <code>SHA-256(code_verifier)</code> khớp challenge; sai thì 400 <code>invalid_grant</code>. Đánh dấu code đã dùng trong cùng transaction với lúc phát token, để hai request đồng thời không cùng đổi được một code. Code bị dùng lại thì từ chối và thu hồi token đã cấp từ code đó (RFC 6749 mục 4.1.2). AS phát access token theo contract, và chỉ phát refresh token khi scope có <code>offline_access</code>. Kết quả quan sát được: Taxi liên kết ví và đọc được số dư.</p>
+      </article>
+      <article class="card">
+        <h3><span data-icon="refresh-cw"></span>Refresh và thanh toán</h3>
+        <p>Refresh token là chuỗi ngẫu nhiên, không phải JWT; DB chỉ lưu hash. Mỗi lần refresh cấp cặp token mới và đánh dấu token cũ đã dùng; token đã dùng xuất hiện lại thì thu hồi cả family. AS còn kiểm: refresh token cấp cho đúng client đang xác thực, consent chưa bị gỡ, scope yêu cầu không rộng hơn lúc Alice đồng ý. Job thanh toán của Taxi chạy khi Alice không có phiên và access token đã hết hạn: refresh thành công, tiền bị trừ đúng một lần theo bộ đếm của Wallet API.</p>
+      </article>
+      <article class="card">
+        <h3><span data-icon="ban"></span>Gỡ quyền</h3>
+        <p>Phần mở rộng. Trang tài khoản của AS cho Alice gỡ quyền của Taxi: đặt <code>revoked_at</code> cho consent và thu hồi các refresh family của cặp Alice và Taxi. Lần refresh tiếp theo của Taxi nhận <code>invalid_grant</code>, Taxi chuyển sang trạng thái chưa liên kết. Nhóm ghi policy cho access token còn hạn: Wallet API kiểm offline nên token còn được nhận tới <code>exp</code>.</p>
+      </article>
+      <article class="card">
+        <h3><span data-icon="server"></span>Client Credentials</h3>
+        <p>Phần mở rộng. Chỉ client được phép dùng grant này mới nhận token, scope phải trong danh sách của client. Token có <code>sub</code> là client_id, <code>principal_type=client</code> và không kèm refresh token. Kết quả quan sát được: <code>taxi-m2m</code> gọi được <code>GET /public/rates</code>; xin <code>wallet:charge</code> thì nhận <code>invalid_scope</code>; dùng token này gọi <code>POST /wallet/charges</code> thì nhận 403.</p>
+      </article>
+      <article class="card">
+        <h3><span data-icon="table"></span>Bảng grant</h3>
+        <p>Ghi response của token endpoint do nhóm viết cho từng grant đã hiện thực: có hay không <code>refresh_token</code>, giá trị <code>sub</code>, <code>aud</code>, <code>scope</code>, <code>principal_type</code>, <code>expires_in</code>. Đối chiếu từng trường với RFC 6749 mục 5.1. Bảng điền từ response đã quan sát, không chép từ slide.</p>
+      </article>
+    </div>
+
+    <div class="note">
+      <strong>Tiêu chí đạt.</strong> Taxi liên kết ví qua trang consent của AS, trình duyệt không thấy token, và đọc được số dư. Job thanh toán refresh được khi Alice không có phiên và trừ tiền đúng một lần. Script tấn công cho <code>redirect_uri</code> không đăng ký, thiếu <code>code_challenge</code>, code dùng lại, code hết hạn, <code>code_verifier</code> sai, client secret sai, đổi code bằng client khác, replay refresh token cũ và refresh bằng client khác đều bị từ chối với đúng mã lỗi. Kết quả nộp là kết quả chạy thật, kể cả kết quả chưa đạt.
+    </div>
+  </section>
+
+  <section>
+    <h2><span data-icon="bot"></span>Cách làm</h2>
+    <ol class="plain">
+      <li><strong>Làm rõ với agent.</strong> Đề bài chỉ nêu mục tiêu. Nhóm brainstorm với agent để chốt cấu trúc repo cho ba ứng dụng, contract access token, danh sách kiểm tra ở <code>/authorize</code> và <code>/token</code>, thứ tự kiểm, mã lỗi OAuth cho từng trường hợp, trường hợp nào hiện lỗi tại AS và trường hợp nào redirect về client, transaction khi đổi code, cách lưu và xoay refresh token, danh sách script tấn công. Ghi các quyết định vào plan trước khi viết code. Không đưa secret, private key, code hay token vào prompt của agent.</li>
+      <li><strong>Hiện thực theo luồng</strong> inspect, plan, implement, run, test, verify. Thứ tự gợi ý: dựng khung và script tấn công, <code>/authorize</code>, <code>/token</code> đổi code, refresh và job thanh toán, chạy lại script tấn công, gỡ quyền, Client Credentials.</li>
+      <li><strong>Tự kiểm soát.</strong> Nhóm đọc diff, giải thích log và bảo vệ quyết định. Câu trả lời của agent không dùng làm evidence.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2><span data-icon="package-check"></span>Sản phẩm nộp</h2>
+    <ul class="plain">
+      <li>Repo có README để chạy lại toàn bộ: cách sinh khóa, khởi động Wallet AS, Wallet API, Taxi và chạy script tấn công.</li>
+      <li>Plan gồm các quyết định đã chốt với agent, viết trước khi hiện thực.</li>
+      <li>Mã nguồn ba ứng dụng và script tấn công, kèm library và phiên bản đã dùng.</li>
+      <li>Bảng kiểm tra của AS: mỗi kiểm tra ở endpoint nào, sai thì trả gì, chặn tấn công nào.</li>
+      <li>Output script tấn công trước và sau khi hiện thực.</li>
+      <li>Trace redirect của lần liên kết ví, đã che code và token.</li>
+      <li>Log job thanh toán kèm mốc <code>exp</code> và bộ đếm trừ tiền của Wallet API.</li>
+      <li>Bảng grant điền từ response của AS.</li>
+      <li>Policy thu hồi, gồm hành vi của access token còn hạn sau khi Alice gỡ quyền.</li>
+      <li>Ghi chú trade-off và giới hạn của AS lab so với AS dùng trong production.</li>
+    </ul>
+    <div class="note">Không nộp secret, private key, authorization code, access token, refresh token hay session cookie nguyên giá trị; dùng nhãn kèm mốc thời gian. Dùng dữ liệu giả.</div>
+  </section>
+
+  <section>
+    <h2><span data-icon="presentation"></span>Trình bày</h2>
+    <p>Mỗi nhóm trình bày năm phần: Problem, Solution, Demo, Evidence, Trade-off. Demo chạy thật luồng liên kết ví, job thanh toán và script tấn công trước và sau, không thay bằng ảnh chụp code.</p>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">Web nâng cao, Tuần 3, Block 5.</div>
+</footer>
+
+<script>
+  const ICONS = {
+    'target': '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+    'shield-check': '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
+    'route': '<circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/>',
+    'log-in': '<path d="m10 17 5-5-5-5"/><path d="M15 12H3"/><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>',
+    'key-round': '<path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/>',
+    'refresh-cw': '<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>',
+    'ban': '<circle cx="12" cy="12" r="10"/><path d="M4.929 4.929 19.07 19.071"/>',
+    'server': '<rect width="20" height="8" x="2" y="2" rx="2" ry="2"/><rect width="20" height="8" x="2" y="14" rx="2" ry="2"/><line x1="6" x2="6.01" y1="6" y2="6"/><line x1="6" x2="6.01" y1="18" y2="18"/>',
+    'table': '<path d="M12 3v18"/><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/>',
+    'gauge': '<path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/>',
+    'package-check': '<path d="M12 22V12"/><path d="m16 17 2 2 4-4"/><path d="M21 11.127V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.729l7 4a2 2 0 0 0 2 .001l1.32-.753"/><path d="M3.29 7 12 12l8.71-5"/><path d="m7.5 4.27 8.997 5.148"/>',
+    'bot': '<path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/>',
+    'presentation': '<path d="M2 3h20"/><path d="M21 3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3"/><path d="m7 21 5-5 5 5"/>'
+  };
+
+  function icon(name) {
+    return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (ICONS[name] || '') + '</svg>';
+  }
+
+  function hydrateIcons(root) {
+    (root || document).querySelectorAll('[data-icon]').forEach(function (el) {
+      el.innerHTML = icon(el.dataset.icon);
+    });
+  }
+
+  hydrateIcons();
+</script>
+</body>
+</html>

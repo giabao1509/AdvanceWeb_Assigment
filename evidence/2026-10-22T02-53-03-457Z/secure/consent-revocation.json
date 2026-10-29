@@ -1,0 +1,57 @@
+{
+  "balance_after_revoke": {
+    "steps": [
+      {
+        "service": "Taxi server",
+        "endpoint": "POST /demo/balance",
+        "status": 200,
+        "response": {
+          "mode": "secure",
+          "action": "balance",
+          "status": "completed"
+        },
+        "explanation": "Taxi điều phối thao tác ở server. Browser chỉ nhận kết quả đã che; token và client secret không được gửi về giao diện."
+      },
+      {
+        "service": "Wallet API",
+        "endpoint": "GET /wallet/balance",
+        "status": 200,
+        "response": {
+          "user": "alice",
+          "balance": 910000,
+          "currency": "VND"
+        },
+        "explanation": "API tự kiểm JWT qua JWKS, scope và principal trước khi xử lý dữ liệu ví."
+      }
+    ]
+  },
+  "refresh_after_revoke": {
+    "status": 409,
+    "body": {
+      "error": "invalid_grant",
+      "steps": [
+        {
+          "service": "Taxi server",
+          "endpoint": "POST /demo/refresh",
+          "status": 409,
+          "response": {
+            "mode": "secure",
+            "action": "refresh",
+            "status": "failed",
+            "error": "invalid_grant"
+          },
+          "explanation": "Taxi điều phối thao tác ở server. Browser chỉ nhận kết quả đã che; token và client secret không được gửi về giao diện."
+        },
+        {
+          "service": "Wallet AS",
+          "endpoint": "POST /token · refresh_token",
+          "status": 400,
+          "response": {
+            "error": "invalid_grant"
+          },
+          "explanation": "Taxi ngừng dùng refresh token và chuyển về chưa liên kết; không retry token cũ vô hạn."
+        }
+      ]
+    }
+  }
+}

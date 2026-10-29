@@ -1,0 +1,62 @@
+{
+  "token_exp_before": 1792636775,
+  "scheduled": {
+    "job": "J_xZjz51FWzMtLj5l1sSQY8XipvtwNKzKKyy1vhOctM",
+    "due_at": 1792636777,
+    "explanation": "Job chờ access token hết hạn thật rồi refresh. Bấm Đăng xuất Taxi; dashboard vẫn xem được tiến độ."
+  },
+  "observed_at": 1792636778,
+  "job": {
+    "id": "J_xZjz51FWzMtLj5l1sSQY8XipvtwNKzKKyy1vhOctM",
+    "user_id": "alice",
+    "trip_id": "trip_6vjXyrc2h-wKDJdH",
+    "due_at": 1792636777,
+    "status": "completed",
+    "detail": {
+      "steps": [
+        {
+          "service": "Wallet AS",
+          "endpoint": "POST /token · refresh_token",
+          "status": 200,
+          "response": {
+            "grant": "refresh_token",
+            "token_type": "bearer",
+            "expires_in": 120,
+            "refresh_token": true,
+            "sub": "alice",
+            "aud": "wallet-api",
+            "scope": "offline_access wallet:charge wallet:read",
+            "principal_type": "user",
+            "exp": 1792636897,
+            "tokens": "[REDACTED]"
+          },
+          "explanation": "Taxi refresh phía server và lưu token mới trước khi nhả khóa theo người dùng."
+        },
+        {
+          "service": "Wallet API",
+          "endpoint": "POST /wallet/charges",
+          "status": 201,
+          "response": {
+            "charge_id": "745p6RyI5tupCBWn-GduF4GgAbFhSBWKCQ8YCxNh24E",
+            "amount": 45000,
+            "trip_id": "trip_6vjXyrc2h-wKDJdH",
+            "duplicate": false,
+            "charge_count": 2
+          },
+          "explanation": "API tự kiểm JWT qua JWKS, scope và principal trước khi xử lý dữ liệu ví."
+        }
+      ],
+      "active_taxi_sessions": 0,
+      "result": {
+        "charge_id": "745p6RyI5tupCBWn-GduF4GgAbFhSBWKCQ8YCxNh24E",
+        "amount": 45000,
+        "trip_id": "trip_6vjXyrc2h-wKDJdH",
+        "duplicate": false,
+        "charge_count": 2
+      }
+    },
+    "attempts": 1
+  },
+  "charge_count_before": 1,
+  "charge_count_after": 2
+}

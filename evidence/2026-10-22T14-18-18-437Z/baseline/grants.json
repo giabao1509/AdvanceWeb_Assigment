@@ -1,0 +1,50 @@
+[
+  {
+    "grant": "authorization_code + offline_access",
+    "token_type": "Bearer",
+    "expires_in": 120,
+    "refresh_token": true,
+    "sub": "alice",
+    "aud": "wallet-api",
+    "scope": "offline_access wallet:charge wallet:read",
+    "principal_type": "user",
+    "exp": 1792678955,
+    "tokens": "[REDACTED]"
+  },
+  {
+    "grant": "authorization_code without offline_access",
+    "token_type": "Bearer",
+    "expires_in": 120,
+    "refresh_token": false,
+    "sub": "alice",
+    "aud": "wallet-api",
+    "scope": "wallet:read",
+    "principal_type": "user",
+    "exp": 1792678956,
+    "tokens": "[REDACTED]"
+  },
+  {
+    "grant": "refresh_token",
+    "token_type": "Bearer",
+    "expires_in": 120,
+    "refresh_token": true,
+    "sub": "alice",
+    "aud": "wallet-api",
+    "scope": "offline_access wallet:charge wallet:read",
+    "principal_type": "user",
+    "exp": 1792678956,
+    "tokens": "[REDACTED]"
+  },
+  {
+    "grant": "client_credentials",
+    "token_type": "Bearer",
+    "expires_in": 120,
+    "refresh_token": false,
+    "sub": "taxi-m2m",
+    "aud": "wallet-api",
+    "scope": "rates:read",
+    "principal_type": "client",
+    "exp": 1792678956,
+    "tokens": "[REDACTED]"
+  }
+]

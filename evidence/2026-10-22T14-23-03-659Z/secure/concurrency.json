@@ -1,0 +1,31 @@
+{
+  "code_exchange": [
+    {
+      "status": 200,
+      "error": null
+    },
+    {
+      "status": 400,
+      "error": "invalid_grant"
+    }
+  ],
+  "access_token_after_code_replay": 401,
+  "refresh": [
+    {
+      "status": 400,
+      "error": "invalid_grant"
+    },
+    {
+      "status": 200,
+      "error": null
+    }
+  ],
+  "rotated_token_after_reuse": "invalid_grant",
+  "charge_statuses": [
+    201,
+    200
+  ],
+  "charge_count_before": 2,
+  "charge_count_after": 3,
+  "limit": "Parallel HTTP against one AS/API process, not cross-process SQLite crash verification."
+}

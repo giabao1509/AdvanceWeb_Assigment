@@ -1,0 +1,42 @@
+{
+  "balance_after_revoke": {
+    "steps": [
+      {
+        "service": "Wallet API",
+        "endpoint": "GET /wallet/balance",
+        "status": 200,
+        "response": {
+          "user": "alice",
+          "balance": 910000,
+          "currency": "VND"
+        },
+        "explanation": "API tự kiểm JWT qua JWKS, scope và principal trước khi xử lý dữ liệu ví."
+      }
+    ]
+  },
+  "refresh_after_revoke": {
+    "status": 200,
+    "body": {
+      "steps": [
+        {
+          "service": "Wallet AS",
+          "endpoint": "POST /token · refresh_token",
+          "status": 200,
+          "response": {
+            "grant": "refresh_token",
+            "token_type": "bearer",
+            "expires_in": 120,
+            "refresh_token": true,
+            "sub": "alice",
+            "aud": "wallet-api",
+            "scope": "offline_access wallet:charge wallet:read",
+            "principal_type": "user",
+            "exp": 1792636898,
+            "tokens": "[REDACTED]"
+          },
+          "explanation": "Taxi refresh phía server và lưu token mới trước khi nhả khóa theo người dùng."
+        }
+      ]
+    }
+  }
+}

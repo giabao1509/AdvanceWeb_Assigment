@@ -1,0 +1,122 @@
+{
+  "id": "code_expired",
+  "mode": "baseline",
+  "at": "2026-10-22T14:27:21.335Z",
+  "protected": false,
+  "conclusion": "AS chấp nhận thao tác mà full security cần chặn. Luồng chưa được bảo vệ đầy đủ trong tình huống này.",
+  "steps": [
+    {
+      "service": "Wallet AS",
+      "from": "Người dùng",
+      "endpoint": "GET /authorize",
+      "status": 200,
+      "request": {
+        "query": {
+          "client_id": "taxi-web",
+          "redirect_uri": "http://localhost:6103/oauth/callback",
+          "response_type": "code",
+          "scope": "wallet:read wallet:charge offline_access",
+          "state": "[REDACTED]",
+          "code_challenge": "[REDACTED]",
+          "code_challenge_method": "S256"
+        }
+      },
+      "response": {
+        "error": null,
+        "code_issued": false,
+        "page": "Đăng nhập ví"
+      },
+      "explanation": "Bộ kiểm thử gửi HTTP đến endpoint chính, đọc status/Location thực tế và chỉ ghi các trường đã che."
+    },
+    {
+      "service": "Wallet AS",
+      "from": "Người dùng",
+      "endpoint": "POST /login",
+      "status": 302,
+      "request": {
+        "body": {
+          "username": "alice",
+          "password": "[REDACTED]",
+          "csrf": "[REDACTED]",
+          "request": "[REDACTED]"
+        }
+      },
+      "response": {
+        "headers": {
+          "location": "http://localhost:6101/consent?request=%5BREDACTED%5D"
+        },
+        "error": null,
+        "code_issued": false
+      },
+      "explanation": "Bộ kiểm thử gửi HTTP đến endpoint chính, đọc status/Location thực tế và chỉ ghi các trường đã che."
+    },
+    {
+      "service": "Wallet AS",
+      "from": "Người dùng",
+      "endpoint": "GET /consent",
+      "status": 200,
+      "request": {
+        "query": {
+          "request": "[REDACTED]"
+        }
+      },
+      "response": {
+        "error": null,
+        "code_issued": false,
+        "page": "Đồng ý cấp quyền"
+      },
+      "explanation": "Bộ kiểm thử gửi HTTP đến endpoint chính, đọc status/Location thực tế và chỉ ghi các trường đã che."
+    },
+    {
+      "service": "Wallet AS",
+      "from": "Người dùng",
+      "endpoint": "POST /consent",
+      "status": 302,
+      "request": {
+        "body": {
+          "csrf": "[REDACTED]",
+          "request": "[REDACTED]",
+          "decision": "allow"
+        }
+      },
+      "response": {
+        "headers": {
+          "location": "http://localhost:6103/oauth/callback?code=%5BREDACTED%5D&state=%5BREDACTED%5D"
+        },
+        "error": null,
+        "code_issued": true
+      },
+      "explanation": "Bộ kiểm thử gửi HTTP đến endpoint chính, đọc status/Location thực tế và chỉ ghi các trường đã che."
+    },
+    {
+      "service": "Wallet AS",
+      "endpoint": "POST /token",
+      "status": 200,
+      "request": {
+        "headers": {
+          "authorization": "Basic [REDACTED] (taxi-web)",
+          "content-type": "application/x-www-form-urlencoded"
+        },
+        "body": {
+          "grant_type": "authorization_code",
+          "code": "[REDACTED]",
+          "redirect_uri": "http://localhost:6103/oauth/callback",
+          "code_verifier": "[REDACTED]"
+        }
+      },
+      "response": {
+        "grant": "authorization_code",
+        "token_type": "Bearer",
+        "expires_in": 120,
+        "refresh_token": true,
+        "sub": "alice",
+        "aud": "wallet-api",
+        "scope": "offline_access wallet:charge wallet:read",
+        "principal_type": "user",
+        "exp": 1792679361,
+        "tokens": "[REDACTED]"
+      },
+      "explanation": "Đã chờ thật 61 giây; code TTL 60 giây."
+    }
+  ]
+}

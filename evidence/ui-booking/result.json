@@ -1,0 +1,25 @@
+{
+  "status": "PASS",
+  "at": "2026-10-22T14:39:17.333Z",
+  "browser": "155.0.4283.62",
+  "checks": [
+    "actual Taxi password login",
+    "two mode dashboards",
+    "all six security cases on actual AS/API endpoints",
+    "natural-language PKCE outcome before/after",
+    "payload hidden until arrow selected",
+    "keyboard arrow selection",
+    "full booking through explicit Wallet consent",
+    "trace shows consent before creation",
+    "consent arrow contains actual allow decision",
+    "request and response arrow payloads",
+    "retry same ticket and trip without new debit",
+    "new booking requests consent and creates a distinct ticket",
+    "select historical ticket and retry that exact ticket",
+    "mobile diagram without page horizontal overflow",
+    "no browser token endpoint/token response",
+    "no JavaScript or CSP errors"
+  ],
+  "errors": [],
+  "leaks": []
+}
