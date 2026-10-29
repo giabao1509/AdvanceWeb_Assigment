@@ -17,10 +17,16 @@
       <div class="version-bar"><span class="muted">Phiên bản bảo vệ</span><nav id="versions" aria-label="Phiên bản"></nav></div>
       <p id="policy-text" class="policy"></p>
       <div id="notice" role="status" aria-live="polite" hidden></div>
+      <div class="workspace-columns">
+      <div class="work-content">
       <section id="page" aria-label="Nội dung ứng dụng"></section>
-      <details id="technical"><summary>Chi tiết kỹ thuật <span class="muted">Request · Response · Authorization trace</span></summary><label for="history">Thao tác gần đây</label><select id="history"></select><div id="technical-content"><p class="muted">Thực hiện một thao tác để xem kết quả server.</p></div></details>
+      </div>
+      <aside class="technical-sidebar" aria-label="Công cụ demo và chi tiết kỹ thuật">
       <details id="demo-tools"><summary>Công cụ demo nâng cao</summary><p class="muted">Thử truy cập trực tiếp, token sai hoặc giả mạo quyền. Kết quả vẫn do server quyết định.</p><label for="preset">Tình huống nhanh</label><select id="preset"><option value="">Chọn tình huống…</option><option value="idor">Alice mở Beta · IDOR</option><option value="viewer">Vera sửa A1 · Viewer</option><option value="closed">Bob sửa A2 · Closed</option><option value="assigned">Bob sửa A1 · Open</option><option value="admin">Admin Alpha mở Alpha</option><option value="cross">Admin Alpha mở Beta</option></select>
       <form id="raw-form"><div class="form-grid"><div><label for="raw-method">Method</label><select id="raw-method"><option>GET</option><option>PATCH</option><option>POST</option><option>DELETE</option></select></div><div><label for="raw-path">Đường dẫn sau /api/:version/</label><input id="raw-path" value="tasks/B1" required></div></div><label for="raw-token">Bearer token (để trống để thử Anonymous)</label><input id="raw-token" autocomplete="off" spellcheck="false"><label for="raw-query">Query thử nghiệm</label><input id="raw-query" placeholder="role=Admin&amp;tenantId=beta"><label for="raw-headers">Headers bổ sung (JSON; token lấy từ ô trên)</label><textarea id="raw-headers" rows="2">{}</textarea><label for="raw-body">JSON body (POST/PATCH)</label><textarea id="raw-body" rows="3">{"title":"Updated from lab"}</textarea><div class="actions"><button>Gửi request</button><button type="button" id="compare" class="secondary">So sánh GET Starter / V1</button></div></form></details>
+        <details id="technical"><summary>Chi tiết kỹ thuật <span class="muted">Request · Response · Authorization trace</span></summary><label for="history">Thao tác gần đây</label><select id="history"></select><div id="technical-content"><p class="muted">Thực hiện một thao tác để xem kết quả server.</p></div></details>
+      </aside>
+      </div>
       <footer>Task Authorization Lab · Authentication ≠ Authorization</footer>
     </main></div>
   </div>

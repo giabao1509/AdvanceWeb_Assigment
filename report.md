@@ -1,6 +1,6 @@
 # Triển khai Task Authorization Minilab
 
-Báo cáo hiện trạng · 29/10/2026 · Đọc theo thứ tự 01–09
+Báo cáo hiện trạng · 29/10/2026 · Đọc theo thứ tự 01–11
 
 ## 01. Kiến trúc: quyền nằm ở server
 
@@ -63,7 +63,7 @@ Role của caller được đọc lại từ membership của **đúng project c
 
 ## 03. Năm policy thay đổi điều gì?
 
-Mỗi version dùng cùng routes và database. Bảng dưới áp dụng cho các API nội dung/nghiệp vụ; danh mục tên project có ngoại lệ riêng ở trang 05. Starter và V1 vẫn kiểm tra dữ liệu đầu vào, ràng buộc database và Owner cố định.
+Mỗi version dùng cùng routes và database. Bảng dưới áp dụng cho các API nội dung/nghiệp vụ; danh mục tên project có ngoại lệ riêng ở mục 07. Starter và V1 vẫn kiểm tra dữ liệu đầu vào, ràng buộc database và Owner cố định.
 
 | Version | Cơ chế quyết định | Hành vi dễ quan sát |
 | --- | --- | --- |
@@ -87,7 +87,64 @@ Từ V2, action `read` cho mọi role có membership; `edit` cho Member/Owner; `
 
 V1–V3 không có tenant boundary riêng. V4 cũng không hoàn toàn là “thêm một điều kiện”: nó vừa siết ranh giới tenant, vừa mở ngoại lệ admin trong tenant. Không có đặc quyền admin ở V1–V3 khi người đó chưa có membership.
 
-## 04. Một lần sửa task đi qua những bước nào?
+## 04. Vì sao nâng cấp từ ACL đến RBAC, ReBAC và ABAC?
+
+Các version được trình bày theo **yêu cầu mới → giới hạn của policy trước → phần bổ sung → kiểm chứng**. V1 kiểm soát truy cập bằng danh sách thành viên, tương ứng ACL ở cấp project; V2 giữ kiểm tra này và thêm RBAC; V3 giữ hai lớp đó rồi thêm quan hệ assignee và thuộc tính trạng thái. Membership cũng là quan hệ user–project nên có thể được mô tả theo góc nhìn ReBAC ở nghĩa rộng; các khái niệm có phần giao nhau. Điểm khác biệt cần chứng minh là V3 bổ sung điều kiện caller phải là assignee của task, còn V1 chỉ xét danh sách thành viên project.
+
+### Starter → V1: chặn truy cập ngoài project bằng ACL
+
+**Yêu cầu và vấn đề:** người đã đăng nhập chỉ được truy cập tài nguyên của project mình tham gia. Starter chỉ xác thực token nên Alice đọc B1 của Beta được dù không có membership: đây là IDOR được cố ý tái hiện.
+
+**Cách sửa và lý do:** server tra project từ tài nguyên thật, rồi kiểm tra caller có trong `project_memberships` của project đó. Danh sách thành viên đóng vai trò ACL chung cho tài nguyên thuộc project, đáp ứng phạm vi V1. Chưa cần kiểm tra assignee hay status vì V1 đang giải quyết quyền tham gia project.
+
+**Kiểm chứng và giới hạn còn lại:** Alice/B1 chuyển 200 → 403, còn Alice/A1 và Charlie/B1 vẫn 200. Tuy nhiên, Vera là Viewer vẫn sửa task, xóa project và quản lý members trong Alpha được. V1 mới trả lời “có trong danh sách truy cập không”, chưa phân biệt hành động; đây là lý do cần V2.
+
+### V1 → V2: giữ ACL, thêm quyền theo role và action
+
+**Yêu cầu mới:** Viewer chỉ đọc, Member được đọc/sửa, Owner được quản lý members và xóa project. Membership đơn thuần của V1 không diễn tả được sự khác nhau này.
+
+**Cách sửa và lý do:** sau khi kiểm tra membership, PDP đọc role của caller tại đúng project rồi xét ma trận role–action. ACL tiếp tục chặn người ngoài; RBAC bổ sung giới hạn hành động cho người bên trong. Không dùng role do caller tự khai và không bỏ bước ACL.
+
+**Kiểm chứng và giới hạn còn lại:** Vera sửa A1 chuyển 200 → 403; Bob vẫn sửa A1 được nhưng không được xóa project hay quản lý members. Bob cũng vẫn sửa được A2 Closed, A3 chưa giao và A4 giao cho Alice: RBAC cho phép theo nhóm Member, chưa xét từng task. Giới hạn này dẫn tới V3.
+
+### V2 → V3: giữ ACL/RBAC, thêm assignee và trạng thái
+
+**Yêu cầu mới:** Member chỉ được sửa task được giao cho mình và hiện còn Open. Role Member không đủ để suy ra hai điều kiện đó.
+
+**Cách sửa và lý do:** sau membership và role, PDP kiểm tra quan hệ `task.assigneeId === principal.id` (ReBAC) rồi kiểm tra status hiện tại là Open (ABAC). Dữ liệu lấy từ server; không xét quyền bằng status mà client muốn ghi. Owner giữ quyền sửa rộng đã có từ V2; điều kiện mới chỉ dành cho Member.
+
+**Kiểm chứng và giới hạn còn lại:** Bob sửa A1 Open được; A2/A3/A4 chuyển từ 200 ở V2 sang 403 ở V3. Bob mất membership vẫn bị chặn dù còn là assignee. V3 giải quyết quyền theo task nhưng chưa có tenant boundary riêng hoặc quyền quản trị cấp tenant; đó là phạm vi mở rộng của V4.
+
+## 05. V4 kế thừa thế nào để không làm version đi lùi?
+
+### V3 → V4: bổ sung tenant boundary và quản trị trong tenant
+
+**Yêu cầu mới:** cách ly nội dung/nghiệp vụ giữa các tổ chức, đồng thời cho tenant admin quản trị project trong tổ chức mình mà không phải được thêm riêng vào từng project.
+
+**Giới hạn của V3:** quyết định dựa vào membership/role/task, chưa kiểm tra trực tiếp tenant. Alice/B1 đã bị V3 chặn vì thiếu membership; vì vậy không dùng ca này để khẳng định V3 đang có một lỗ hổng cross-tenant đã khai thác thành công. V4 thêm ranh giới tenant rõ ràng, độc lập với việc có membership, và bổ sung nhu cầu quản trị cấp tổ chức.
+
+**Cách sửa và lý do:** V4 so sánh tenant của caller và project trước. Khác tenant thì dừng với `TENANT_MISMATCH`; cùng tenant mới xét cờ admin từ server. Admin hợp lệ có quyền tương đương Owner. Caller không phải admin tiếp tục qua membership → role → assignee/status như V3. Khi thêm thành viên, route còn kiểm tra user đích cùng tenant với project.
+
+**Kiểm chứng và đánh đổi:** Admin Alpha chưa có membership mở Alpha chuyển từ 403 ở V3 sang 200 ở V4; truy cập Beta vẫn 403. Đây là quyền mới có phạm vi theo yêu cầu V4, nên không thể tuyên bố mọi deny ở V3 đều phải giữ nguyên. Ngoại lệ admin không cho phép vượt tenant, validation hoặc quy tắc Owner cố định. Danh mục tên project vẫn là ngoại lệ demo ở mục 07; tenant boundary ở đây bảo vệ nội dung/nghiệp vụ.
+
+### Những bảo vệ phải được giữ khi thêm policy
+
+So sánh trên cùng dữ liệu mẫu hoặc reset giữa các ca ghi/xóa; thay đổi dữ liệu không được nhầm với thay đổi policy.
+
+| Bảo vệ đã có | Version phải tiếp tục giữ | Bằng chứng trong bộ test hiện có |
+| --- | --- | --- |
+| V1: người ngoài project không đọc nội dung | V2–V4, với ngoại lệ tenant admin hợp lệ ở V4 | Alice/B1 bị chặn; Alice/A1 và Charlie/B1 vẫn được đọc |
+| V2: giới hạn theo role/action | V3–V4 cho caller không phải tenant admin | Viewer không sửa; Member không xóa project/quản lý members |
+| V3: Member cần membership, đúng assignee và Open | V4 cho Member không phải tenant admin | A2/A3/A4 bị chặn; bị thu hồi membership vẫn không sửa được |
+| V4: tenant trước admin | Mọi action nội dung/nghiệp vụ của V4 | Admin Alpha bị chặn ở task/project/members Beta |
+
+### Phân biệt kế thừa policy với lịch sử triển khai
+
+`src/policy.js` và `test/authorization.test.js` thể hiện các lớp kiểm tra và ca so sánh trên. Các giới hạn V1/V2 được giữ có chủ đích để giải thích nhu cầu bản sau; không gọi chúng là sự cố đã gặp trong quá trình lập trình khi chưa có bằng chứng lịch sử.
+
+Schema và seed có sẵn role, assignee, status, tenant để chạy cùng fixture. **V1 chỉ dùng membership để cấp quyền đối tượng; V2 mới xét role; V3 mới xét assignee/status; V4 mới xét tenant/admin.** Dùng chung cấu trúc dữ liệu không có nghĩa bật policy cuối ở V1. Báo cáo mô tả tiến hóa policy được tái hiện trong một ứng dụng; chưa chứng minh lịch sử migration hay các commit triển khai tuần tự. Cũng chưa có số đo để lấy “scale tốt hơn” làm lý do lựa chọn.
+
+## 06. Một lần sửa task đi qua những bước nào?
 
 Xét Bob gửi `PATCH /api/v3/tasks/A1` với body `{"status":"Closed"}`. Token chứng minh danh tính demo; quyết định sửa vẫn dựa vào project, membership, assignee và trạng thái hiện tại lấy từ server.
 
@@ -116,7 +173,7 @@ A1 đang Open, Bob là Member và assignee nên được đóng task. Ở reques
 
 **Đọc dữ liệu:** GET tải tài nguyên và membership rồi xét quyền trước khi trả nội dung, nhưng không được bọc trong transaction ghi này. Chưa kiểm thử tranh chấp nhiều process; không suy rộng cơ chế local thành bảo đảm cho hệ thống phân tán.
 
-## 05. API và ranh giới dữ liệu trả về
+## 07. API và ranh giới dữ liệu trả về
 
 Các đường dẫn dưới có prefix `/api/:version`, với version là `starter`, `v1`, `v2`, `v3`, `v4`. Mọi API trong nhóm này yêu cầu token hợp lệ. Hai endpoint hỗ trợ lab `/lab/config` và `/lab/reset` nằm ngoài nhóm đó.
 
@@ -150,7 +207,7 @@ Response API dùng `{ data, error, trace, requestId }`. Khi bị từ chối, `d
 
 Xóa hiện trả **200 kèm JSON**, không trả 204. Phân biệt 403 và 404 giúp giải thích policy, nhưng có thể tiết lộ một ID tồn tại. Response đặt `Cache-Control: no-store`; trace chi tiết chỉ thích hợp với mục đích lab hiện tại.
 
-## 06. Quyết định kỹ thuật: tổ chức ứng dụng và policy
+## 08. Quyết định kỹ thuật: tổ chức ứng dụng và policy
 
 Các quyết định dưới đây phản ánh cách triển khai hiện tại. Mỗi lựa chọn được giải thích bằng cơ chế và giới hạn cụ thể.
 
@@ -182,7 +239,7 @@ Khi bấm đổi version, UI đổi prefix request (ví dụ `/api/v1/tasks/B1` 
 
 **Đánh đổi:** route mới vẫn phải gắn wrapper/action đúng; hàm policy tập trung không tự bảo vệ một route viết ngoài wrapper. Danh mục project là ngoại lệ được viết riêng. Chưa cần policy engine ngoài process; việc đó chỉ có ích khi nhiều dịch vụ cần chung một hệ chính sách.
 
-## 07. Quyết định kỹ thuật: lưu trữ và tính toàn vẹn
+## 09. Quyết định kỹ thuật: lưu trữ và tính toàn vẹn
 
 ### 4. SQLite bền vững, SQL trực tiếp có tham số
 
@@ -196,7 +253,7 @@ Khi bấm đổi version, UI đổi prefix request (ví dụ `/api/v1/tasks/B1` 
 
 **Lý do chọn:** policy phải dùng dữ liệu hiện tại, còn ghi dữ liệu phải toàn vẹn. Chỉ có foreign key không trả lời được “Bob có được sửa A2 không”; chỉ có policy cũng không ngăn được mọi lỗi quan hệ dữ liệu.
 
-**Cơ chế:** transaction bao cả đọc–authorize–write như trang 04. Xóa project dùng `ON DELETE CASCADE` để xóa task và membership liên quan. `CHECK` giới hạn role/status; unique index `one_owner` cho phép tối đa một Owner trong project. Route không cho thêm role Owner hoặc đổi/xóa Owner đang có, nên Owner seed được giữ cố định.
+**Cơ chế:** transaction bao cả đọc–authorize–write như mục 06. Xóa project dùng `ON DELETE CASCADE` để xóa task và membership liên quan. `CHECK` giới hạn role/status; unique index `one_owner` cho phép tối đa một Owner trong project. Route không cho thêm role Owner hoặc đổi/xóa Owner đang có, nên Owner seed được giữ cố định.
 
 **Đánh đổi:** unique index chỉ đảm bảo **tối đa** một Owner, không tự bảo đảm project luôn có Owner. Quy tắc Owner cố định vẫn cần code ứng dụng. V4 kiểm tra tenant người được thêm ở route; foreign key đơn lẻ không tự áp đặt quan hệ cùng tenant.
 
@@ -212,7 +269,7 @@ Khi bấm đổi version, UI đổi prefix request (ví dụ `/api/v1/tasks/B1` 
 
 **Nguồn gốc code diff:** `evidence/authorization.diff` là diff **tái dựng**, không phải hai commit lịch sử. Before bỏ khối object authorization, after giữ code hiện tại. Cùng regression V1 chạy đỏ/xanh ở hai snapshot; patch đã qua `git apply --check`. Chi tiết tái dựng nằm trong README evidence.
 
-## 08. Giao diện và cách trình bày một lần demo
+## 10. Giao diện và cách trình bày một lần demo
 
 ### 7. Giải thích kết quả bằng thao tác thật và trace
 
@@ -241,7 +298,7 @@ Khi bấm đổi version, UI đổi prefix request (ví dụ `/api/v1/tasks/B1` 
 
 Khôi phục seed trước khi so sánh các thao tác ghi, nhất là đóng task hoặc xóa project. **So sánh tự động chỉ gửi GET** để tránh thực hiện mutation hai lần. Sau mỗi phép thử, mở trace và chỉ ra đúng bước FAIL; tài nguyên bị xóa trả 404 không chứng minh được policy 403.
 
-## 09. Kiểm chứng, giới hạn và điểm cần nhớ
+## 11. Kiểm chứng, giới hạn và điểm cần nhớ
 
 ### 9. Kiểm tra cả response lẫn dữ liệu sau request
 
@@ -259,7 +316,7 @@ Khôi phục seed trước khi so sánh các thao tác ghi, nhất là đóng ta
 | `npm.cmd run evidence` | **PASS** · 11 ca HTTP, logs và diff |
 | Môi trường | Node.js 22.17.1, Express cài tại workspace 5.3.0; Windows, Chrome headless |
 
-Hướng dẫn và artifact bài nộp: [evidence/README.md](evidence/README.md). Nguồn gốc diff tái dựng được giải thích tại mục 07.
+Hướng dẫn và artifact bài nộp: [evidence/README.md](evidence/README.md). Nguồn gốc diff tái dựng được giải thích tại mục 09.
 
 Bộ HTTP kiểm tra token, ma trận role/action, membership, assignee/status, admin cùng/khác tenant, giả mạo quyền, validation, Owner cố định, dữ liệu sau deny, cascade, persistence, reset và quyền đọc project/list task. Bộ UI đi qua đăng nhập demo, form task, quản lý thành viên, popup, xóa/reset, so sánh GET, response đến muộn và màn hình mobile 390 px.
 
