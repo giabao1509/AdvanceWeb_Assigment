@@ -40,16 +40,40 @@ test('Starter reproduces IDOR; V1–V4 reject cross-project access without leaki
 test('Every version requires a valid bearer token', async t => {
   const { request } = await fixture(t);
   for (const version of ['starter','v1','v2','v3','v4']) {
-    assert.equal((await request(version,null,'GET','tasks/A1')).status,401);
-    assert.equal((await request(version,'invalid','GET','tasks/A1')).status,401);
+    for (const [method,path,body] of [
+      ['GET','tasks/A1'],['PATCH','tasks/A1',{title:'No token'}],['DELETE','projects/alpha'],
+      ['GET','projects/alpha/members'],['POST','projects/alpha/members',{userId:'admin-alpha',role:'Viewer'}],
+      ['PATCH','projects/alpha/members/vera',{role:'Member'}],['DELETE','projects/alpha/members/vera'],
+    ]) {
+      assert.equal((await request(version,null,method,path,body)).status,401);
+      assert.equal((await request(version,'invalid',method,path,body)).status,401);
+    }
   }
 });
-for (const version of ['starter','v1']) test(`${version}: mutation and member routes unavailable`, async t => {
-  const { request } = await fixture(t);
-  for (const [method,path] of [['PATCH','tasks/A1'],['DELETE','projects/alpha'],['GET','projects/alpha/members']]) {
-    assert.equal((await request(version,'alice',method,path,method === 'PATCH' ? {title:'changed'} : undefined)).status,404);
-  }
-});
+for (const version of ['starter','v1']) {
+  for (const user of ['alice','bob','vera','charlie']) test(`${version}: ${user} uses every endpoint under authentication/membership policy`, async t => {
+    const { request, db } = await fixture(t);
+    const allowed = version === 'starter' || user !== 'charlie';
+    const snapshot = () => ['projects','tasks','project_memberships'].map(table => db.prepare(`SELECT * FROM ${table} ORDER BY rowid`).all());
+    const before = snapshot();
+    assert.equal((await request(version,user,'GET','tasks/A1')).status,allowed ? 200 : 403);
+    const edit = await request(version,user,'PATCH','tasks/A1',{title:`Edited by ${user}`});
+    assert.equal(edit.status,allowed ? 200 : 403);
+    assert.equal(db.prepare('SELECT title FROM tasks WHERE id = ?').get('A1').title,allowed ? `Edited by ${user}` : before[1][0].title);
+    assert.equal((await request(version,user,'GET','projects/alpha/members')).status,allowed ? 200 : 403);
+    assert.equal((await request(version,user,'POST','projects/alpha/members',{userId:'admin-alpha',role:'Viewer'})).status,allowed ? 201 : 403);
+    assert.equal((await request(version,user,'PATCH','projects/alpha/members/admin-alpha',{role:'Member'})).status,allowed ? 200 : 403);
+    if (allowed) assert.equal(db.prepare('SELECT role FROM project_memberships WHERE projectId = ? AND userId = ?').get('alpha','admin-alpha').role,'Member');
+    assert.equal((await request(version,user,'DELETE','projects/alpha/members/admin-alpha')).status,allowed ? 200 : 403);
+    if (allowed) assert.equal(db.prepare('SELECT * FROM project_memberships WHERE userId = ?').get('admin-alpha'),undefined);
+    assert.equal((await request(version,user,'DELETE','projects/alpha')).status,allowed ? 200 : 403);
+    if (allowed) {
+      for (const table of ['tasks','project_memberships']) assert.equal(db.prepare(`SELECT count(*) AS n FROM ${table} WHERE projectId = ?`).get('alpha').n,0);
+      assert.equal(db.prepare('SELECT * FROM projects WHERE id = ?').get('alpha'),undefined);
+    } else assert.deepEqual(snapshot(),before);
+    assert.ok(edit.body.trace.some(check => version === 'starter' ? check.result === 'SKIPPED' : check.name === 'Project membership'));
+  });
+}
 for (const version of ['v2','v3','v4']) {
   test(`${version}: project RBAC read/edit matrix`, async t => {
     const { request, db } = await fixture(t);
@@ -124,9 +148,11 @@ test('V4 admin permissions: positive within tenant; negative across every resour
 });
 test('Spoofing and validation cannot change identity, tenant, role, project or assignee', async t => {
   const { request } = await fixture(t);
-  for (const version of ['v2','v3','v4']) {
-    assert.equal((await request(version,'bob','DELETE','projects/alpha?role=Admin',undefined,{'X-Role':'Admin'})).status,403);
-    assert.equal((await request(version,'vera','PATCH','tasks/A1',{title:'No',role:'Admin'})).status,403);
+  for (const version of ['starter','v1','v2','v3','v4']) {
+    if (['v2','v3','v4'].includes(version)) {
+      assert.equal((await request(version,'bob','DELETE','projects/alpha?role=Admin',undefined,{'X-Role':'Admin'})).status,403);
+      assert.equal((await request(version,'vera','PATCH','tasks/A1',{title:'No',role:'Admin'})).status,403);
+    }
     for (const field of ['role','tenantId','projectId','assigneeId','userId']) assert.equal((await request(version,'alice','PATCH','tasks/A1',{[field]:'Admin'})).status,400);
     for (const body of [{},[],null,{status:'Done'},{title:''},{title:5}]) assert.equal((await request(version,'alice','PATCH','tasks/A1',body)).status,400);
     assert.equal((await request(version,'alice','PATCH','projects/alpha/members/vera',{role:'Admin'})).status,400);

@@ -86,13 +86,13 @@ Principal được resolve từ token ở server. Membership, project role và t
 
 | Version | Kế thừa và bổ sung | API demo |
 | --- | --- | --- |
-| Starter | Xác thực token; GET task thiếu object-level authorization | GET task |
-| V1 | Starter + kiểm tra caller có quan hệ membership với project chứa task | GET task |
-| V2 | V1 + project roles và permission matrix cho từng action | GET/PATCH task, DELETE project, quản lý member |
-| V3 | V2 + ràng buộc Member phải là assignee và task còn Open khi edit | Các API của V2 |
-| V4 | V3 + tenant boundary trước mọi quyết định project/task; thêm tenant admin | Các API của V3 |
+| Starter | Xác thực token; thiếu object-level authorization trên mọi thao tác | Toàn bộ endpoint |
+| V1 | Starter + kiểm tra membership với project chứa tài nguyên trên mọi thao tác | Toàn bộ endpoint |
+| V2 | V1 + project roles và permission matrix cho từng action | Toàn bộ endpoint |
+| V3 | V2 + ràng buộc Member phải là assignee và task còn Open khi edit | Toàn bộ endpoint |
+| V4 | V3 + tenant boundary trước mọi quyết định project/task; thêm tenant admin | Toàn bộ endpoint |
 
-Task assignee/status có thể tồn tại trong seed từ đầu, nhưng đến V3 mới tham gia quyết định edit. Endpoint chỉ được mở từ version giới thiệu nó; gọi PATCH ở V1 trả 404 và không được thay đổi dữ liệu.
+Task assignee/status tồn tại trong seed từ đầu, nhưng đến V3 mới tham gia quyết định edit. Giữ cùng bộ endpoint ở mọi version để so sánh cùng request; chỉ nâng cấp policy. PATCH ở V1 được phép nếu caller là member của project, kể cả Viewer; V2 mới xét role. Starter chỉ yêu cầu token nhưng vẫn áp dụng validation và constraints chung.
 
 ### V1: Sửa IDOR/BOLA
 
@@ -138,15 +138,15 @@ Quyền được xác định bằng cặp `(userId, projectId)`. Một người
 
 Các phiên bản được chọn bằng URL rõ ràng: `/api/:version/...`, với allowlist `starter`, `v1`, `v2`, `v3`, `v4`. Server dùng version từ URL để chọn policy demo; version không hợp lệ trả 404. Đây là cơ chế so sánh trong lab, không phải cơ chế bảo vệ cho production.
 
-| Method | Route sau `/api/:version` | Có từ |
+| Method | Route sau `/api/:version` | Version |
 | --- | --- | --- |
-| GET | `/tasks/:id` | Starter |
-| PATCH | `/tasks/:id` | V2 |
-| DELETE | `/projects/:id` | V2 |
-| GET | `/projects/:id/members` | V2 |
-| POST | `/projects/:id/members` | V2 |
-| PATCH | `/projects/:id/members/:userId` | V2 |
-| DELETE | `/projects/:id/members/:userId` | V2 |
+| GET | `/tasks/:id` | Starter–V4 |
+| PATCH | `/tasks/:id` | Starter–V4 |
+| DELETE | `/projects/:id` | Starter–V4 |
+| GET | `/projects/:id/members` | Starter–V4 |
+| POST | `/projects/:id/members` | Starter–V4 |
+| PATCH | `/projects/:id/members/:userId` | Starter–V4 |
+| DELETE | `/projects/:id/members/:userId` | Starter–V4 |
 
 Luồng xử lý chung:
 
@@ -233,9 +233,9 @@ Code diff: lưu hoặc hướng dẫn chạy `git diff` cho các file auth/polic
 | Bước | Việc thực hiện | Điều kiện hoàn tất |
 | --- | --- | --- |
 | 1 | Chốt seed, permission matrix, lỗi và policy Owner | `POLICY.md` có oracle rõ ràng |
-| 2 | Tạo app factory, auth adapter, SQLite schema/seed/reset, GET Starter | Alice đọc B1 nhận 200; Anonymous nhận 401; restart giữ dữ liệu |
+| 2 | Tạo app factory, auth adapter, SQLite schema/seed/reset, toàn bộ endpoint Starter | Alice đọc B1 nhận 200; mutation chỉ cần token hợp lệ; Anonymous nhận 401; restart giữ dữ liệu |
 | 3 | Viết regression, thu evidence Starter, thêm V1 | Regression đỏ ở Starter, xanh ở V1; legitimate reads vẫn đạt |
-| 4 | Thêm V2, mutation và member management | Mỗi action có test allow/deny; không tự khai quyền |
+| 4 | Thêm policy V2 cho cùng bộ endpoint, enforce role trên mutation và member management | Mỗi action có test allow/deny; không tự khai quyền |
 | 5 | Thêm điều kiện V3 | Membership + assignee + status được kiểm tra trên server |
 | 6 | Thêm UI, preset, compare GET, trace và reset | Demo được Starter/V1 và V2/V3, log khớp response |
 | 7 | Nếu còn thời gian, thêm V4 | Admin cùng tenant được phép; cross-tenant và spoofing bị chặn |
@@ -247,7 +247,7 @@ Code diff: lưu hoặc hướng dẫn chạy `git diff` cho các file auth/polic
 
 - [ ] Starter tái hiện được Alice đọc B1 và có evidence thực tế.
 - [ ] V1 chặn B1 nhưng giữ Alice/A1 và Charlie/B1 thành công.
-- [ ] V2 enforce project role trên mọi endpoint được mở, có positive/negative tests cho từng quyền.
+- [ ] Mọi version có cùng bộ endpoint; V2 enforce project role trên từng action, có positive/negative tests cho từng quyền.
 - [ ] V3 không làm mất bảo vệ V1/V2; Member chỉ sửa task được assign, còn Open, trong project mình còn membership.
 - [ ] UI chuyển được version và hiển thị response/trace đúng; request trực tiếp tuân thủ cùng policy.
 - [ ] Giả mạo role/tenant không tăng quyền; mutation bị từ chối không đổi state.

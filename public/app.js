@@ -2,8 +2,8 @@ const $ = id => document.getElementById(id);
 let version = 'starter';
 let busy = false;
 const policies = {
-  starter: ['AUTHENTICATION ONLY', 'Token hợp lệ là đọc được mọi task. Thử Alice → B1 để tái hiện IDOR.'],
-  v1: ['OBJECT-LEVEL AUTHORIZATION', 'Kế thừa Starter + kiểm tra membership trong project của task. Alice đọc A1 được, B1 bị từ chối.'],
+  starter: ['AUTHENTICATION ONLY', 'Mọi endpoint chỉ kiểm tra token, chưa kiểm tra quyền trên tài nguyên. Có thể đọc/sửa/xóa và quản lý members ngoài project của mình.'],
+  v1: ['OBJECT-LEVEL AUTHORIZATION', 'Mọi thao tác cần membership trong project chứa tài nguyên; chưa phân quyền theo role. Viewer vẫn sửa/xóa được trong project, từ V2 mới bị chặn.'],
   v2: ['PROJECT RBAC', 'Kế thừa V1 + Viewer đọc, Member đọc/sửa, Owner thêm quyền xóa project và quản lý members.'],
   v3: ['RBAC + ReBAC + ABAC', 'Kế thừa V2 + Member chỉ sửa task được assign cho mình và còn Open. Owner vẫn sửa được task Closed.'],
   v4: ['TENANT BOUNDARY', 'Kế thừa V3 + kiểm tra tenant trước project policy. Tenant admin có quyền Owner chỉ trong tenant của mình.'],

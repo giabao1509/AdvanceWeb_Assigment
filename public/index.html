@@ -19,7 +19,7 @@
       <div id="payload-field" hidden><label for="payload">JSON body</label><textarea id="payload" rows="5" spellcheck="false">{"title":"Updated from lab"}</textarea></div>
       <details><summary>Token và request tùy chỉnh</summary><label for="token">Bearer token (để trống = Anonymous)</label><input id="token" spellcheck="false" autocomplete="off"><label for="query">Query giả mạo, ví dụ role=Admin&amp;tenantId=beta</label><input id="query" placeholder="role=Admin&amp;tenantId=beta"><label for="headers">Headers bổ sung (JSON; Authorization dùng ô token)</label><textarea id="headers" rows="3" spellcheck="false">{}</textarea></details>
       <div class="url" id="url"></div><div class="buttons"><button id="send">Gửi request →</button><button id="compare" class="secondary">So sánh Starter / V1</button></div>
-      <p class="muted">Starter/V1 chỉ có GET task. Các version dùng chung SQLite; restart giữ dữ liệu, Reset khôi phục seed.</p>
+      <p class="muted">Mọi version có cùng endpoint, chỉ khác policy. Các version dùng chung SQLite; Reset trước khi so sánh thao tác xóa hoặc đổi quyền.</p>
     </section>
     <section class="panel output"><div class="panel-heading"><h2>02 / Response</h2><span id="status" class="tag">CHƯA GỬI</span></div><div id="message" role="status" aria-live="polite">Chọn một tình huống rồi gửi request để xem server quyết định quyền.</div><div id="responses"></div>
       <div class="panel-heading trace-heading"><h2>03 / Authorization trace</h2><span class="muted">SERVER-SIDE</span></div><div id="trace"><p class="muted">Authentication → Resource policy → Allow / Deny</p></div>

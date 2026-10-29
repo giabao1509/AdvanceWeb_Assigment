@@ -69,7 +69,7 @@
     <article>
       <div class="card-head"><div class="meta"><span class="number">02</span> Phiên bản · plan §1, §4–6</div><h2>Một codebase, policy tăng dần</h2></div>
       <dl>
-        <dt>Quyết định</dt><dd>Chọn Starter → V4 bằng <code>/api/:version</code>, dùng chung database. Mỗi bản bổ sung lớp bảo vệ; endpoint chỉ mở từ bản giới thiệu nó.</dd>
+        <dt>Quyết định</dt><dd>Chọn Starter → V4 bằng <code>/api/:version</code>, dùng chung database và cùng bộ endpoint. Mỗi bản bổ sung lớp policy trên cùng thao tác: token → membership → role → assignee/status → tenant boundary.</dd>
         <dt>Phương án thay thế</dt><dd>Năm ứng dụng/database riêng; hoặc chỉ giữ bản cuối và giải thích thay đổi bằng tài liệu.</dd>
         <dt>Lý do chọn &amp; trade-off</dt><dd><p><strong>Chọn vì:</strong> so sánh cùng người, cùng tài nguyên để thấy rõ tác động của policy.</p><p class="trade"><strong>Đánh đổi:</strong> mutation ảnh hưởng mọi bản, cần reset khi demo. Starter cố ý có IDOR; chỉ chạy local, không dùng cơ chế chọn policy này cho production.</p></dd>
       </dl>

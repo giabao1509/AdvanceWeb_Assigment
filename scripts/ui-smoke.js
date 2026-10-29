@@ -70,6 +70,22 @@ try {
   assert.match(await evaluate(`document.getElementById('trace').textContent`),/SKIPPED/);
   await version('v1'); await preset(1); await send(200);
   await preset(3); await send(401);
+  // Same PATCH endpoint: Viewer is allowed before RBAC, denied from V2 onward.
+  await preset(4); await version('starter'); await send(200);
+  await version('v1'); await send(200);
+  await version('v2'); await send(403);
+  // Same member endpoint: V1 only requires membership; V2 requires Owner.
+  await preset(11);
+  await evaluate(`document.getElementById('user').value = 'bob'; document.getElementById('user').dispatchEvent(new Event('change'));`);
+  await version('v1'); await send(200);
+  await version('v2'); await send(403);
+  // Reset between destructive requests so policy is tested against existing data.
+  for (const v of ['starter','v1']) {
+    await version(v); await preset(10); await send(200);
+    await evaluate(`document.getElementById('reset').click()`);
+    await waitFor(`!document.getElementById('reset').disabled`);
+  }
+  await version('v2'); await preset(10); await send(403);
   await version('v2'); await preset(6); await send(200);
   await version('v3'); await send(403);
   await preset(5); await send(200);

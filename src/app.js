@@ -49,7 +49,6 @@ export function createApp({ db = openDatabase() } = {}) {
   });
   function endpoint(action, kind, work) {
     return (req, res) => {
-      if (action !== 'read' && ['starter','v1'].includes(req.params.version)) fail(404, 'ENDPOINT_NOT_AVAILABLE');
       if (!validId(req.params.id) || (req.params.userId && !validId(req.params.userId))) fail(400, 'INVALID_ID');
       const execute = () => {
         const task = kind === 'task' ? db.prepare('SELECT * FROM tasks WHERE id = ?').get(req.params.id) : null;

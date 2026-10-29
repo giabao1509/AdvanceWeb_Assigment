@@ -30,6 +30,7 @@ Lưu ý khi thao tác:
 - Chọn tình huống nhanh **không tự đổi version**; luôn kiểm tra tab đang chọn.
 - Khi đổi thao tác, UI có thể đặt lại ID và JSON body; nhập ID/body sau khi chọn thao tác.
 - Các version dùng chung SQLite. Mutation ảnh hưởng các bước sau; restart không reset dữ liệu.
+- Mọi version có cùng bộ endpoint, chỉ khác policy. Starter cho mọi caller có token thao tác trên mọi project; V1 yêu cầu membership nhưng chưa phân biệt Viewer/Member/Owner. Validation và quy tắc Owner cố định vẫn áp dụng.
 - Mỗi lần gửi chỉ hiển thị kết quả mới. Nút **So sánh Starter / V1** dành cho GET task để giữ hai kết quả cạnh nhau.
 - Kết quả trong tài liệu là **kết quả mong đợi** trên seed ban đầu, không phải bộ evidence đã ghi sẵn.
 
@@ -87,6 +88,8 @@ Chọn tab **V1**, lần lượt chọn preset và bấm **Gửi request**:
 
 ## 3. V2: RBAC theo project — khoảng 2 phút
 
+Trước khi vào bảng dưới, chọn preset **Viewer thử sửa A1**, gửi lần lượt ở **Starter → V1 → V2**. Mong đợi **200 → 200 → 403**: cùng endpoint PATCH, V1 cho phép vì Vera có membership; V2 mới từ chối do role Viewer. Body mặc định chỉ sửa title nên không ảnh hưởng status/assignee ở các bước sau.
+
 Chọn tab **V2**. Trong bước này chỉ sửa title, không đổi status.
 
 | Thứ tự | Tình huống/thao tác | Mong đợi |
@@ -102,6 +105,8 @@ Chỉ vào check **Project role** trong trace.
 Lời trình bày:
 
 > “V2 giữ kiểm tra membership của V1 rồi bổ sung quyền theo role trong từng project. Viewer đọc, Member đọc và sửa, Owner thêm quyền xóa project và quản lý thành viên. Là Owner của Alpha không tạo quyền ở Beta.”
+
+Nếu muốn so sánh DELETE: với preset **Bob thử xóa Project Alpha**, bấm Reset trước mỗi request, thử ở Starter/V1/V2. Mong đợi **200/200/403**. Reset sau cùng để tiếp tục demo. Không gửi liên tiếp trên project đã bị xóa, vì 404 khi đó là tài nguyên không còn tồn tại.
 
 ## 4. V2 → V3: thêm quan hệ assignee và trạng thái — khoảng 3 phút
 
@@ -251,7 +256,7 @@ Nếu cần minh họa thu hồi quyền: ở V3, Alice xóa membership của Bo
 
 ## 9. Lời kết và câu hỏi phản biện
 
-> “Starter chỉ biết caller là ai. V1 bổ sung quyền trên object. V2 tổ chức quyền theo role trong project. V3 thêm quan hệ assignee và thuộc tính trạng thái. V4 đặt tenant boundary trước các quyền còn lại. Mọi quyết định đều được enforce tại server.”
+> “Các version giữ cùng endpoint. Starter chỉ biết caller là ai. V1 bổ sung membership trên object cho mọi thao tác. V2 tổ chức quyền theo role trong project. V3 thêm quan hệ assignee và thuộc tính trạng thái. V4 đặt tenant boundary trước các quyền còn lại. Mọi quyết định đều được enforce tại server.”
 
 | Câu hỏi | Ý trả lời ngắn |
 | --- | --- |

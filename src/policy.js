@@ -18,6 +18,7 @@ export function authorize(version, principal, action, { project, task, membershi
     }
   }
   if (!check('Project membership', Boolean(membership), 'PROJECT_MEMBERSHIP_REQUIRED')) return result(false, 'NOT_PROJECT_MEMBER');
+  // V1 protects all objects by project membership; per-action roles start in V2.
   if (version === 'v1') return result(true, 'PROJECT_MEMBER_ALLOWED');
   const role = membership.role;
   const roleAllowed = action === 'read' || (action === 'edit' ? role !== 'Viewer' : role === 'Owner');

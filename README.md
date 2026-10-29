@@ -34,6 +34,8 @@ File `data/lab.sqlite` tự tạo và seed ở lần đầu. Restart giữ dữ 
 
 Chọn preset chỉ thay request, giữ nguyên version đang chọn. Chỉ so sánh tự động GET task để tránh gửi mutation hai lần. Ô token và header/query tùy chỉnh nằm trong phần mở rộng. Sửa JSON body để thử status, validation hoặc giả mạo field. Request không hợp lệ có thể bị từ chối quyền trước khi kiểm tra payload.
 
+Mọi version có cùng bộ endpoint. Starter chỉ kiểm tra token; V1 kiểm tra membership cho mọi thao tác; V2 mới phân quyền theo action/role. Ví dụ Vera sửa A1: Starter/V1 trả 200, V2–V4 trả 403. Bob xóa Alpha: Starter/V1 trả 200, V2–V4 trả 403. Reset trước mỗi lần thử xóa để giữ tài nguyên tồn tại.
+
 ## API trực tiếp
 
 Token demo: `demo-alice`, `demo-bob`, `demo-vera`, `demo-charlie`, `demo-admin-alpha`, `demo-admin-beta`. Đây là adapter mô phỏng authentication đã có; không xây JWT/OAuth2 mới.
@@ -44,17 +46,17 @@ curl.exe -i http://127.0.0.1:3000/api/v1/tasks/B1 -H "Authorization: Bearer demo
 curl.exe -i http://127.0.0.1:3000/api/v3/tasks/A1 -H "Authorization: Bearer demo-bob"
 ```
 
-| Method | Path sau `/api/:version` | Có từ |
+| Method | Path sau `/api/:version` | Version |
 | --- | --- | --- |
-| GET | `/tasks/:id` | Starter |
-| PATCH | `/tasks/:id` | V2 |
-| DELETE | `/projects/:id` | V2 |
-| GET/POST | `/projects/:id/members` | V2 |
-| PATCH/DELETE | `/projects/:id/members/:userId` | V2 |
+| GET | `/tasks/:id` | Starter–V4 |
+| PATCH | `/tasks/:id` | Starter–V4 |
+| DELETE | `/projects/:id` | Starter–V4 |
+| GET/POST | `/projects/:id/members` | Starter–V4 |
+| PATCH/DELETE | `/projects/:id/members/:userId` | Starter–V4 |
 
 PATCH task nhận `title`, `description`, `status` (Open/Closed). POST member nhận `userId`, `role`; PATCH member nhận `role` (Viewer/Member). Owner cố định, không được xóa/hạ quyền. Xóa project cascade tasks/memberships. Mutation thành công trả 200, riêng tạo membership trả 201.
 
-Mọi response API có `{ data, error, trace, requestId }`. 401: token thiếu/sai; 403: thiếu quyền; 404: không tồn tại/version hoặc endpoint chưa có; 400: dữ liệu sai; 409: membership trùng hoặc sửa Owner. Không trả task trong response từ chối. Trace chỉ có kết quả check và mã lý do, không có token hoặc nội dung task bị chặn.
+Mọi response API có `{ data, error, trace, requestId }`. 401: token thiếu/sai; 403: thiếu quyền; 404: tài nguyên, version hoặc route không tồn tại; 400: dữ liệu sai; 409: membership trùng hoặc sửa Owner. Không trả task trong response từ chối. Trace chỉ có kết quả check và mã lý do, không có token hoặc nội dung task bị chặn.
 
 ## Code và giới hạn
 
