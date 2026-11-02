@@ -24,3 +24,23 @@ CREATE TABLE IF NOT EXISTS tasks (
   status TEXT NOT NULL CHECK (status IN ('Open','Closed'))
 );
 CREATE INDEX IF NOT EXISTS tasks_project ON tasks(projectId);
+
+-- Revisions never reset. This row also pins the graph belonging to this SQLite DB.
+CREATE TABLE IF NOT EXISTS authorization_state (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  revision INTEGER NOT NULL DEFAULT 0,
+  desiredRevision INTEGER NOT NULL DEFAULT 0,
+  appliedRevision INTEGER NOT NULL DEFAULT -1,
+  apiUrl TEXT, storeId TEXT, modelId TEXT, modelHash TEXT,
+  syncOwner TEXT, syncUntil INTEGER NOT NULL DEFAULT 0
+);
+INSERT OR IGNORE INTO authorization_state(id) VALUES (1);
+CREATE TABLE IF NOT EXISTS authorization_outbox (
+  revision INTEGER PRIMARY KEY,
+  createdAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS authorization_operations (
+  id TEXT PRIMARY KEY, actorId TEXT,
+  revision INTEGER NOT NULL,
+  createdAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

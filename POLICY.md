@@ -1,5 +1,38 @@
 # Chính sách của minilab
 
+## Engine và nguồn dữ liệu
+
+Trên branch `Block-6-Advance`, **V1–V4 dùng OpenFGA**. Starter vẫn cố ý bỏ qua object authorization. Bộ chọn version/API giữ nguyên; mỗi version ánh xạ đến relation riêng trong cùng model đã pin. Đổi version không thay model hoặc seed lại quan hệ.
+
+OpenFGA lưu store/model/tuples bền trong **SQLite riêng** trên Docker volume, thay datastore PostgreSQL trước đó. Database này khác `data/lab.sqlite` của ứng dụng. Cách Check và policy Starter–V4 không thay đổi; vẫn đồng bộ quan hệ vì hai database có schema và transaction riêng.
+
+SQLite là nguồn gốc của danh tính, tenant, project, membership và task. OpenFGA lưu bản chiếu quan hệ `tenant.member/admin`, `project.tenant/owner/member/viewer`, `task.project/assignee`. Backend truyền `current_status` đọc từ SQLite cho condition `task_is_open`; body gửi `status: Open` không làm task Closed vượt quyền. Store/model ID do server quản lý.
+
+OpenFGA quyết định ALLOW/DENY; Express là PEP thực thi. Chẩn đoán từ snapshot chỉ giải thích DENY bằng mã thân thiện, không cấp quyền thay engine. Trace Check có relation/model, không giả rằng OpenFGA trả đường suy luận từng nhánh.
+
+| Version | Read project/task | Edit task | Delete project / members |
+| --- | --- | --- | --- |
+| V1 | participant | participant | participant |
+| V2 | participant | Owner hoặc Member | Owner |
+| V3 | participant | Owner hoặc (Member và assignee và Open) | Owner |
+| V4 | cùng tenant và (participant hoặc admin tenant) | cùng tenant và (Owner hoặc admin tenant hoặc (Member và assignee và Open)) | cùng tenant và (Owner hoặc admin tenant) |
+
+`participant = owner or member or viewer`. Read task kế thừa qua project. Relation có hậu tố `_v1`…`_v4`; V1–V3 không xét tenant. Cross-tenant membership tạo ở version trước không vượt được boundary V4. Role, action và version lạ bị chặn trước mọi nhánh, kể cả Starter/admin.
+
+## Đồng bộ, transaction và lỗi dịch vụ
+
+Mọi mutation quan hệ, kể cả Starter và reset, ghi SQLite và outbox trong cùng transaction. Sync đối chiếu toàn bộ tuple của store lab, xóa grant cũ trước khi ghi grant mới, có pagination/batch và lease một synchronizer. Chỉ mở readiness khi applied revision bằng desired revision và binding/model đúng. Startup/manual sync cũng đóng readiness trước khi chạm graph. Job tồn tại qua restart; chưa có worker nền tự retry vô hạn, phục hồi bằng startup, CLI sync hoặc nút Đồng bộ lại.
+
+200/201 cho mutation quan hệ nghĩa là đã commit và đồng bộ. Nếu commit xong nhưng sync chưa thành công, trả **202** với `committed: true`, operation ID và trạng thái pending. Không báo mutation thất bại hoặc chạy lại nghiệp vụ. Caller được xác thực chỉ xem metadata operation của mình. Request bảo vệ tiếp theo bị 503 khi pending; sau sync, user đã bị thu hồi membership nhận 403 dù vẫn là assignee.
+
+Không có transaction chung giữa hai database SQLite của ứng dụng và OpenFGA. Server đọc snapshot/revision trong transaction ngắn, đóng transaction trước HTTP Check, rồi mở transaction ngắn xác nhận revision/binding/readiness trước khi trả dữ liệu hoặc ghi. Dữ liệu đổi giữa chừng trả **409 AUTHORIZATION_CONTEXT_CHANGED**, không dùng quyết định cũ. Trigger tăng revision cho SQL writes/cascade/reset; reset không đưa counter về giá trị cũ. Callback transaction phải đồng bộ.
+
+Check dùng **HIGHER_CONSISTENCY**, SDK không tự retry và có timeout. Engine lỗi, response sai, condition/model lỗi hoặc graph chưa ready trả **503**, không giả thành DENY 403 và không fallback local/Starter. Request bị 4xx/5xx trước commit không thay đổi nghiệp vụ. Starter và ngoại lệ danh mục không phụ thuộc Check.
+
+Trace phân biệt OpenFGA Check, Authorization decision, Business rule, Authorization sync và Request outcome. HTTP 202 kết thúc bằng **PENDING**; chỉ báo SUCCESS hoàn tất sau commit và sync nếu có. Error code cụ thể giữ nguyên khi chẩn đoán chắc chắn, nếu engine DENY mà snapshot không phân loại được thì trả `AUTHORIZATION_DENIED`.
+
+Các mục bên dưới mô tả policy nghiệp vụ giữ từ minilab gốc; phần trên bổ sung cách OpenFGA thực thi và các trạng thái vận hành mới.
+
 | Version | Quy tắc bổ sung, kế thừa version trước |
 | --- | --- |
 | Starter | Mọi endpoint chỉ yêu cầu token hợp lệ; cố ý thiếu object authorization |
@@ -49,4 +82,4 @@ Kiểm chứng bằng `test/policy.test.js` cho đầu vào PDP không hợp l�
 
 ## Ý nghĩa trace và kết quả cuối
 
-`Authorization decision` chỉ là kết quả PDP kiểm tra quyền, chưa phải kết quả toàn bộ request. `ALLOW` vẫn có thể đi cùng HTTP 400/404/409 nếu payload hoặc quy tắc nghiệp vụ không hợp lệ. Owner cố định được kiểm tra ở bước `Business rule: fixed project owner`; sửa/xóa Owner trả FAIL và 409, kể cả Starter. Trace kết thúc bằng `Request outcome`: SUCCESS cho response thành công, REJECTED cho 4xx, ERROR cho 5xx, kèm mã lỗi hoặc HTTP status. Mutation chỉ báo SUCCESS sau khi transaction hoàn tất.
+`Authorization decision` chỉ là kết quả kiểm tra quyền, chưa phải kết quả toàn bộ request. `ALLOW` vẫn có thể đi cùng HTTP 400/404/409 nếu payload hoặc quy tắc nghiệp vụ không hợp lệ. Owner cố định được kiểm tra ở bước `Business rule: fixed project owner`; sửa/xóa Owner trả FAIL và 409, kể cả Starter. `Request outcome` là SUCCESS khi hoàn tất, PENDING cho 202, REJECTED cho 4xx và ERROR cho 5xx. Mutation quan hệ chỉ báo SUCCESS sau khi transaction và đồng bộ đều hoàn tất.

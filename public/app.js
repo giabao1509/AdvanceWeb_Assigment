@@ -9,6 +9,10 @@ const policies = {
   v4:'Kiểm tra tenant trước tiên. Tenant admin có quyền Owner trong tenant của mình.'
 };
 const errors = {
+  AUTHORIZATION_NOT_READY:'Quyền truy cập đang được cập nhật. Hãy thử lại sau khi đồng bộ hoàn tất.',
+  AUTHORIZATION_UNAVAILABLE:'Dịch vụ kiểm tra quyền tạm thời không phản hồi. Thao tác chưa được thực hiện.',
+  AUTHORIZATION_CONTEXT_CHANGED:'Dữ liệu đã thay đổi trong lúc kiểm tra quyền. Hãy tải lại trước khi thao tác.',
+  AUTHORIZATION_DENIED:'Tài khoản của bạn chưa được phép thực hiện thao tác này.',
   NOT_PROJECT_MEMBER:'Bạn không phải thành viên của dự án này.', TENANT_MISMATCH:'Bạn không có quyền truy cập tài nguyên thuộc tenant khác.',
   ROLE_DENIED:'Vai trò của bạn không có quyền thực hiện thao tác này.', TASK_CLOSED:'Task đã đóng. Thành viên không thể sửa hoặc tự mở lại task này.',
   NOT_ASSIGNEE:'Bạn chỉ được sửa task được giao cho mình.', UNAUTHENTICATED:'Chưa xác thực hợp lệ. Hãy chọn lại tài khoản hoặc kiểm tra token demo.',
@@ -27,6 +31,29 @@ function writeSuccess(text) {
   notice(text);
   $('success-description').textContent=text;
   if(!$('success-popup').open) $('success-popup').showModal();
+}
+function pendingMutation(result) {
+  if (result.status !== 202) return false;
+  const stamp = generation, operationId = result.json.data.operationId;
+  $('modal').close(); $('success-popup').close();
+  const box = el('section',undefined,'surface');
+  box.id='pending-operation';
+  box.append(el('h2','Đã lưu thay đổi, đang cập nhật quyền truy cập'),
+    el('p','Bạn không cần gửi lại thao tác. Các nội dung được bảo vệ sẽ mở lại khi cập nhật quyền hoàn tất.'));
+  const status=el('p','Đang chờ đồng bộ.','muted'); status.setAttribute('role','status');
+  const check = async (sync=false) => {
+    const headers={Authorization:`Bearer demo-${user}`};
+    const response = await fetch(sync?'/lab/sync':`/lab/operations/${encodeURIComponent(operationId)}`,{method:sync?'POST':'GET',headers});
+    const json=await response.json();
+    if(stamp!==generation) throw new Stale();
+    if(response.ok && (sync || json.data.authorizationSync==='complete')) {
+      await navigate(); writeSuccess('Đã hoàn tất cập nhật quyền truy cập.');
+    } else status.textContent='Thay đổi đã được lưu. Việc cập nhật quyền chưa hoàn tất; bạn có thể kiểm tra lại sau.';
+  };
+  const actions=el('div',undefined,'actions');
+  actions.append(button('Kiểm tra trạng thái',()=>check()),button('Đồng bộ lại',()=>check(true)));
+  box.append(status,actions); $('page').replaceChildren(box); notice('Thay đổi đã lưu; quyền truy cập đang được cập nhật.');
+  return true;
 }
 function safe(fn) { return async event => { try { await fn(event); } catch (error) { if (!(error instanceof Stale)) { const text=error.message || 'Không kết nối được server. Hãy thử lại.'; const feedback=$('modal').open && $('modal-content').querySelector('[role="status"]'); if(feedback) feedback.textContent=text; else notice(text,true); } } }; }
 function button(text, action, cls = 'secondary small') { const b = el('button', text, cls); b.type = 'button'; b.onclick = safe(action); return b; }
@@ -212,6 +239,7 @@ async function loadMembers(id,content,background=false) {
     try {
       const add=operation.value==='add', path=`projects/${encodeURIComponent(id)}/members${add?'':`/${encodeURIComponent(member.value)}`}`;
       const result=await api(add?'POST':'PATCH',path,add?{userId:member.value,role:role.value}:{role:role.value},{label:add?'Thêm thành viên':'Đổi vai trò',form});
+      if(pendingMutation(result)) return;
       if(result.status>=300) {formError(result,feedback); return;}
       await navigate(id,'members',true); writeSuccess(add?'Đã thêm thành viên vào dự án.':'Đã cập nhật vai trò thành viên.');
     } finally {submit.disabled=false;}
@@ -230,6 +258,7 @@ function editMemberRole(id,member) {
     event.preventDefault(); save.disabled=true; clearFormErrors(form);
     try {
       const r=await api('PATCH',`projects/${encodeURIComponent(id)}/members/${encodeURIComponent(member.userId)}`,{role:role.value},{label:'Đổi vai trò thành viên',form});
+      if(pendingMutation(r)) return;
       if(r.status>=300){formError(r,feedback);return;}
       $('modal').close(); await navigate(id,'members',true); writeSuccess(`Đã cập nhật vai trò của ${names[member.userId] || member.userId} thành ${role.value}.`);
     } finally {save.disabled=false;}
@@ -245,11 +274,13 @@ function confirmation(title,text,action) {
 }
 function confirmDelete(id) { confirmation('Xóa dự án?',`Dự án ${id}, toàn bộ task và membership liên quan sẽ bị xóa.`,async feedback=>{
   const r=await api('DELETE',`projects/${encodeURIComponent(id)}`,undefined,{label:'Xóa dự án'});
+  if(pendingMutation(r)) return;
   if(r.status!==200){formError(r,feedback);return;}
   $('modal').close(); await navigate(null,'tasks',true); writeSuccess('Đã xóa dự án cùng các công việc và thành viên liên quan.');
 }); }
 function confirmMember(id,member) { confirmation('Xóa thành viên?',`Thu hồi membership của ${member} trong dự án ${id}.`,async feedback=>{
   const r=await api('DELETE',`projects/${encodeURIComponent(id)}/members/${encodeURIComponent(member)}`,undefined,{label:'Xóa thành viên'});
+  if(pendingMutation(r)) return;
   if(r.status!==200){formError(r,feedback);return;}
   $('modal').close(); await navigate(id,'members',true); writeSuccess('Đã xóa thành viên khỏi dự án.');
 }); }
@@ -270,6 +301,7 @@ async function runRaw(compare=false) {
   const stamp=generation, results=[];
   for(const v of compare?['starter','v1']:[version]) results.push(await api(spec.method,spec.path,spec.body,{...spec.options,version:v}));
   if(stamp!==generation) throw new Stale();
+  if(pendingMutation(results[0])) { $('technical').open=true; return; }
   if(compare || !results.some(r=>r.errorShown)) notice(compare?`Cùng GET: Starter ${results[0].status} → V1 ${results[1].status}`:results[0].status<300?'Request thành công. Mở Chi tiết kỹ thuật để xem kết quả.':message(results[0]),results.some(r=>r.status>=300));
   $('technical').open=true;
   // Arbitrary mutations can invalidate every cached resource; clear before reloading.
@@ -291,8 +323,10 @@ $('preset').onchange=safe(async()=>{
 });
 $('reset').onclick=()=>confirmation('Khôi phục dữ liệu mẫu?','Mọi thay đổi trong SQLite sẽ được thay bằng dữ liệu seed. Tất cả phiên bản dùng chung dữ liệu.',async feedback=>{
   const stamp=generation; let r;
-  try{r=await fetch('/lab/reset',{method:'POST'});}catch(error){if(stamp!==generation)throw new Stale();throw error;}
+  try{r=await fetch('/lab/reset',{method:'POST',headers:{Authorization:`Bearer demo-${user}`}});}catch(error){if(stamp!==generation)throw new Stale();throw error;}
+  const json=await r.json();
   if(stamp!==generation)throw new Stale();
+  if(pendingMutation({status:r.status,json})) return;
   if(!r.ok){feedback.textContent='Không thể khôi phục dữ liệu.';return;}
   contextClear(); await navigate(); writeSuccess('Đã khôi phục dữ liệu mẫu.');
 });

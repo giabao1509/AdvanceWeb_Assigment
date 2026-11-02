@@ -3,3 +3,4 @@ node_modules/
 .local-check/
 data/*.sqlite*
 *.log
+.env

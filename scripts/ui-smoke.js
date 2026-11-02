@@ -15,7 +15,9 @@ const executable = process.env.LAB_BROWSER || [
 if (!executable) throw new Error('Set LAB_BROWSER to your Chrome/Edge executable.');
 const dir = mkdtempSync(join(tmpdir(), 'task-lab-ui-'));
 const db = openDatabase(join(dir, 'test.sqlite'));
-const app = createApp({db}); const server = app.listen(0, '127.0.0.1');
+const app = createApp({db});
+assert.equal(await app.locals.ready, true, 'OpenFGA must be running for UI smoke');
+const server = app.listen(0, '127.0.0.1');
 await new Promise(resolve => server.once('listening',resolve));
 const browser = spawn(executable, ['--headless=new','--no-first-run','--no-default-browser-check','--remote-debugging-port=0',`--user-data-dir=${join(dir,'profile')}`,'about:blank'], { windowsHide:true, stdio:'ignore' });
 let socket;
@@ -70,11 +72,12 @@ try {
   const version = async v => { await click(`[data-version="${v}"]`); };
   const project = async id => click(`[data-project="${id}"] .open-project`);
   const task = async (id,action='Sửa') => {
+    await waitFor(`!!document.querySelector('[data-task="${id}"]')`);
     await evaluate(`[...document.querySelector('[data-task="${id}"]').querySelectorAll('button')].find(b=>b.textContent===${JSON.stringify(action)}).click()`);
     await waitFor(`document.getElementById('modal').open`);
   };
   const action = async (selector,label) => evaluate(`[...document.querySelector(${JSON.stringify(selector)}).querySelectorAll('button')].find(b=>b.textContent===${JSON.stringify(label)}).click()`);
-  const save = async () => { await submit('#task-form'); await waitFor(`!document.querySelector('#task-form button[type="submit"]') || !document.querySelector('#task-form button[type="submit"]').disabled`); };
+  const save = async () => { await submit('#task-form'); await waitFor(`document.querySelector('#task-form button[type="submit"]') ? !document.querySelector('#task-form button[type="submit"]').disabled : document.getElementById('success-popup').open`); };
   const reset = async () => { await click('#reset'); await action('#modal','Xác nhận'); await waitFor(`document.getElementById('notice').textContent.includes('Đã khôi phục')`); assert.equal(await evaluate(`document.getElementById('success-popup').open`),true); };
   await call('Runtime.enable'); await call('Page.enable');
   await call('Page.navigate',{url:`http://127.0.0.1:${server.address().port}`});
@@ -103,21 +106,25 @@ try {
   await fill('#task-title','UI persisted title'); await save();
   await waitFor(`document.getElementById('page').textContent.includes('UI persisted title')`);
   await waitFor(`document.getElementById('success-popup').open`);
+  await waitFor(`document.getElementById('success-popup').open`);
   assert.match(await text('#success-popup'),/Đã lưu thay đổi công việc/);
   writeFileSync('.local-check/success-popup.png',Buffer.from((await call('Page.captureScreenshot',{format:'png'})).data,'base64'));
   assert.match(await text('#technical-content'),/PATCH \/api\/v2\/tasks\/A1/,'Mutation result survives background refresh');
   await action('#page','Thành viên'); await waitFor(`!!document.getElementById('member-form')`);
   await submit('#member-form'); await waitFor(`!!document.querySelector('[data-member="admin-alpha"]')`);
   assert.equal(await evaluate(`document.getElementById('success-popup').open`),true);
+  await waitFor(`document.getElementById('success-popup').open`);
   assert.match(await text('#success-popup'),/Đã thêm thành viên/);
   await dismissPermission();
   await action('[data-member="admin-alpha"]','Đổi role');
   await waitFor(`document.getElementById('modal').open && !!document.getElementById('role-form')`);
   await fill('#role-value','Member'); await submit('#role-form');
-  await waitFor(`document.querySelector('[data-member="admin-alpha"]').textContent.includes('Member')`);
+  await waitFor(`document.querySelector('[data-member="admin-alpha"]')?.textContent.includes('Member') && document.getElementById('success-popup').open`);
+  await waitFor(`document.getElementById('success-popup').open`);
   assert.match(await text('#success-popup'),/Đã cập nhật vai trò/); await dismissPermission();
   await evaluate(`document.querySelector('[data-member="admin-alpha"] .danger').click()`); await action('#modal','Xác nhận');
-  await waitFor(`!document.getElementById('modal').open && !document.querySelector('[data-member="admin-alpha"]')`);
+  await waitFor(`!document.getElementById('modal').open && !document.querySelector('[data-member="admin-alpha"]') && document.getElementById('success-popup').open`);
+  await waitFor(`document.getElementById('success-popup').open`);
   assert.match(await text('#success-popup'),/Đã xóa thành viên/); await dismissPermission();
   await evaluate(`document.querySelector('[data-member="alice"] .danger').click()`); await action('#modal','Xác nhận');
   await waitFor(`document.getElementById('permission-popup').open`);
@@ -182,6 +189,7 @@ try {
   await click('#home'); await waitFor(`document.querySelectorAll('.project-card').length===2`);
   await fill('#raw-method','PATCH'); await fill('#raw-path','tasks/A1'); await fill('#raw-body',JSON.stringify({title:'Alpha · Build API'})); await submit('#raw-form');
   await waitFor(`document.getElementById('success-popup').open`);
+  await waitFor(`document.getElementById('success-popup').open`);
   assert.match(await text('#success-popup'),/Đã thực hiện thao tác ghi/);
   await fill('#raw-method','PATCH'); await fill('#raw-path','tasks/A1'); await fill('#raw-body','{broken'); await submit('#raw-form');
   await waitFor(`!document.querySelector('#raw-form button').disabled`);
@@ -207,8 +215,24 @@ try {
   await version('v2'); await click('#home'); await waitFor(`document.querySelectorAll('.project-card').length===2`); await project('alpha'); await waitFor(`!!document.querySelector('[data-task="A1"]')`);
   await action('#page','Xóa project'); await action('#modal','Xác nhận'); await waitFor(`document.querySelectorAll('.project-card').length===1`);
   assert.equal(await evaluate(`document.getElementById('success-popup').open`),true);
+  await waitFor(`document.getElementById('success-popup').open`);
   assert.match(await text('#success-popup'),/Đã xóa dự án/);
   assert.equal(db.prepare('SELECT count(*) AS n FROM tasks WHERE projectId = ?').get('alpha').n,0);
+  await reset(); await project('alpha'); await waitFor(`!!document.querySelector('[data-task="A1"]')`);
+  // A committed membership change with a failed graph write is pending, never failed/complete.
+  await action('#page','Thành viên'); await waitFor(`!!document.getElementById('member-form')`);
+  const originalGraphWrite=app.locals.authorization.client.writeTuples.bind(app.locals.authorization.client);
+  app.locals.authorization.client.writeTuples=async()=>{throw new Error('UI fault injection: sync unavailable');};
+  try {
+    await action('[data-member="vera"]','Đổi role'); await fill('#role-value','Member'); await submit('#role-form');
+    await waitFor(`!!document.getElementById('pending-operation')`);
+    assert.equal(db.prepare('SELECT role FROM project_memberships WHERE projectId=? AND userId=?').get('alpha','vera').role,'Member');
+    assert.equal(await evaluate(`document.getElementById('success-popup').open`),false);
+    assert.match(await text('#technical-content'),/202|PENDING/);
+    assert.doesNotMatch(await text('#page'),/Thao tác chưa được thực hiện/);
+    writeFileSync('.local-check/pending-sync.png',Buffer.from((await call('Page.captureScreenshot',{format:'png'})).data,'base64'));
+  } finally { app.locals.authorization.client.writeTuples=originalGraphWrite; }
+  await action('#pending-operation','Đồng bộ lại'); await waitFor(`document.querySelectorAll('.project-card').length===2 && document.getElementById('success-popup').open`);
   await reset(); await project('alpha'); await waitFor(`!!document.querySelector('[data-task="A1"]')`);
   await call('Emulation.setDeviceMetricsOverride',{width:1360,height:1100,deviceScaleFactor:1,mobile:false});
   mkdirSync('.local-check',{recursive:true});
@@ -223,10 +247,12 @@ try {
   await call('Input.dispatchKeyEvent',{type:'keyUp',key:'Escape',code:'Escape',windowsVirtualKeyCode:27});
   await waitFor(`!document.getElementById('modal').open`);
   assert.deepEqual(errors,[],'Browser JS errors');
-  console.log('UI smoke PASS: app navigation, V1–V4, task forms, members, delete/reset, anonymous/spoofing/compare, stale response, mobile; no browser JS errors.');
+  console.log('UI smoke PASS: OpenFGA V1–V4, task forms, members, delete/reset, pending sync/recovery, anonymous/spoofing/compare, stale response, mobile; no browser JS errors.');
 } finally {
   socket?.close(); browser.kill();
-  await new Promise(resolve => server.close(resolve)); db.close();
+  await new Promise(resolve => server.close(resolve));
+  await app.locals.authorization.client.deleteStore(app.locals.authorization.state().storeId);
+  db.close();
   await delay(400);
   assert.ok(resolve(dir).startsWith(resolve(tmpdir()) + sep));
   rmSync(dir,{recursive:true,force:true,maxRetries:20,retryDelay:100});

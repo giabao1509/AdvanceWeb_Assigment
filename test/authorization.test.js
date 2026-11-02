@@ -10,10 +10,13 @@ async function fixture(t) {
   const dir = mkdtempSync(join(tmpdir(), 'task-lab-'));
   const db = openDatabase(join(dir, 'test.sqlite'));
   const app = createApp({ db });
+  assert.equal(await app.locals.ready, true, 'OpenFGA initialization failed; start Docker services');
   const server = app.listen(0, '127.0.0.1');
   await new Promise((resolve, reject) => { server.once('listening', resolve); server.once('error', reject); });
   t.after(async () => {
-    await new Promise(resolve => server.close(resolve)); db.close(); rmSync(dir, { recursive:true, force:true });
+    await new Promise(resolve => server.close(resolve));
+    await app.locals.authorization.client.deleteStore(app.locals.authorization.state().storeId);
+    db.close(); rmSync(dir, { recursive:true, force:true });
   });
   async function request(version, user, method, path, body, extras = {}) {
     const headers = { ...(user ? { Authorization:`Bearer demo-${user}` } : {}), ...extras };
@@ -202,7 +205,8 @@ test('Project directory exposes only discoverable names; detail/list enforce eve
       assert.equal(r.status,version === 'starter' ? 200 : 403);
       if(version !== 'starter') {
         assert.equal(r.body.data,null);
-        assert.doesNotMatch(JSON.stringify(r.body),/Private Beta|roadmap|charlie|B1|B2/);
+        // Match resource IDs as whole tokens: opaque model ULIDs may contain B1/B2.
+        assert.doesNotMatch(JSON.stringify(r.body),/Private Beta|roadmap|charlie|\bB[12]\b/);
       }
     }
     assert.equal((await request(version,'vera','GET','projects/alpha')).status,200);

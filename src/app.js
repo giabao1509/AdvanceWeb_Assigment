@@ -3,7 +3,8 @@ import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { authenticate, identities } from './auth.js';
 import { authorize, versions } from './policy.js';
-import { openDatabase, resetDatabase, transaction } from './db.js';
+import { openDatabase, resetDatabase, transaction, authorizationState } from './db.js';
+import { AuthorizationService } from './openfga/sync.js';
 
 class HttpError extends Error {
   constructor(status, code) { super(code); this.status = status; }
@@ -14,9 +15,11 @@ function bodyFields(body, allowed, required = []) {
   if (!body || Array.isArray(body) || typeof body !== 'object' || !Object.keys(body).length ||
       Object.keys(body).some(key => !allowed.includes(key)) || required.some(key => !(key in body))) fail(400, 'INVALID_FIELDS');
 }
-export function createApp({ db = openDatabase() } = {}) {
+export function createApp({ db = openDatabase(), authorization = new AuthorizationService(db) } = {}) {
   const app = express();
   app.locals.db = db;
+  app.locals.authorization = authorization;
+  app.locals.ready = authorization.sync().then(() => true, () => false);
   app.use((req, res, next) => {
     req.trace = []; req.requestId = randomUUID();
     res.set('Cache-Control', 'no-store');
@@ -25,7 +28,7 @@ export function createApp({ db = openDatabase() } = {}) {
   });
   app.use(express.json({ limit: '16kb' }));
   function send(req, res, status, data = null, error = null) {
-    req.trace.push({ name: 'Request outcome', result: status >= 500 ? 'ERROR' : status >= 400 ? 'REJECTED' : 'SUCCESS', reason: error?.code || `HTTP_${status}` });
+    req.trace.push({ name: 'Request outcome', result: status === 202 ? 'PENDING' : status >= 500 ? 'ERROR' : status >= 400 ? 'REJECTED' : 'SUCCESS', reason: error?.code || `HTTP_${status}` });
     res.status(status).json({ data, error, trace: req.trace, requestId: req.requestId });
   }
     // Public catalog contains only fixed lab identities/IDs, never live task contents.
@@ -34,10 +37,47 @@ export function createApp({ db = openDatabase() } = {}) {
     users: identities.map(id => ({ id, token: `demo-${id}` })),
     tasks: ['A1','A2','A3','A4','B1','B2'], projects: ['alpha','beta'],
   }));
-  app.post('/lab/reset', (req, res) => {
-    // Reject cross-origin browser submissions to the local-only reset endpoint.
+  function requireLocalOrigin(req) {
     if (req.headers.origin && req.headers.origin !== `http://${req.headers.host}`) fail(403, 'CROSS_ORIGIN_RESET');
-    resetDatabase(db); send(req, res, 200, { reset: true });
+  }
+  async function finishMutation(req, res, output, operationId) {
+    const status = Number.isInteger(output?.status) ? output.status : 200;
+    const data = output?.data ?? output;
+    if (operationId) {
+      try { await authorization.sync(); }
+      catch {
+        req.trace.push({ name: 'Authorization sync', result: 'PENDING', reason: 'SQLITE_COMMITTED_GRAPH_PENDING' });
+        return send(req, res, 202, { operationId, committed: true, authorizationSync: 'pending' });
+      }
+      req.trace.push({ name: 'Authorization sync', result: 'PASS', reason: 'GRAPH_SYNCHRONIZED' });
+    }
+    send(req, res, status, data);
+  }
+  function recordOperation(actorId, revision) {
+    const id = randomUUID();
+    db.prepare('INSERT INTO authorization_operations(id,actorId,revision) VALUES (?,?,?)').run(id, actorId || null, revision);
+    return id;
+  }
+  app.post('/lab/reset', async (req, res) => {
+    // Reject cross-origin browser submissions to the local-only reset endpoint.
+    requireLocalOrigin(req);
+    await app.locals.ready;
+    const operationId = resetDatabase(db, () => recordOperation(authenticate(db, req.headers.authorization)?.id, authorizationState(db).desiredRevision));
+    await finishMutation(req, res, { reset: true }, operationId);
+  });
+  app.post('/lab/sync', async (req, res) => {
+    requireLocalOrigin(req);
+    if (!authenticate(db, req.headers.authorization)) fail(401, 'UNAUTHENTICATED');
+    await app.locals.ready;
+    await authorization.sync();
+    send(req, res, 200, { authorizationSync: 'complete' });
+  });
+  app.get('/lab/operations/:operationId', (req, res) => {
+    const principal = authenticate(db, req.headers.authorization);
+    if (!principal) fail(401, 'UNAUTHENTICATED');
+    const operation = db.prepare('SELECT revision FROM authorization_operations WHERE id=? AND actorId=?').get(req.params.operationId, principal.id);
+    if (!operation) fail(404, 'OPERATION_NOT_FOUND');
+    send(req, res, 200, { operationId: req.params.operationId, committed: true, authorizationSync: authorization.ready() && authorizationState(db).appliedRevision >= operation.revision ? 'complete' : 'pending' });
   });
   const api = express.Router({ mergeParams: true });
   app.use('/api/:version', api);
@@ -49,21 +89,39 @@ export function createApp({ db = openDatabase() } = {}) {
     next();
   });
   function endpoint(action, kind, work) {
-    return (req, res) => {
+    return async (req, res) => {
       if (!validId(req.params.id) || (req.params.userId && !validId(req.params.userId))) fail(400, 'INVALID_ID');
-      const execute = () => {
+      await app.locals.ready;
+      const snapshot = transaction(db, () => {
+        const principal = authenticate(db, req.headers.authorization);
+        if (!principal) fail(401, 'UNAUTHENTICATED');
         const task = kind === 'task' ? db.prepare('SELECT * FROM tasks WHERE id = ?').get(req.params.id) : null;
         if (kind === 'task' && !task) fail(404, 'TASK_NOT_FOUND');
         const project = db.prepare('SELECT * FROM projects WHERE id = ?').get(task?.projectId || req.params.id);
         if (!project) fail(404, 'PROJECT_NOT_FOUND');
-        const membership = db.prepare('SELECT * FROM project_memberships WHERE projectId = ? AND userId = ?').get(project.id, req.principal.id);
-        const decision = authorize(req.params.version, req.principal, action, { project, task, membership });
-        req.trace.push(...decision.checks, { name: 'Authorization decision', result: decision.allowed ? 'ALLOW' : 'DENY', reason: decision.reason });
+        const membership = db.prepare('SELECT * FROM project_memberships WHERE projectId = ? AND userId = ?').get(project.id, principal.id);
+        if (req.params.version !== 'starter') authorization.assertReady();
+        return { principal, project, task, membership, state: authorizationState(db) };
+      });
+      let decision;
+      try { decision = await authorize(req.params.version, snapshot.principal, action, snapshot, authorization); }
+      catch (error) {
+        req.trace.push({ name: 'OpenFGA Check', result: 'ERROR', reason: error.status === 503 ? error.message : 'AUTHORIZATION_UNAVAILABLE' });
+        throw error;
+      }
+      let operationId;
+      const output = transaction(db, () => {
+        const state = authorizationState(db);
+        if (state.revision !== snapshot.state.revision || state.storeId !== snapshot.state.storeId || state.modelId !== snapshot.state.modelId) fail(409, 'AUTHORIZATION_CONTEXT_CHANGED');
+        if (req.params.version !== 'starter') authorization.assertReady();
+        req.trace.push(...decision.checks, { name: 'Authorization decision', result: decision.allowed === true ? 'ALLOW' : 'DENY', reason: decision.reason });
         if (decision.allowed !== true) fail(403, decision.reason);
-        return work(req, { task, project });
-      };
-      const output = req.method === 'GET' ? execute() : transaction(db, execute);
-      send(req, res, Number.isInteger(output?.status) ? output.status : 200, output?.data ?? output);
+        const result = work(req, snapshot);
+        const after = authorizationState(db);
+        if (after.desiredRevision !== state.desiredRevision) operationId = recordOperation(snapshot.principal.id, after.desiredRevision);
+        return result;
+      });
+      await finishMutation(req, res, output, operationId);
     };
   }
     // Discoverable lab directory: authentication grants only project IDs/names.

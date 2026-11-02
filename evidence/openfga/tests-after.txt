@@ -1,0 +1,437 @@
+Command: node --test (npm.cmd test)
+Started: 2026-11-02T15:39:46.048Z
+Expected exit: 0
+Actual exit: 0
+
+STDOUT
+TAP version 13
+# (node:38708) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: Starter reproduces IDOR; V1–V4 reject cross-project access without leaking content
+ok 1 - Starter reproduces IDOR; V1–V4 reject cross-project access without leaking content
+  ---
+  duration_ms: 874.69
+  type: 'test'
+  ...
+# Subtest: Every version requires a valid bearer token
+ok 2 - Every version requires a valid bearer token
+  ---
+  duration_ms: 999.9548
+  type: 'test'
+  ...
+# Subtest: starter: alice uses every endpoint under authentication/membership policy
+ok 3 - starter: alice uses every endpoint under authentication/membership policy
+  ---
+  duration_ms: 758.0314
+  type: 'test'
+  ...
+# Subtest: starter: bob uses every endpoint under authentication/membership policy
+ok 4 - starter: bob uses every endpoint under authentication/membership policy
+  ---
+  duration_ms: 881.3753
+  type: 'test'
+  ...
+# Subtest: starter: vera uses every endpoint under authentication/membership policy
+ok 5 - starter: vera uses every endpoint under authentication/membership policy
+  ---
+  duration_ms: 879.6688
+  type: 'test'
+  ...
+# Subtest: starter: charlie uses every endpoint under authentication/membership policy
+ok 6 - starter: charlie uses every endpoint under authentication/membership policy
+  ---
+  duration_ms: 1169.7035
+  type: 'test'
+  ...
+# Subtest: v1: alice uses every endpoint under authentication/membership policy
+ok 7 - v1: alice uses every endpoint under authentication/membership policy
+  ---
+  duration_ms: 700.4458
+  type: 'test'
+  ...
+# Subtest: v1: bob uses every endpoint under authentication/membership policy
+ok 8 - v1: bob uses every endpoint under authentication/membership policy
+  ---
+  duration_ms: 768.6047
+  type: 'test'
+  ...
+# Subtest: v1: vera uses every endpoint under authentication/membership policy
+ok 9 - v1: vera uses every endpoint under authentication/membership policy
+  ---
+  duration_ms: 794.6306
+  type: 'test'
+  ...
+# Subtest: v1: charlie uses every endpoint under authentication/membership policy
+ok 10 - v1: charlie uses every endpoint under authentication/membership policy
+  ---
+  duration_ms: 558.173
+  type: 'test'
+  ...
+# Subtest: v2: project RBAC read/edit matrix
+ok 11 - v2: project RBAC read/edit matrix
+  ---
+  duration_ms: 510.1166
+  type: 'test'
+  ...
+# Subtest: v2: alice delete-project permission and cascade
+ok 12 - v2: alice delete-project permission and cascade
+  ---
+  duration_ms: 361.3062
+  type: 'test'
+  ...
+# Subtest: v2: bob delete-project permission and cascade
+ok 13 - v2: bob delete-project permission and cascade
+  ---
+  duration_ms: 246.6411
+  type: 'test'
+  ...
+# Subtest: v2: vera delete-project permission and cascade
+ok 14 - v2: vera delete-project permission and cascade
+  ---
+  duration_ms: 236.8852
+  type: 'test'
+  ...
+# Subtest: v2: charlie delete-project permission and cascade
+ok 15 - v2: charlie delete-project permission and cascade
+  ---
+  duration_ms: 229.2941
+  type: 'test'
+  ...
+# Subtest: v2: alice permission for every membership endpoint
+ok 16 - v2: alice permission for every membership endpoint
+  ---
+  duration_ms: 1104.8501
+  type: 'test'
+  ...
+# Subtest: v2: bob permission for every membership endpoint
+ok 17 - v2: bob permission for every membership endpoint
+  ---
+  duration_ms: 308.8002
+  type: 'test'
+  ...
+# Subtest: v2: vera permission for every membership endpoint
+ok 18 - v2: vera permission for every membership endpoint
+  ---
+  duration_ms: 312.5346
+  type: 'test'
+  ...
+# Subtest: v2: charlie permission for every membership endpoint
+ok 19 - v2: charlie permission for every membership endpoint
+  ---
+  duration_ms: 385.7717
+  type: 'test'
+  ...
+# Subtest: v3: project RBAC read/edit matrix
+ok 20 - v3: project RBAC read/edit matrix
+  ---
+  duration_ms: 466.5677
+  type: 'test'
+  ...
+# Subtest: v3: alice delete-project permission and cascade
+ok 21 - v3: alice delete-project permission and cascade
+  ---
+  duration_ms: 371.2606
+  type: 'test'
+  ...
+# Subtest: v3: bob delete-project permission and cascade
+ok 22 - v3: bob delete-project permission and cascade
+  ---
+  duration_ms: 364.1809
+  type: 'test'
+  ...
+# Subtest: v3: vera delete-project permission and cascade
+ok 23 - v3: vera delete-project permission and cascade
+  ---
+  duration_ms: 275.1737
+  type: 'test'
+  ...
+# Subtest: v3: charlie delete-project permission and cascade
+ok 24 - v3: charlie delete-project permission and cascade
+  ---
+  duration_ms: 363.2698
+  type: 'test'
+  ...
+# Subtest: v3: alice permission for every membership endpoint
+ok 25 - v3: alice permission for every membership endpoint
+  ---
+  duration_ms: 530.479
+  type: 'test'
+  ...
+# Subtest: v3: bob permission for every membership endpoint
+ok 26 - v3: bob permission for every membership endpoint
+  ---
+  duration_ms: 310.2108
+  type: 'test'
+  ...
+# Subtest: v3: vera permission for every membership endpoint
+ok 27 - v3: vera permission for every membership endpoint
+  ---
+  duration_ms: 306.7362
+  type: 'test'
+  ...
+# Subtest: v3: charlie permission for every membership endpoint
+ok 28 - v3: charlie permission for every membership endpoint
+  ---
+  duration_ms: 289.5306
+  type: 'test'
+  ...
+# Subtest: v4: project RBAC read/edit matrix
+ok 29 - v4: project RBAC read/edit matrix
+  ---
+  duration_ms: 436.169
+  type: 'test'
+  ...
+# Subtest: v4: alice delete-project permission and cascade
+ok 30 - v4: alice delete-project permission and cascade
+  ---
+  duration_ms: 888.6678
+  type: 'test'
+  ...
+# Subtest: v4: bob delete-project permission and cascade
+ok 31 - v4: bob delete-project permission and cascade
+  ---
+  duration_ms: 226.825
+  type: 'test'
+  ...
+# Subtest: v4: vera delete-project permission and cascade
+ok 32 - v4: vera delete-project permission and cascade
+  ---
+  duration_ms: 230.8627
+  type: 'test'
+  ...
+# Subtest: v4: charlie delete-project permission and cascade
+ok 33 - v4: charlie delete-project permission and cascade
+  ---
+  duration_ms: 219.8851
+  type: 'test'
+  ...
+# Subtest: v4: alice permission for every membership endpoint
+ok 34 - v4: alice permission for every membership endpoint
+  ---
+  duration_ms: 544.6904
+  type: 'test'
+  ...
+# Subtest: v4: bob permission for every membership endpoint
+ok 35 - v4: bob permission for every membership endpoint
+  ---
+  duration_ms: 300.1964
+  type: 'test'
+  ...
+# Subtest: v4: vera permission for every membership endpoint
+ok 36 - v4: vera permission for every membership endpoint
+  ---
+  duration_ms: 318.6819
+  type: 'test'
+  ...
+# Subtest: v4: charlie permission for every membership endpoint
+ok 37 - v4: charlie permission for every membership endpoint
+  ---
+  duration_ms: 309.6153
+  type: 'test'
+  ...
+# Subtest: V2 Member can edit unassigned/closed/other-assignee tasks inside project
+ok 38 - V2 Member can edit unassigned/closed/other-assignee tasks inside project
+  ---
+  duration_ms: 320.2327
+  type: 'test'
+  ...
+# Subtest: v3: membership, assignee and current status all enforced
+ok 39 - v3: membership, assignee and current status all enforced
+  ---
+  duration_ms: 509.5461
+  type: 'test'
+  ...
+# Subtest: v4: membership, assignee and current status all enforced
+ok 40 - v4: membership, assignee and current status all enforced
+  ---
+  duration_ms: 607.6925
+  type: 'test'
+  ...
+# Subtest: V4 admin permissions: positive within tenant; negative across every resource/action
+ok 41 - V4 admin permissions: positive within tenant; negative across every resource/action
+  ---
+  duration_ms: 989.4064
+  type: 'test'
+  ...
+# Subtest: Spoofing and validation cannot change identity, tenant, role, project or assignee
+ok 42 - Spoofing and validation cannot change identity, tenant, role, project or assignee
+  ---
+  duration_ms: 1751.3327
+  type: 'test'
+  ...
+# Subtest: Malformed JSON, static UI and local reset endpoint work over HTTP
+ok 43 - Malformed JSON, static UI and local reset endpoint work over HTTP
+  ---
+  duration_ms: 358.7143
+  type: 'test'
+  ...
+# Subtest: SQLite persists across reopen; reset restores seed and foreign keys cascade
+ok 44 - SQLite persists across reopen; reset restores seed and foreign keys cascade
+  ---
+  duration_ms: 110.4962
+  type: 'test'
+  ...
+# Subtest: Project directory exposes only discoverable names; detail/list enforce every version
+ok 45 - Project directory exposes only discoverable names; detail/list enforce every version
+  ---
+  duration_ms: 1165.8657
+  type: 'test'
+  ...
+# Subtest: Live directory/task list follow mutation, revoked membership, deletion and reset
+ok 46 - Live directory/task list follow mutation, revoked membership, deletion and reset
+  ---
+  duration_ms: 988.3572
+  type: 'test'
+  ...
+# Subtest: Trace separates authorization, fixed-owner business rule and final HTTP outcome
+ok 47 - Trace separates authorization, fixed-owner business rule and final HTTP outcome
+  ---
+  duration_ms: 887.6094
+  type: 'test'
+  ...
+# (node:16076) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: model matrix: real OpenFGA evaluates all versions, users, tasks and actions
+ok 48 - model matrix: real OpenFGA evaluates all versions, users, tasks and actions
+  ---
+  duration_ms: 7388.2998
+  type: 'test'
+  ...
+# 432 independent expected decisions checked against persisted OpenFGA tuples.
+# Subtest: model ID stays pinned when a different newer model is published
+ok 49 - model ID stays pinned when a different newer model is published
+  ---
+  duration_ms: 326.4236
+  type: 'test'
+  ...
+# Subtest: stored role changes, cross-tenant memberships and cascades follow selected version
+ok 50 - stored role changes, cross-tenant memberships and cascades follow selected version
+  ---
+  duration_ms: 942.7838
+  type: 'test'
+  ...
+# Subtest: partial sync stays closed; durable outbox recovers after service restart
+ok 51 - partial sync stays closed; durable outbox recovers after service restart
+  ---
+  duration_ms: 470.9766
+  type: 'test'
+  ...
+# Subtest: failed Check cannot write; Starter remains independent of engine availability
+ok 52 - failed Check cannot write; Starter remains independent of engine availability
+  ---
+  duration_ms: 247.8738
+  type: 'test'
+  ...
+# Subtest: missing condition context is an engine error, not a permission denial or ALLOW
+ok 53 - missing condition context is an engine error, not a permission denial or ALLOW
+  ---
+  duration_ms: 241.7542
+  type: 'test'
+  ...
+# Subtest: changed pinned binding fails closed before business writes
+ok 54 - changed pinned binding fails closed before business writes
+  ---
+  duration_ms: 238.2863
+  type: 'test'
+  ...
+# Subtest: snapshot race also rejects an outdated DENY after a membership grant
+ok 55 - snapshot race also rejects an outdated DENY after a membership grant
+  ---
+  duration_ms: 338.6057
+  type: 'test'
+  ...
+# Subtest: snapshot race: status during Check rejects stale ALLOW before read/write
+ok 56 - snapshot race: status during Check rejects stale ALLOW before read/write
+  ---
+  duration_ms: 874.2906
+  type: 'test'
+  ...
+# Subtest: snapshot race: membership during Check rejects stale ALLOW before read/write
+ok 57 - snapshot race: membership during Check rejects stale ALLOW before read/write
+  ---
+  duration_ms: 312.0635
+  type: 'test'
+  ...
+# Subtest: snapshot race: reset during Check rejects stale ALLOW before read/write
+ok 58 - snapshot race: reset during Check rejects stale ALLOW before read/write
+  ---
+  duration_ms: 352.5137
+  type: 'test'
+  ...
+# Subtest: snapshot race: delete during Check rejects stale ALLOW before read/write
+ok 59 - snapshot race: delete during Check rejects stale ALLOW before read/write
+  ---
+  duration_ms: 392.0629
+  type: 'test'
+  ...
+# Subtest: reconciliation handles paged graphs, batches and removes stale conditioned tuples
+ok 60 - reconciliation handles paged graphs, batches and removes stale conditioned tuples
+  ---
+  duration_ms: 835.157
+  type: 'test'
+  ...
+# Subtest: synchronizers use a SQLite lease and do not edit a store concurrently
+ok 61 - synchronizers use a SQLite lease and do not edit a store concurrently
+  ---
+  duration_ms: 332.4637
+  type: 'test'
+  ...
+# Subtest: SDK enforces an actual network timeout without retrying or returning ALLOW
+ok 62 - SDK enforces an actual network timeout without retrying or returning ALLOW
+  ---
+  duration_ms: 122.272
+  type: 'test'
+  ...
+# Subtest: SQLite refuses an async transaction callback and rolls back synchronous writes
+ok 63 - SQLite refuses an async transaction callback and rolls back synchronous writes
+  ---
+  duration_ms: 3.8141
+  type: 'test'
+  ...
+# Subtest: new app with unavailable OpenFGA fails closed instead of falling back to local PDP
+ok 64 - new app with unavailable OpenFGA fails closed instead of falling back to local PDP
+  ---
+  duration_ms: 80.9656
+  type: 'test'
+  ...
+# Subtest: PDP rejects unknown versions even for an owner or tenant admin
+ok 65 - PDP rejects unknown versions even for an owner or tenant admin
+  ---
+  duration_ms: 5.8013
+  type: 'test'
+  ...
+# Subtest: PDP rejects unknown actions before Starter, V1 or tenant admin can allow
+ok 66 - PDP rejects unknown actions before Starter, V1 or tenant admin can allow
+  ---
+  duration_ms: 1.9419
+  type: 'test'
+  ...
+# Subtest: PDP rejects unknown membership roles for every action and version
+ok 67 - PDP rejects unknown membership roles for every action and version
+  ---
+  duration_ms: 9.5678
+  type: 'test'
+  ...
+# Subtest: PDP rejects missing identity or resource context instead of allowing or throwing
+ok 68 - PDP rejects missing identity or resource context instead of allowing or throwing
+  ---
+  duration_ms: 1.2605
+  type: 'test'
+  ...
+# Subtest: OpenFGA decision is authoritative; missing service never falls back locally
+ok 69 - OpenFGA decision is authoritative; missing service never falls back locally
+  ---
+  duration_ms: 8.2853
+  type: 'test'
+  ...
+1..69
+# tests 69
+# suites 0
+# pass 69
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 27366.2046
+
+STDERR

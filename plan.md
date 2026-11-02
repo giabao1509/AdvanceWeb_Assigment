@@ -1,5 +1,7 @@
 # Kế hoạch triển khai minilab Task Management API
 
+> Mở rộng ngày 02/11/2026: đã tích hợp OpenFGA local và giữ Starter–V4 trên `Block-6-Advance`; xem [OPENFGA-PLAN.md](OPENFGA-PLAN.md), [POLICY.md](POLICY.md) và `evidence/openfga/manifest.json`. Nội dung bên dưới ghi lại thiết kế/baseline trước tích hợp; các câu về không dùng policy engine hoặc kiểm quyền trong một transaction thuộc bản cũ.
+
 > Đã triển khai Starter–V4, UI web app và SQLite. Bộ evidence local đã được thu thập bằng `npm.cmd run evidence`: 11 ca HTTP, regression đỏ/xanh, 52/52 tests, browser smoke và diff tái dựng có kiểm chứng. Seed/reset nằm trong `db.js`; routes/trace nằm trong `app.js`. Chi tiết artifact và giới hạn tại `evidence/README.md`; chưa có nghiệm thu giảng viên hoặc hosted CI.
 
 ## 1. Mục tiêu và phạm vi

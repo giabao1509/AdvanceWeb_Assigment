@@ -1,5 +1,13 @@
 # Kế hoạch chuyển UI lab thành web app quản lý công việc
 
+## Bổ sung OpenFGA ngày 02/11/2026
+
+Đã giữ selector Starter–V4 và luồng form hiện có. Chi tiết kỹ thuật hiển thị relation/model OpenFGA. Các mã 503 dịch vụ và 409 context thay đổi được giải thích riêng với deny 403.
+
+Mutation quan hệ trả 202 mở màn hình **Đã lưu thay đổi, đang cập nhật quyền truy cập**, đóng form và không báo thành công hoàn tất. Có nút kiểm tra operation của caller hoặc Đồng bộ lại; không gửi lại business mutation. Sau recovery, tải lại danh mục và báo hoàn tất. Reset/request ghi tùy chỉnh cũng xử lý 202.
+
+Browser smoke đã bổ sung sync lỗi sau SQLite commit và recovery qua UI. Điều kiện chờ dựa vào DOM/popup khi thao tác async hoàn tất, không thêm sleep để che race. Nội dung UI gốc bên dưới tiếp tục áp dụng.
+
 Ngày chốt yêu cầu: 2026-10-29. Trạng thái: đã triển khai và kiểm tra local bằng HTTP tests, browser smoke và screenshot. Chưa có nghiệm thu trực tiếp từ người dùng/giảng viên.
 
 ## 1. Các quyết định đã chốt

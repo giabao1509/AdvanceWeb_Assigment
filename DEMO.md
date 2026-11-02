@@ -1,4 +1,18 @@
-﻿# Demo web app quản lý công việc và authorization
+# Demo web app quản lý công việc và authorization
+
+## Bản OpenFGA — Block-6-Advance
+
+Khởi động Docker Engine rồi chạy `docker compose up -d --wait`, `npm.cmd ci`, `npm.cmd run fga:init` và `npm.cmd start`. Vẫn dùng selector Starter–V4 như các kịch bản dưới. Trong Chi tiết kỹ thuật, V1–V4 phải có **OpenFGA Check** với relation/model ID; Starter phải có **SKIPPED**.
+
+Model `openfga/model.fga` khai báo quan hệ và phép suy ra quyền; SQLite là nguồn gốc dữ liệu; OpenFGA lưu tuple và quyết định Check. Đổi version chỉ chọn relation `_v1`…`_v4`, không seed lại graph.
+
+Kịch bản thu hồi quyền: Alice/V4 xóa Bob khỏi thành viên Alpha, sau đó Bob/V4 đọc A1 → 403 dù task vẫn giao Bob. Đổi Bob Member → Viewer ở V2 phải mất quyền sửa ngay khi response thành công.
+
+Demo lỗi dịch vụ: dừng riêng OpenFGA bằng `docker compose stop openfga`: V4 nhận 503, Starter vẫn tái hiện IDOR. Khởi động lại `docker compose up -d --wait` rồi restart app hoặc dùng Đồng bộ lại. Không xóa volume để giả lập lỗi.
+
+Nếu mutation quan hệ đã commit nhưng sync lỗi, HTTP là 202 và UI báo **đã lưu, đang cập nhật quyền**. Không bấm lại thao tác thêm/xóa; dùng kiểm tra trạng thái/đồng bộ lại. Browser smoke có fault injection tái hiện chính xác ranh giới này, không cần canh thời điểm tắt service.
+
+Evidence mới ở `evidence/openfga/`. Kết quả 52 tests trong manifest gốc là baseline trước OpenFGA.
 
 ## Chuẩn bị
 

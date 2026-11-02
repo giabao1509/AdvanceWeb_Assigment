@@ -1,0 +1,33 @@
+name: block6-advance
+services:
+  migrate:
+    image: openfga/openfga:v1.22.1
+    command: migrate
+    environment:
+      OPENFGA_DATASTORE_ENGINE: sqlite
+      OPENFGA_DATASTORE_URI: file:/home/nonroot/openfga.sqlite?_pragma=busy_timeout(3000)
+    volumes:
+      - openfga-sqlite:/home/nonroot
+  openfga:
+    image: openfga/openfga:v1.22.1
+    command: run
+    environment:
+      OPENFGA_DATASTORE_ENGINE: sqlite
+      OPENFGA_DATASTORE_URI: file:/home/nonroot/openfga.sqlite?_pragma=busy_timeout(3000)
+      OPENFGA_DATASTORE_MAX_OPEN_CONNS: '1'
+      OPENFGA_DATASTORE_MAX_IDLE_CONNS: '1'
+      OPENFGA_PLAYGROUND_ENABLED: 'false'
+    volumes:
+      - openfga-sqlite:/home/nonroot
+    ports:
+      - 127.0.0.1:8080:8080
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: [CMD, /usr/local/bin/grpc_health_probe, '-addr=:8081']
+      interval: 3s
+      timeout: 3s
+      retries: 20
+volumes:
+  openfga-sqlite:

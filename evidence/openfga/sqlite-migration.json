@@ -1,0 +1,35 @@
+{
+  "at": "2026-11-02T14:51:27.283Z",
+  "source": "PostgreSQL (OpenFGA v1.22.1)",
+  "target": "SQLite (OpenFGA v1.22.1)",
+  "sourceSha256": "76673001734fd6a1013a17a25ed28c6ab951a58bf596440be043b2ff8b82707e",
+  "tables": {
+    "store": {
+      "source": 390,
+      "target": 390,
+      "allValuesVerified": true
+    },
+    "authorization_model": {
+      "source": 396,
+      "target": 396,
+      "allValuesVerified": true
+    },
+    "tuple": {
+      "source": 8411,
+      "target": 8411,
+      "allValuesVerified": true
+    },
+    "changelog": {
+      "source": 13887,
+      "target": 13887,
+      "allValuesVerified": true
+    },
+    "assertion": {
+      "source": 0,
+      "target": 0,
+      "allValuesVerified": true
+    }
+  },
+  "integrityCheck": "ok",
+  "status": "PASS"
+}

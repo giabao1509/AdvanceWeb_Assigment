@@ -1,0 +1,8 @@
+{
+  "engine": "sqlite",
+  "image": "openfga/openfga:v1.22.1",
+  "imageId": "sha256:b852071314f1fda1194d341a6ebac0a4f619b3cd87a6626d2ccc7048af4ec671",
+  "databasePath": "/home/nonroot/openfga.sqlite",
+  "volume": "block6-advance_openfga-sqlite",
+  "healthy": true
+}

@@ -1,0 +1,5 @@
+# Preserve generated evidence bytes across platforms.
+evidence/openfga/** -text
+# Raw patches and TAP logs contain intentional context/blank-line whitespace.
+evidence/openfga/*.diff -whitespace
+evidence/openfga/*.txt -whitespace

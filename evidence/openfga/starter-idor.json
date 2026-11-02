@@ -1,0 +1,55 @@
+{
+  "id": "starter-idor",
+  "capturedAt": "2026-11-02T15:39:39.684Z",
+  "request": {
+    "method": "GET",
+    "path": "/api/starter/tasks/B1",
+    "actor": "alice",
+    "headers": {
+      "Authorization": "[REDACTED]"
+    }
+  },
+  "expectedStatus": 200,
+  "response": {
+    "status": 200,
+    "durationMs": 23,
+    "body": {
+      "data": {
+        "id": "B1",
+        "projectId": "beta",
+        "assigneeId": "charlie",
+        "title": "Beta · Private roadmap",
+        "description": "Private Beta task content",
+        "status": "Open"
+      },
+      "error": null,
+      "trace": [
+        {
+          "name": "Authentication",
+          "result": "PASS",
+          "reason": "alice"
+        },
+        {
+          "name": "Object authorization",
+          "result": "SKIPPED",
+          "reason": "STARTER_IDOR"
+        },
+        {
+          "name": "Authorization decision",
+          "result": "ALLOW",
+          "reason": "STARTER_AUTHENTICATION_ONLY"
+        },
+        {
+          "name": "Request outcome",
+          "result": "SUCCESS",
+          "reason": "HTTP_200"
+        }
+      ],
+      "requestId": "42215c7d-7616-451f-a2b2-a21f84583c7d"
+    }
+  },
+  "verification": {
+    "statusMatches": true,
+    "stateUnchanged": true
+  }
+}

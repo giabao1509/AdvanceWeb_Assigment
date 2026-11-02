@@ -1,5 +1,15 @@
 # Evidence bài nộp Task Management API
 
+## Evidence OpenFGA mới
+
+Trên `Block-6-Advance`, `npm.cmd run evidence` ghi vào **`evidence/openfga/`** và yêu cầu OpenFGA thật. Chạy `npm.cmd ci` rồi `docker compose up -d --wait` trước. Mỗi HTTP/browser fixture tạo SQLite/store riêng, không mở/reset dữ liệu demo.
+
+Bản hiện tại dùng **SQLite datastore** của OpenFGA. Generator kiểm tra container/port/volume đang chạy trước khi thu bằng chứng, ghi `openfga/datastore.json`; nếu engine không phải SQLite thì fail. `sqlite-migration.json` và `sqlite-restart.json` ghi kiểm chứng chuyển dữ liệu và restart thực tế của lượt chuyển datastore, không phải test được generator chạy lại tự động. Snapshot/source mới phải khớp hash trong manifest.
+
+`openfga/manifest.json` ghi lần thu mới: 11 ca HTTP, regression Starter/before RED và V1/after GREEN, kiểm tra DSL/JSON, toàn bộ tests và browser smoke có pending/recovery. `openfga/authorization.diff` so sánh snapshot authentication-only đã lưu với source hiện tại, có `git apply --check`. Before là bản **tái dựng của lab trước**, không phải historical commit; after gồm source OpenFGA/model hiện tại. Manifest ghi hash nguồn, artifact và working tree.
+
+Artifact trực tiếp trong `evidence/`, bao gồm manifest/snapshot/log cũ, được giữ làm bằng chứng bản PDP nội bộ ngày 29/10/2026. Các hướng dẫn/tổng test cũ bên dưới mô tả baseline đó; dùng manifest trong `openfga/` cho bản hiện tại. Không chỉnh tay response/log để đổi kết quả.
+
 Bộ evidence được tạo từ request HTTP và test chạy thật trên code trong workspace. Không chỉnh tay các JSON response hoặc log để tạo kết quả mong muốn. Thời điểm chạy, phiên bản Node, exit code, commit nền, trạng thái working tree và SHA-256 nằm trong `manifest.json`; chỉ coi lần thu thập hoàn tất khi `status` là `PASS`.
 
 ## Tái tạo

@@ -1,0 +1,56 @@
+{
+  "id": "v1-idor",
+  "capturedAt": "2026-11-02T15:39:39.712Z",
+  "request": {
+    "method": "GET",
+    "path": "/api/v1/tasks/B1",
+    "actor": "alice",
+    "headers": {
+      "Authorization": "[REDACTED]"
+    }
+  },
+  "expectedStatus": 403,
+  "response": {
+    "status": 403,
+    "durationMs": 28,
+    "body": {
+      "data": null,
+      "error": {
+        "code": "NOT_PROJECT_MEMBER"
+      },
+      "trace": [
+        {
+          "name": "Authentication",
+          "result": "PASS",
+          "reason": "alice"
+        },
+        {
+          "name": "OpenFGA Check",
+          "result": "FAIL",
+          "reason": "can_read_v1 · task:B1 · model 01M6EEN34SWW82AG61RX2VFY96 · HIGHER_CONSISTENCY"
+        },
+        {
+          "name": "Project membership",
+          "result": "FAIL",
+          "reason": "SQLITE_SNAPSHOT_OBSERVATION"
+        },
+        {
+          "name": "Authorization decision",
+          "result": "DENY",
+          "reason": "NOT_PROJECT_MEMBER"
+        },
+        {
+          "name": "Request outcome",
+          "result": "REJECTED",
+          "reason": "NOT_PROJECT_MEMBER"
+        }
+      ],
+      "requestId": "99c3fac7-1733-4af9-a1f4-54a9819dfa8f"
+    }
+  },
+  "verification": {
+    "statusMatches": true,
+    "stateUnchanged": true,
+    "deniedDataIsNull": true
+  }
+}

@@ -1,0 +1,58 @@
+model
+  schema 1.1
+
+type user
+
+type tenant
+  relations
+    define member: [user]
+    define admin: [user]
+
+type project
+  relations
+    define tenant: [tenant]
+    define owner: [user]
+    define member: [user]
+    define viewer: [user]
+    define participant: owner or member or viewer
+    define same_tenant: member from tenant
+    define tenant_admin: admin from tenant
+    define can_read_v1: participant
+    define can_delete_v1: participant
+    define can_manage_members_v1: participant
+    define can_read_v2: participant
+    define can_delete_v2: owner
+    define can_manage_members_v2: owner
+    define can_read_v3: participant
+    define can_delete_v3: owner
+    define can_manage_members_v3: owner
+    define v4_reader: participant or tenant_admin
+    define v4_manager: owner or tenant_admin
+    define can_read_v4: v4_reader and same_tenant
+    define can_delete_v4: v4_manager and same_tenant
+    define can_manage_members_v4: v4_manager and same_tenant
+
+type task
+  relations
+    define project: [project]
+    define assignee: [user with task_is_open]
+    define project_owner: owner from project
+    define project_member: member from project
+    define project_participant: participant from project
+    define assigned_member: project_member and assignee
+    define v3_editor: project_owner or assigned_member
+    define tenant_admin: tenant_admin from project
+    define same_tenant: same_tenant from project
+    define v4_editor: v3_editor or tenant_admin
+    define can_read_v1: can_read_v1 from project
+    define can_edit_v1: project_participant
+    define can_read_v2: can_read_v2 from project
+    define can_edit_v2: project_owner or project_member
+    define can_read_v3: can_read_v3 from project
+    define can_edit_v3: v3_editor
+    define can_read_v4: can_read_v4 from project
+    define can_edit_v4: v4_editor and same_tenant
+
+condition task_is_open(current_status: string) {
+  current_status == 'Open'
+}

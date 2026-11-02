@@ -1,0 +1,540 @@
+diff --git a/before/src/app.js b/after/src/app.js
+index cccb47c..4d935a8 100644
+--- a/before/src/app.js
++++ b/after/src/app.js
+@@ -2,8 +2,9 @@ import express from 'express';
+ import { randomUUID } from 'node:crypto';
+ import { fileURLToPath } from 'node:url';
+ import { authenticate, identities } from './auth.js';
+-import { versions } from './policy.js';
+-import { openDatabase, resetDatabase, transaction } from './db.js';
++import { authorize, versions } from './policy.js';
++import { openDatabase, resetDatabase, transaction, authorizationState } from './db.js';
++import { AuthorizationService } from './openfga/sync.js';
+ 
+ class HttpError extends Error {
+   constructor(status, code) { super(code); this.status = status; }
+@@ -14,9 +15,11 @@ function bodyFields(body, allowed, required = []) {
+   if (!body || Array.isArray(body) || typeof body !== 'object' || !Object.keys(body).length ||
+       Object.keys(body).some(key => !allowed.includes(key)) || required.some(key => !(key in body))) fail(400, 'INVALID_FIELDS');
+ }
+-export function createApp({ db = openDatabase() } = {}) {
++export function createApp({ db = openDatabase(), authorization = new AuthorizationService(db) } = {}) {
+   const app = express();
+   app.locals.db = db;
++  app.locals.authorization = authorization;
++  app.locals.ready = authorization.sync().then(() => true, () => false);
+   app.use((req, res, next) => {
+     req.trace = []; req.requestId = randomUUID();
+     res.set('Cache-Control', 'no-store');
+@@ -25,7 +28,7 @@ export function createApp({ db = openDatabase() } = {}) {
+   });
+   app.use(express.json({ limit: '16kb' }));
+   function send(req, res, status, data = null, error = null) {
+-    req.trace.push({ name: 'Request outcome', result: status >= 500 ? 'ERROR' : status >= 400 ? 'REJECTED' : 'SUCCESS', reason: error?.code || `HTTP_${status}` });
++    req.trace.push({ name: 'Request outcome', result: status === 202 ? 'PENDING' : status >= 500 ? 'ERROR' : status >= 400 ? 'REJECTED' : 'SUCCESS', reason: error?.code || `HTTP_${status}` });
+     res.status(status).json({ data, error, trace: req.trace, requestId: req.requestId });
+   }
+     // Public catalog contains only fixed lab identities/IDs, never live task contents.
+@@ -34,10 +37,47 @@ export function createApp({ db = openDatabase() } = {}) {
+     users: identities.map(id => ({ id, token: `demo-${id}` })),
+     tasks: ['A1','A2','A3','A4','B1','B2'], projects: ['alpha','beta'],
+   }));
+-  app.post('/lab/reset', (req, res) => {
+-    // Reject cross-origin browser submissions to the local-only reset endpoint.
++  function requireLocalOrigin(req) {
+     if (req.headers.origin && req.headers.origin !== `http://${req.headers.host}`) fail(403, 'CROSS_ORIGIN_RESET');
+-    resetDatabase(db); send(req, res, 200, { reset: true });
++  }
++  async function finishMutation(req, res, output, operationId) {
++    const status = Number.isInteger(output?.status) ? output.status : 200;
++    const data = output?.data ?? output;
++    if (operationId) {
++      try { await authorization.sync(); }
++      catch {
++        req.trace.push({ name: 'Authorization sync', result: 'PENDING', reason: 'SQLITE_COMMITTED_GRAPH_PENDING' });
++        return send(req, res, 202, { operationId, committed: true, authorizationSync: 'pending' });
++      }
++      req.trace.push({ name: 'Authorization sync', result: 'PASS', reason: 'GRAPH_SYNCHRONIZED' });
++    }
++    send(req, res, status, data);
++  }
++  function recordOperation(actorId, revision) {
++    const id = randomUUID();
++    db.prepare('INSERT INTO authorization_operations(id,actorId,revision) VALUES (?,?,?)').run(id, actorId || null, revision);
++    return id;
++  }
++  app.post('/lab/reset', async (req, res) => {
++    // Reject cross-origin browser submissions to the local-only reset endpoint.
++    requireLocalOrigin(req);
++    await app.locals.ready;
++    const operationId = resetDatabase(db, () => recordOperation(authenticate(db, req.headers.authorization)?.id, authorizationState(db).desiredRevision));
++    await finishMutation(req, res, { reset: true }, operationId);
++  });
++  app.post('/lab/sync', async (req, res) => {
++    requireLocalOrigin(req);
++    if (!authenticate(db, req.headers.authorization)) fail(401, 'UNAUTHENTICATED');
++    await app.locals.ready;
++    await authorization.sync();
++    send(req, res, 200, { authorizationSync: 'complete' });
++  });
++  app.get('/lab/operations/:operationId', (req, res) => {
++    const principal = authenticate(db, req.headers.authorization);
++    if (!principal) fail(401, 'UNAUTHENTICATED');
++    const operation = db.prepare('SELECT revision FROM authorization_operations WHERE id=? AND actorId=?').get(req.params.operationId, principal.id);
++    if (!operation) fail(404, 'OPERATION_NOT_FOUND');
++    send(req, res, 200, { operationId: req.params.operationId, committed: true, authorizationSync: authorization.ready() && authorizationState(db).appliedRevision >= operation.revision ? 'complete' : 'pending' });
+   });
+   const api = express.Router({ mergeParams: true });
+   app.use('/api/:version', api);
+@@ -49,18 +89,39 @@ export function createApp({ db = openDatabase() } = {}) {
+     next();
+   });
+   function endpoint(action, kind, work) {
+-    return (req, res) => {
++    return async (req, res) => {
+       if (!validId(req.params.id) || (req.params.userId && !validId(req.params.userId))) fail(400, 'INVALID_ID');
+-      const execute = () => {
++      await app.locals.ready;
++      const snapshot = transaction(db, () => {
++        const principal = authenticate(db, req.headers.authorization);
++        if (!principal) fail(401, 'UNAUTHENTICATED');
+         const task = kind === 'task' ? db.prepare('SELECT * FROM tasks WHERE id = ?').get(req.params.id) : null;
+         if (kind === 'task' && !task) fail(404, 'TASK_NOT_FOUND');
+         const project = db.prepare('SELECT * FROM projects WHERE id = ?').get(task?.projectId || req.params.id);
+         if (!project) fail(404, 'PROJECT_NOT_FOUND');
+-        req.trace.push({ name: 'Object authorization', result: 'SKIPPED', reason: 'RECONSTRUCTED_AUTHENTICATION_ONLY' });
+-        return work(req, { task, project });
+-      };
+-      const output = req.method === 'GET' ? execute() : transaction(db, execute);
+-      send(req, res, Number.isInteger(output?.status) ? output.status : 200, output?.data ?? output);
++        const membership = db.prepare('SELECT * FROM project_memberships WHERE projectId = ? AND userId = ?').get(project.id, principal.id);
++        if (req.params.version !== 'starter') authorization.assertReady();
++        return { principal, project, task, membership, state: authorizationState(db) };
++      });
++      let decision;
++      try { decision = await authorize(req.params.version, snapshot.principal, action, snapshot, authorization); }
++      catch (error) {
++        req.trace.push({ name: 'OpenFGA Check', result: 'ERROR', reason: error.status === 503 ? error.message : 'AUTHORIZATION_UNAVAILABLE' });
++        throw error;
++      }
++      let operationId;
++      const output = transaction(db, () => {
++        const state = authorizationState(db);
++        if (state.revision !== snapshot.state.revision || state.storeId !== snapshot.state.storeId || state.modelId !== snapshot.state.modelId) fail(409, 'AUTHORIZATION_CONTEXT_CHANGED');
++        if (req.params.version !== 'starter') authorization.assertReady();
++        req.trace.push(...decision.checks, { name: 'Authorization decision', result: decision.allowed === true ? 'ALLOW' : 'DENY', reason: decision.reason });
++        if (decision.allowed !== true) fail(403, decision.reason);
++        const result = work(req, snapshot);
++        const after = authorizationState(db);
++        if (after.desiredRevision !== state.desiredRevision) operationId = recordOperation(snapshot.principal.id, after.desiredRevision);
++        return result;
++      });
++      await finishMutation(req, res, output, operationId);
+     };
+   }
+     // Discoverable lab directory: authentication grants only project IDs/names.
+diff --git a/before/src/db.js b/after/src/db.js
+index 63c38fc..7339dff 100644
+--- a/before/src/db.js
++++ b/after/src/db.js
+@@ -4,12 +4,17 @@ import { dirname, resolve } from 'node:path';
+ 
+ export const defaultDatabase = resolve('data/lab.sqlite');
+ export function transaction(db, work) {
++  if (work.constructor?.name === 'AsyncFunction') throw new TypeError('SQLite transaction callback must be synchronous');
+   db.exec('BEGIN IMMEDIATE');
+-  try { const result = work(); db.exec('COMMIT'); return result; }
++  try {
++    const result = work();
++    if (result && typeof result.then === 'function') throw new TypeError('SQLite transaction callback must be synchronous');
++    db.exec('COMMIT'); return result;
++  }
+   catch (error) { db.exec('ROLLBACK'); throw error; }
+ }
+-export function resetDatabase(db) {
+-  transaction(db, () => {
++export function resetDatabase(db, afterReset = () => {}) {
++  return transaction(db, () => {
+     db.exec('DELETE FROM tasks; DELETE FROM project_memberships; DELETE FROM projects; DELETE FROM users; DELETE FROM tenants;');
+     const tenant = db.prepare('INSERT INTO tenants VALUES (?,?)');
+     tenant.run('alpha', 'Tenant Alpha'); tenant.run('beta', 'Tenant Beta');
+@@ -31,6 +36,7 @@ export function resetDatabase(db) {
+       ['B1','beta','charlie','Beta · Private roadmap','Private Beta task content','Open'],
+       ['B2','beta',null,'Beta · Unassigned task','Beta task without assignee','Open'],
+     ]) task.run(...row);
++    return afterReset();
+   });
+ }
+ export function openDatabase(path = defaultDatabase) {
+@@ -38,6 +44,32 @@ export function openDatabase(path = defaultDatabase) {
+   const db = new DatabaseSync(path);
+   db.exec('PRAGMA foreign_keys = ON; PRAGMA busy_timeout = 3000;');
+   db.exec(readFileSync(new URL('./schema.sql', import.meta.url), 'utf8'));
++  installRevisionTriggers(db);
+   if (!db.prepare('SELECT count(*) AS count FROM tenants').get().count) resetDatabase(db);
+   return db;
+ }
++
++export function authorizationState(db) {
++  return db.prepare('SELECT * FROM authorization_state WHERE id = 1').get();
++}
++
++function installRevisionTriggers(db) {
++  // All SQL writes, including fixtures, cascade deletes and CLI reset, participate.
++  const relationColumns = {
++    tenants: ['id'], users: ['id','tenantId','isAdmin'],
++    projects: ['id','tenantId'], project_memberships: ['projectId','userId','role'],
++    tasks: ['id','projectId','assigneeId'],
++  };
++  for (const [table, columns] of Object.entries(relationColumns)) {
++    for (const event of ['INSERT','DELETE','UPDATE']) {
++      const changed = event === 'UPDATE' ? columns.map(c => `OLD.${c} IS NOT NEW.${c}`).join(' OR ') : '1';
++      db.exec(`CREATE TRIGGER IF NOT EXISTS authz_${table}_${event.toLowerCase()}
++        AFTER ${event} ON ${table} BEGIN
++          UPDATE authorization_state SET revision = revision + 1 WHERE id = 1;
++          UPDATE authorization_state SET desiredRevision = desiredRevision + 1 WHERE id = 1 AND (${changed});
++          INSERT OR IGNORE INTO authorization_outbox(revision)
++            SELECT desiredRevision FROM authorization_state WHERE id = 1 AND (${changed});
++        END;`);
++    }
++  }
++}
+diff --git a/after/src/openfga/client.js b/after/src/openfga/client.js
+new file mode 100644
+index 0000000..13b1bb6
+--- /dev/null
++++ b/after/src/openfga/client.js
+@@ -0,0 +1,40 @@
++import { OpenFgaClient, ConsistencyPreference } from '@openfga/sdk';
++
++export class AuthorizationUnavailable extends Error {
++  constructor(code = 'AUTHORIZATION_UNAVAILABLE') { super(code); this.status = 503; }
++}
++
++export class FgaClient {
++  constructor({ apiUrl = process.env.FGA_API_URL || 'http://127.0.0.1:8080', timeout = Number(process.env.FGA_TIMEOUT_MS || 3000) } = {}) {
++    this.apiUrl = new URL(apiUrl).href.replace(/\/$/, '');
++    if (!Number.isInteger(timeout) || timeout < 100 || timeout > 10000) throw new Error('FGA_TIMEOUT_MS must be 100..10000');
++    this.sdk = new OpenFgaClient({ apiUrl: this.apiUrl, retryParams: { maxRetry: 0 }, baseOptions: { timeout } });
++  }
++  async createStore(name) { return this.sdk.createStore({ name }); }
++  async deleteStore(storeId) { return this.sdk.deleteStore({ storeId }); }
++  async writeModel(storeId, model) { return this.sdk.writeAuthorizationModel(model, { storeId }); }
++  async readModel(storeId, modelId) { return this.sdk.readAuthorizationModel({ storeId, authorizationModelId: modelId }); }
++  async readTuples(storeId) {
++    const tuples = []; let continuationToken;
++    do {
++      const page = await this.sdk.read({}, { storeId, pageSize: 100, continuationToken, consistency: ConsistencyPreference.HigherConsistency });
++      tuples.push(...page.tuples.map(tuple => tuple.key));
++      continuationToken = page.continuation_token;
++    } while (continuationToken);
++    return tuples;
++  }
++  async writeTuples(storeId, modelId, writes, deletes) {
++    const response = await this.sdk.write({ ...(writes.length ? { writes } : {}), ...(deletes.length ? { deletes } : {}) }, {
++      storeId, authorizationModelId: modelId,
++      transaction: { disable: false },
++    });
++    if ([...response.writes, ...response.deletes].some(item => item.status !== 'success')) throw new AuthorizationUnavailable('AUTHORIZATION_SYNC_FAILED');
++  }
++  async check(storeId, modelId, { user, relation, object, context }) {
++    const response = await this.sdk.check({ user, relation, object, context }, {
++      storeId, authorizationModelId: modelId, consistency: ConsistencyPreference.HigherConsistency,
++    });
++    if (typeof response.allowed !== 'boolean') throw new AuthorizationUnavailable();
++    return response.allowed;
++  }
++}
+diff --git a/after/src/openfga/relations.js b/after/src/openfga/relations.js
+new file mode 100644
+index 0000000..d6859fb
+--- /dev/null
++++ b/after/src/openfga/relations.js
+@@ -0,0 +1,30 @@
++const roles = new Map([['Owner','owner'], ['Member','member'], ['Viewer','viewer']]);
++export const tupleIdentity = t => JSON.stringify([t.user, t.relation, t.object]);
++export const tupleValue = t => JSON.stringify([t.user, t.relation, t.object, t.condition?.name || '', t.condition?.context || {}]);
++export function projectTuples(db) {
++  const tuples = [];
++  const add = (user, relation, object, condition) => tuples.push({ user, relation, object, ...(condition ? { condition } : {}) });
++  for (const user of db.prepare('SELECT id, tenantId, isAdmin FROM users ORDER BY id').all()) {
++    add(`user:${user.id}`, 'member', `tenant:${user.tenantId}`);
++    if (user.isAdmin) add(`user:${user.id}`, 'admin', `tenant:${user.tenantId}`);
++  }
++  for (const project of db.prepare('SELECT id, tenantId FROM projects ORDER BY id').all()) add(`tenant:${project.tenantId}`, 'tenant', `project:${project.id}`);
++  for (const m of db.prepare('SELECT * FROM project_memberships ORDER BY projectId,userId').all()) {
++    if (!roles.has(m.role)) throw new Error('UNKNOWN_ROLE');
++    add(`user:${m.userId}`, roles.get(m.role), `project:${m.projectId}`);
++  }
++  for (const task of db.prepare('SELECT id,projectId,assigneeId FROM tasks ORDER BY id').all()) {
++    add(`project:${task.projectId}`, 'project', `task:${task.id}`);
++    if (task.assigneeId) add(`user:${task.assigneeId}`, 'assignee', `task:${task.id}`, { name: 'task_is_open' });
++  }
++  return tuples;
++}
++export function permissionQuery(version, principal, action, { project, task }) {
++  const relations = new Map([['read','can_read'],['edit','can_edit'],['delete','can_delete'],['members','can_manage_members']]);
++  if (!['v1','v2','v3','v4'].includes(version) || !relations.has(action)) throw new Error('UNKNOWN_PERMISSION');
++  return {
++    user: `user:${principal.id}`, relation: `${relations.get(action)}_${version}`,
++    object: task ? `task:${task.id}` : `project:${project.id}`,
++    ...(task ? { context: { current_status: task.status } } : {}),
++  };
++}
+diff --git a/after/src/openfga/sync.js b/after/src/openfga/sync.js
+new file mode 100644
+index 0000000..843e898
+--- /dev/null
++++ b/after/src/openfga/sync.js
+@@ -0,0 +1,99 @@
++import { createHash, randomUUID } from 'node:crypto';
++import { readFileSync } from 'node:fs';
++import { authorizationState, transaction } from '../db.js';
++import { FgaClient, AuthorizationUnavailable } from './client.js';
++import { projectTuples, tupleIdentity, tupleValue } from './relations.js';
++
++export const model = JSON.parse(readFileSync(new URL('../../openfga/model.json', import.meta.url), 'utf8'));
++const canonical = value => JSON.stringify(value && typeof value === 'object'
++  ? Array.isArray(value) ? value.map(v => JSON.parse(canonical(v)))
++    : Object.fromEntries(Object.keys(value).sort()
++      .filter(key => value[key] != null && value[key] !== '' && !(Array.isArray(value[key]) && value[key].length === 0))
++      .map(key => [key, JSON.parse(canonical(value[key]))])) : value);
++export const modelHash = createHash('sha256').update(canonical(model)).digest('hex');
++
++export class AuthorizationService {
++  constructor(db, { client = new FgaClient() } = {}) {
++    this.db = db; this.client = client; this.inFlight = null;
++  }
++  state() { return authorizationState(this.db); }
++  ready() {
++    const s = this.state();
++    return Boolean(this.storeId && this.modelId) && s.apiUrl === this.client.apiUrl && s.storeId === this.storeId && s.modelId === this.modelId &&
++      s.modelHash === modelHash && s.appliedRevision === s.desiredRevision;
++  }
++  assertReady() { if (!this.ready()) throw new AuthorizationUnavailable('AUTHORIZATION_NOT_READY'); }
++  sync() {
++    if (!this.inFlight) this.inFlight = this.reconcile().finally(() => { this.inFlight = null; });
++    return this.inFlight;
++  }
++  async reconcile() {
++    const db = this.db, owner = randomUUID();
++    transaction(db, () => {
++      const s = this.state();
++      if (s.syncOwner && s.syncUntil > Date.now()) throw new AuthorizationUnavailable('AUTHORIZATION_SYNC_BUSY');
++      db.prepare('UPDATE authorization_state SET syncOwner=?, syncUntil=? WHERE id=1').run(owner, Date.now()+30000);
++      db.prepare('UPDATE authorization_state SET appliedRevision=-1 WHERE id=1').run();
++    });
++    const renew = () => {
++      const changed = db.prepare('UPDATE authorization_state SET syncUntil=? WHERE id=1 AND syncOwner=? AND syncUntil>?').run(Date.now()+30000, owner, Date.now());
++      if (changed.changes !== 1) throw new AuthorizationUnavailable('AUTHORIZATION_SYNC_BUSY');
++    };
++    try {
++      let s = this.state();
++      if (s.apiUrl && s.apiUrl !== this.client.apiUrl) throw new AuthorizationUnavailable('AUTHORIZATION_ENDPOINT_MISMATCH');
++      if (!s.storeId) {
++        const store = await this.client.createStore(`task-lab-${randomUUID()}`); renew();
++        db.prepare('UPDATE authorization_state SET apiUrl=?, storeId=?, appliedRevision=-1 WHERE id=1').run(this.client.apiUrl, store.id);
++      }
++      s = this.state();
++      if (!s.modelId) {
++        const result = await this.client.writeModel(s.storeId, model); renew();
++        db.prepare('UPDATE authorization_state SET modelId=?, modelHash=?, appliedRevision=-1 WHERE id=1').run(result.authorization_model_id, modelHash);
++      }
++      s = this.state();
++      if (s.modelHash !== modelHash) throw new AuthorizationUnavailable('AUTHORIZATION_MODEL_MISMATCH');
++      const remote = (await this.client.readModel(s.storeId, s.modelId)).authorization_model; renew();
++      const { id, ...definition } = remote;
++      if (canonical(definition) !== canonical(model)) throw new AuthorizationUnavailable('AUTHORIZATION_MODEL_MISMATCH');
++      this.storeId = s.storeId; this.modelId = s.modelId;
++      for (let round=0; round<8; round++) {
++        const snapshot = transaction(db, () => ({ revision: this.state().desiredRevision, tuples: projectTuples(db) }));
++        const actual = await this.client.readTuples(this.storeId); renew();
++        const desired = new Map(snapshot.tuples.map(t => [tupleIdentity(t), t]));
++        const present = new Map(actual.map(t => [tupleIdentity(t), t]));
++        const deletes = actual.filter(t => !desired.has(tupleIdentity(t)) || tupleValue(t) !== tupleValue(desired.get(tupleIdentity(t))));
++        const writes = snapshot.tuples.filter(t => !present.has(tupleIdentity(t)) || tupleValue(t) !== tupleValue(present.get(tupleIdentity(t))));
++        // Remove stale grants first; readiness stays closed across all batches.
++        for (let i=0; i<deletes.length; i+=50) {
++          renew();
++          await this.client.writeTuples(this.storeId, this.modelId, [], deletes.slice(i,i+50).map(({ user, relation, object }) => ({ user, relation, object })));
++        }
++        for (let i=0; i<writes.length; i+=50) {
++          renew(); await this.client.writeTuples(this.storeId, this.modelId, writes.slice(i,i+50), []);
++        }
++        renew();
++        const completed = transaction(db, () => {
++          if (this.state().desiredRevision !== snapshot.revision) return false;
++          db.prepare('UPDATE authorization_state SET appliedRevision=? WHERE id=1 AND syncOwner=?').run(snapshot.revision, owner);
++          db.prepare('DELETE FROM authorization_outbox WHERE revision<=?').run(snapshot.revision);
++          return true;
++        });
++        if (completed) return this.state();
++      }
++      throw new AuthorizationUnavailable('AUTHORIZATION_SYNC_BUSY');
++    } catch (error) {
++      throw error instanceof AuthorizationUnavailable ? error : new AuthorizationUnavailable('AUTHORIZATION_SYNC_FAILED');
++    } finally {
++      db.prepare('UPDATE authorization_state SET syncOwner=NULL, syncUntil=0 WHERE id=1 AND syncOwner=?').run(owner);
++    }
++  }
++  async check(query) {
++    this.assertReady();
++    try {
++      const allowed = await this.client.check(this.storeId, this.modelId, query);
++      if (typeof allowed !== 'boolean') throw new AuthorizationUnavailable();
++      return allowed;
++    } catch { throw new AuthorizationUnavailable(); }
++  }
++}
+diff --git a/before/src/policy.js b/after/src/policy.js
+index 53c6fca..e74543c 100644
+--- a/before/src/policy.js
++++ b/after/src/policy.js
+@@ -1,48 +1,49 @@
++import { permissionQuery } from './openfga/relations.js';
++import { AuthorizationUnavailable } from './openfga/client.js';
++
+ export const versions = ['starter','v1','v2','v3','v4'];
+ const actions = ['read','edit','delete','members'];
+ const permissions = new Map([
+-  ['Viewer', ['read']],
+-  ['Member', ['read','edit']],
+-  ['Owner', ['read','edit','delete','members']],
++  ['Viewer', ['read']], ['Member', ['read','edit']], ['Owner', ['read','edit','delete','members']],
+ ]);
+-export function authorize(version, principal, action, { project, task, membership } = {}) {
+-  const checks = [];
+-  const check = (name, pass, reason) => {
+-    checks.push({ name, result: pass ? 'PASS' : 'FAIL', reason });
+-    return pass;
+-  };
+-  const result = (allowed, reason) => ({ allowed, reason, checks });
+-  // Validate policy inputs before any permissive lab/admin branch.
+-  const deny = reason => {
+-    check('Policy input', false, reason);
+-    return result(false, reason);
+-  };
+-  if (!versions.includes(version)) return deny('UNKNOWN_VERSION');
+-  if (!actions.includes(action)) return deny('UNKNOWN_ACTION');
+-  if (!principal?.id) return deny('UNAUTHENTICATED');
+-  if (!project?.id) return deny('PROJECT_REQUIRED');
+-  if (action === 'edit' && (!task?.id || task.projectId !== project.id)) return deny('TASK_REQUIRED');
+-  if (membership && !permissions.has(membership.role)) return deny('UNKNOWN_ROLE');
+-  if (version === 'starter') {
+-    checks.push({ name: 'Object authorization', result: 'SKIPPED', reason: 'STARTER_IDOR' });
+-    return result(true, 'STARTER_AUTHENTICATION_ONLY');
+-  }
+-  if (version === 'v4') {
+-    if (!check('Tenant boundary', principal.tenantId === project.tenantId, 'SAME_TENANT_REQUIRED')) return result(false, 'TENANT_MISMATCH');
+-    if (principal.isAdmin) {
+-      check('Tenant admin', true, 'ADMIN_IN_OWN_TENANT');
+-      return result(true, 'TENANT_ADMIN_ALLOWED');
+-    }
+-  }
+-  if (!check('Project membership', Boolean(membership), 'PROJECT_MEMBERSHIP_REQUIRED')) return result(false, 'NOT_PROJECT_MEMBER');
+-  // V1 protects all objects by project membership; per-action roles start in V2.
+-  if (version === 'v1') return result(true, 'PROJECT_MEMBER_ALLOWED');
+-  const role = membership.role;
+-  const roleAllowed = permissions.get(role)?.includes(action) === true;
+-  if (!check('Project role', roleAllowed, `${role}:${action}`)) return result(false, 'ROLE_DENIED');
+-  if (['v3','v4'].includes(version) && action === 'edit' && role === 'Member') {
+-    if (!check('Task assignee', task.assigneeId === principal.id, 'CALLER_MUST_BE_ASSIGNEE')) return result(false, 'NOT_ASSIGNEE');
+-    if (!check('Task status', task.status === 'Open', 'CURRENT_TASK_MUST_BE_OPEN')) return result(false, 'TASK_CLOSED');
++
++export function validatePolicyInput(version, principal, action, { project, task, membership } = {}) {
++  if (!versions.includes(version)) return 'UNKNOWN_VERSION';
++  if (!actions.includes(action)) return 'UNKNOWN_ACTION';
++  if (!principal?.id) return 'UNAUTHENTICATED';
++  if (!project?.id) return 'PROJECT_REQUIRED';
++  if (task && task.projectId !== project.id) return 'TASK_REQUIRED';
++  if (action === 'edit' && !task?.id) return 'TASK_REQUIRED';
++  if (membership && !permissions.has(membership.role)) return 'UNKNOWN_ROLE';
++}
++
++// Diagnostic only: this function runs after OpenFGA DENY and cannot grant access.
++function denialReason(version, principal, action, { project, task, membership }) {
++  if (version === 'v4' && principal.tenantId !== project.tenantId) return 'TENANT_MISMATCH';
++  if (!membership) return 'NOT_PROJECT_MEMBER';
++  if (version !== 'v1' && !permissions.get(membership.role)?.includes(action)) return 'ROLE_DENIED';
++  if (['v3','v4'].includes(version) && action === 'edit' && membership.role === 'Member') {
++    if (task.assigneeId !== principal.id) return 'NOT_ASSIGNEE';
++    if (task.status !== 'Open') return 'TASK_CLOSED';
+   }
+-  return result(true, 'POLICY_ALLOWED');
++  return 'AUTHORIZATION_DENIED';
++}
++
++export async function authorize(version, principal, action, context = {}, service) {
++  const invalid = validatePolicyInput(version, principal, action, context);
++  if (invalid) return { allowed: false, reason: invalid, checks: [{ name: 'Policy input', result: 'FAIL', reason: invalid }] };
++  if (version === 'starter') return {
++    allowed: true, reason: 'STARTER_AUTHENTICATION_ONLY',
++    checks: [{ name: 'Object authorization', result: 'SKIPPED', reason: 'STARTER_IDOR' }],
++  };
++  if (!service) throw new AuthorizationUnavailable('AUTHORIZATION_NOT_READY');
++  const query = permissionQuery(version, principal, action, context);
++  const allowed = await service.check(query);
++  if (typeof allowed !== 'boolean') throw new AuthorizationUnavailable();
++  const reason = allowed ? version === 'v1' ? 'PROJECT_MEMBER_ALLOWED'
++    : version === 'v4' && principal.isAdmin ? 'TENANT_ADMIN_ALLOWED' : 'POLICY_ALLOWED'
++    : denialReason(version, principal, action, context);
++  const checks = [{ name: 'OpenFGA Check', result: allowed ? 'PASS' : 'FAIL', reason: `${query.relation} · ${query.object} · model ${service.modelId} · HIGHER_CONSISTENCY` }];
++  if (version === 'v1') checks.push({ name: 'Project membership', result: context.membership ? 'PASS' : 'FAIL', reason: 'SQLITE_SNAPSHOT_OBSERVATION' });
++  return { allowed: allowed === true, reason, checks };
+ }
+diff --git a/after/src/reset.js b/after/src/reset.js
+new file mode 100644
+index 0000000..3ef267e
+--- /dev/null
++++ b/after/src/reset.js
+@@ -0,0 +1,8 @@
++import { openDatabase, resetDatabase } from './db.js';
++import { AuthorizationService } from './openfga/sync.js';
++const db = openDatabase();
++try {
++  resetDatabase(db);
++  try { await new AuthorizationService(db).sync(); console.log('SQLite reset to seed; OpenFGA synchronized.'); }
++  catch { console.log('SQLite reset COMMITTED; OpenFGA sync PENDING. Run npm.cmd run fga:sync when the service is available.'); process.exitCode = 2; }
++} finally { db.close(); }
+diff --git a/before/src/schema.sql b/after/src/schema.sql
+index bff5a8c..ed890c4 100644
+--- a/before/src/schema.sql
++++ b/after/src/schema.sql
+@@ -24,3 +24,23 @@ CREATE TABLE IF NOT EXISTS tasks (
+   status TEXT NOT NULL CHECK (status IN ('Open','Closed'))
+ );
+ CREATE INDEX IF NOT EXISTS tasks_project ON tasks(projectId);
++
++-- Revisions never reset. This row also pins the graph belonging to this SQLite DB.
++CREATE TABLE IF NOT EXISTS authorization_state (
++  id INTEGER PRIMARY KEY CHECK (id = 1),
++  revision INTEGER NOT NULL DEFAULT 0,
++  desiredRevision INTEGER NOT NULL DEFAULT 0,
++  appliedRevision INTEGER NOT NULL DEFAULT -1,
++  apiUrl TEXT, storeId TEXT, modelId TEXT, modelHash TEXT,
++  syncOwner TEXT, syncUntil INTEGER NOT NULL DEFAULT 0
++);
++INSERT OR IGNORE INTO authorization_state(id) VALUES (1);
++CREATE TABLE IF NOT EXISTS authorization_outbox (
++  revision INTEGER PRIMARY KEY,
++  createdAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
++);
++CREATE TABLE IF NOT EXISTS authorization_operations (
++  id TEXT PRIMARY KEY, actorId TEXT,
++  revision INTEGER NOT NULL,
++  createdAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
++);
+diff --git a/after/src/server.js b/after/src/server.js
+new file mode 100644
+index 0000000..1143841
+--- /dev/null
++++ b/after/src/server.js
+@@ -0,0 +1,7 @@
++import { createApp } from './app.js';
++const app = createApp();
++if (!(await app.locals.ready)) console.warn('OpenFGA not ready: Starter remains available; V1–V4 fail closed. Use npm.cmd run fga:sync or restart after recovery.');
++const port = Number(process.env.PORT || 3000);
++const server = app.listen(port, '127.0.0.1', () => console.log(`Task Authorization Lab: http://127.0.0.1:${port}`));
++server.on('error', error => { console.error(error.message); app.locals.db.close(); process.exitCode = 1; });
++for (const signal of ['SIGINT','SIGTERM']) process.on(signal, () => server.close(() => { app.locals.db.close(); process.exit(0); }));

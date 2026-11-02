@@ -1,0 +1,601 @@
+[
+  {
+    "id": "starter-idor",
+    "capturedAt": "2026-11-02T15:39:39.684Z",
+    "request": {
+      "method": "GET",
+      "path": "/api/starter/tasks/B1",
+      "actor": "alice",
+      "headers": {
+        "Authorization": "[REDACTED]"
+      }
+    },
+    "expectedStatus": 200,
+    "response": {
+      "status": 200,
+      "durationMs": 23,
+      "body": {
+        "data": {
+          "id": "B1",
+          "projectId": "beta",
+          "assigneeId": "charlie",
+          "title": "Beta · Private roadmap",
+          "description": "Private Beta task content",
+          "status": "Open"
+        },
+        "error": null,
+        "trace": [
+          {
+            "name": "Authentication",
+            "result": "PASS",
+            "reason": "alice"
+          },
+          {
+            "name": "Object authorization",
+            "result": "SKIPPED",
+            "reason": "STARTER_IDOR"
+          },
+          {
+            "name": "Authorization decision",
+            "result": "ALLOW",
+            "reason": "STARTER_AUTHENTICATION_ONLY"
+          },
+          {
+            "name": "Request outcome",
+            "result": "SUCCESS",
+            "reason": "HTTP_200"
+          }
+        ],
+        "requestId": "42215c7d-7616-451f-a2b2-a21f84583c7d"
+      }
+    },
+    "verification": {
+      "statusMatches": true,
+      "stateUnchanged": true
+    }
+  },
+  {
+    "id": "v1-idor",
+    "capturedAt": "2026-11-02T15:39:39.712Z",
+    "request": {
+      "method": "GET",
+      "path": "/api/v1/tasks/B1",
+      "actor": "alice",
+      "headers": {
+        "Authorization": "[REDACTED]"
+      }
+    },
+    "expectedStatus": 403,
+    "response": {
+      "status": 403,
+      "durationMs": 28,
+      "body": {
+        "data": null,
+        "error": {
+          "code": "NOT_PROJECT_MEMBER"
+        },
+        "trace": [
+          {
+            "name": "Authentication",
+            "result": "PASS",
+            "reason": "alice"
+          },
+          {
+            "name": "OpenFGA Check",
+            "result": "FAIL",
+            "reason": "can_read_v1 · task:B1 · model 01M6EEN34SWW82AG61RX2VFY96 · HIGHER_CONSISTENCY"
+          },
+          {
+            "name": "Project membership",
+            "result": "FAIL",
+            "reason": "SQLITE_SNAPSHOT_OBSERVATION"
+          },
+          {
+            "name": "Authorization decision",
+            "result": "DENY",
+            "reason": "NOT_PROJECT_MEMBER"
+          },
+          {
+            "name": "Request outcome",
+            "result": "REJECTED",
+            "reason": "NOT_PROJECT_MEMBER"
+          }
+        ],
+        "requestId": "99c3fac7-1733-4af9-a1f4-54a9819dfa8f"
+      }
+    },
+    "verification": {
+      "statusMatches": true,
+      "stateUnchanged": true,
+      "deniedDataIsNull": true
+    }
+  },
+  {
+    "id": "anonymous",
+    "capturedAt": "2026-11-02T15:39:39.721Z",
+    "request": {
+      "method": "GET",
+      "path": "/api/v1/tasks/A1",
+      "actor": "Anonymous",
+      "headers": {}
+    },
+    "expectedStatus": 401,
+    "response": {
+      "status": 401,
+      "durationMs": 8,
+      "body": {
+        "data": null,
+        "error": {
+          "code": "UNAUTHENTICATED"
+        },
+        "trace": [
+          {
+            "name": "Authentication",
+            "result": "FAIL",
+            "reason": "TOKEN_REQUIRED"
+          },
+          {
+            "name": "Request outcome",
+            "result": "REJECTED",
+            "reason": "UNAUTHENTICATED"
+          }
+        ],
+        "requestId": "ccf44b19-e22f-45b9-b755-aa2740303b32"
+      }
+    },
+    "verification": {
+      "statusMatches": true,
+      "stateUnchanged": true,
+      "deniedDataIsNull": true
+    }
+  },
+  {
+    "id": "alice-legitimate",
+    "capturedAt": "2026-11-02T15:39:39.747Z",
+    "request": {
+      "method": "GET",
+      "path": "/api/v1/tasks/A1",
+      "actor": "alice",
+      "headers": {
+        "Authorization": "[REDACTED]"
+      }
+    },
+    "expectedStatus": 200,
+    "response": {
+      "status": 200,
+      "durationMs": 25,
+      "body": {
+        "data": {
+          "id": "A1",
+          "projectId": "alpha",
+          "assigneeId": "bob",
+          "title": "Alpha · Build API",
+          "description": "Task assigned to Bob",
+          "status": "Open"
+        },
+        "error": null,
+        "trace": [
+          {
+            "name": "Authentication",
+            "result": "PASS",
+            "reason": "alice"
+          },
+          {
+            "name": "OpenFGA Check",
+            "result": "PASS",
+            "reason": "can_read_v1 · task:A1 · model 01M6EEN34SWW82AG61RX2VFY96 · HIGHER_CONSISTENCY"
+          },
+          {
+            "name": "Project membership",
+            "result": "PASS",
+            "reason": "SQLITE_SNAPSHOT_OBSERVATION"
+          },
+          {
+            "name": "Authorization decision",
+            "result": "ALLOW",
+            "reason": "PROJECT_MEMBER_ALLOWED"
+          },
+          {
+            "name": "Request outcome",
+            "result": "SUCCESS",
+            "reason": "HTTP_200"
+          }
+        ],
+        "requestId": "72b320c2-1eab-48dc-805f-0821c654a212"
+      }
+    },
+    "verification": {
+      "statusMatches": true,
+      "stateUnchanged": true
+    }
+  },
+  {
+    "id": "charlie-legitimate",
+    "capturedAt": "2026-11-02T15:39:39.769Z",
+    "request": {
+      "method": "GET",
+      "path": "/api/v1/tasks/B1",
+      "actor": "charlie",
+      "headers": {
+        "Authorization": "[REDACTED]"
+      }
+    },
+    "expectedStatus": 200,
+    "response": {
+      "status": 200,
+      "durationMs": 22,
+      "body": {
+        "data": {
+          "id": "B1",
+          "projectId": "beta",
+          "assigneeId": "charlie",
+          "title": "Beta · Private roadmap",
+          "description": "Private Beta task content",
+          "status": "Open"
+        },
+        "error": null,
+        "trace": [
+          {
+            "name": "Authentication",
+            "result": "PASS",
+            "reason": "charlie"
+          },
+          {
+            "name": "OpenFGA Check",
+            "result": "PASS",
+            "reason": "can_read_v1 · task:B1 · model 01M6EEN34SWW82AG61RX2VFY96 · HIGHER_CONSISTENCY"
+          },
+          {
+            "name": "Project membership",
+            "result": "PASS",
+            "reason": "SQLITE_SNAPSHOT_OBSERVATION"
+          },
+          {
+            "name": "Authorization decision",
+            "result": "ALLOW",
+            "reason": "PROJECT_MEMBER_ALLOWED"
+          },
+          {
+            "name": "Request outcome",
+            "result": "SUCCESS",
+            "reason": "HTTP_200"
+          }
+        ],
+        "requestId": "6519f50e-b2a4-4865-85f6-08518b0a1725"
+      }
+    },
+    "verification": {
+      "statusMatches": true,
+      "stateUnchanged": true
+    }
+  },
+  {
+    "id": "member-not-assigned",
+    "capturedAt": "2026-11-02T15:39:39.806Z",
+    "request": {
+      "method": "PATCH",
+      "path": "/api/v3/tasks/A4",
+      "actor": "bob",
+      "headers": {
+        "Authorization": "[REDACTED]",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "title": "Denied attempt"
+      }
+    },
+    "expectedStatus": 403,
+    "response": {
+      "status": 403,
+      "durationMs": 36,
+      "body": {
+        "data": null,
+        "error": {
+          "code": "NOT_ASSIGNEE"
+        },
+        "trace": [
+          {
+            "name": "Authentication",
+            "result": "PASS",
+            "reason": "bob"
+          },
+          {
+            "name": "OpenFGA Check",
+            "result": "FAIL",
+            "reason": "can_edit_v3 · task:A4 · model 01M6EEN34SWW82AG61RX2VFY96 · HIGHER_CONSISTENCY"
+          },
+          {
+            "name": "Authorization decision",
+            "result": "DENY",
+            "reason": "NOT_ASSIGNEE"
+          },
+          {
+            "name": "Request outcome",
+            "result": "REJECTED",
+            "reason": "NOT_ASSIGNEE"
+          }
+        ],
+        "requestId": "f7f804ba-c848-4cc7-bec0-a6aac15f2515"
+      }
+    },
+    "verification": {
+      "statusMatches": true,
+      "stateUnchanged": true,
+      "deniedDataIsNull": true
+    }
+  },
+  {
+    "id": "member-task-closed",
+    "capturedAt": "2026-11-02T15:39:39.829Z",
+    "request": {
+      "method": "PATCH",
+      "path": "/api/v3/tasks/A2",
+      "actor": "bob",
+      "headers": {
+        "Authorization": "[REDACTED]",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "title": "Denied attempt"
+      }
+    },
+    "expectedStatus": 403,
+    "response": {
+      "status": 403,
+      "durationMs": 23,
+      "body": {
+        "data": null,
+        "error": {
+          "code": "TASK_CLOSED"
+        },
+        "trace": [
+          {
+            "name": "Authentication",
+            "result": "PASS",
+            "reason": "bob"
+          },
+          {
+            "name": "OpenFGA Check",
+            "result": "FAIL",
+            "reason": "can_edit_v3 · task:A2 · model 01M6EEN34SWW82AG61RX2VFY96 · HIGHER_CONSISTENCY"
+          },
+          {
+            "name": "Authorization decision",
+            "result": "DENY",
+            "reason": "TASK_CLOSED"
+          },
+          {
+            "name": "Request outcome",
+            "result": "REJECTED",
+            "reason": "TASK_CLOSED"
+          }
+        ],
+        "requestId": "9dc45977-30e6-4477-b41a-e3ab0d76f595"
+      }
+    },
+    "verification": {
+      "statusMatches": true,
+      "stateUnchanged": true,
+      "deniedDataIsNull": true
+    }
+  },
+  {
+    "id": "spoofed-role",
+    "capturedAt": "2026-11-02T15:39:39.851Z",
+    "request": {
+      "method": "DELETE",
+      "path": "/api/v2/projects/alpha?role=Admin",
+      "actor": "bob",
+      "headers": {
+        "X-Role": "Admin",
+        "Authorization": "[REDACTED]"
+      }
+    },
+    "expectedStatus": 403,
+    "response": {
+      "status": 403,
+      "durationMs": 21,
+      "body": {
+        "data": null,
+        "error": {
+          "code": "ROLE_DENIED"
+        },
+        "trace": [
+          {
+            "name": "Authentication",
+            "result": "PASS",
+            "reason": "bob"
+          },
+          {
+            "name": "OpenFGA Check",
+            "result": "FAIL",
+            "reason": "can_delete_v2 · project:alpha · model 01M6EEN34SWW82AG61RX2VFY96 · HIGHER_CONSISTENCY"
+          },
+          {
+            "name": "Authorization decision",
+            "result": "DENY",
+            "reason": "ROLE_DENIED"
+          },
+          {
+            "name": "Request outcome",
+            "result": "REJECTED",
+            "reason": "ROLE_DENIED"
+          }
+        ],
+        "requestId": "a422d89a-1fa1-4373-b0eb-289fc2c33914"
+      }
+    },
+    "verification": {
+      "statusMatches": true,
+      "stateUnchanged": true,
+      "deniedDataIsNull": true
+    }
+  },
+  {
+    "id": "admin-cross-tenant",
+    "capturedAt": "2026-11-02T15:39:39.873Z",
+    "request": {
+      "method": "GET",
+      "path": "/api/v4/tasks/B1?tenantId=beta&role=Admin",
+      "actor": "admin-alpha",
+      "headers": {
+        "X-Role": "Admin",
+        "X-Tenant-Id": "beta",
+        "Authorization": "[REDACTED]"
+      }
+    },
+    "expectedStatus": 403,
+    "response": {
+      "status": 403,
+      "durationMs": 22,
+      "body": {
+        "data": null,
+        "error": {
+          "code": "TENANT_MISMATCH"
+        },
+        "trace": [
+          {
+            "name": "Authentication",
+            "result": "PASS",
+            "reason": "admin-alpha"
+          },
+          {
+            "name": "OpenFGA Check",
+            "result": "FAIL",
+            "reason": "can_read_v4 · task:B1 · model 01M6EEN34SWW82AG61RX2VFY96 · HIGHER_CONSISTENCY"
+          },
+          {
+            "name": "Authorization decision",
+            "result": "DENY",
+            "reason": "TENANT_MISMATCH"
+          },
+          {
+            "name": "Request outcome",
+            "result": "REJECTED",
+            "reason": "TENANT_MISMATCH"
+          }
+        ],
+        "requestId": "90e8e47c-4006-49be-8425-d9797fbe9524"
+      }
+    },
+    "verification": {
+      "statusMatches": true,
+      "stateUnchanged": true,
+      "deniedDataIsNull": true
+    }
+  },
+  {
+    "id": "admin-own-tenant",
+    "capturedAt": "2026-11-02T15:39:39.895Z",
+    "request": {
+      "method": "GET",
+      "path": "/api/v4/tasks/A1",
+      "actor": "admin-alpha",
+      "headers": {
+        "Authorization": "[REDACTED]"
+      }
+    },
+    "expectedStatus": 200,
+    "response": {
+      "status": 200,
+      "durationMs": 22,
+      "body": {
+        "data": {
+          "id": "A1",
+          "projectId": "alpha",
+          "assigneeId": "bob",
+          "title": "Alpha · Build API",
+          "description": "Task assigned to Bob",
+          "status": "Open"
+        },
+        "error": null,
+        "trace": [
+          {
+            "name": "Authentication",
+            "result": "PASS",
+            "reason": "admin-alpha"
+          },
+          {
+            "name": "OpenFGA Check",
+            "result": "PASS",
+            "reason": "can_read_v4 · task:A1 · model 01M6EEN34SWW82AG61RX2VFY96 · HIGHER_CONSISTENCY"
+          },
+          {
+            "name": "Authorization decision",
+            "result": "ALLOW",
+            "reason": "TENANT_ADMIN_ALLOWED"
+          },
+          {
+            "name": "Request outcome",
+            "result": "SUCCESS",
+            "reason": "HTTP_200"
+          }
+        ],
+        "requestId": "51b6eb77-d71f-4d80-9d3d-ffaa779e7b1c"
+      }
+    },
+    "verification": {
+      "statusMatches": true,
+      "stateUnchanged": true
+    }
+  },
+  {
+    "id": "member-assigned-open",
+    "capturedAt": "2026-11-02T15:39:39.922Z",
+    "request": {
+      "method": "PATCH",
+      "path": "/api/v3/tasks/A1",
+      "actor": "bob",
+      "headers": {
+        "Authorization": "[REDACTED]",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "title": "Evidence: assigned open task updated"
+      }
+    },
+    "expectedStatus": 200,
+    "response": {
+      "status": 200,
+      "durationMs": 26,
+      "body": {
+        "data": {
+          "id": "A1",
+          "projectId": "alpha",
+          "assigneeId": "bob",
+          "title": "Evidence: assigned open task updated",
+          "description": "Task assigned to Bob",
+          "status": "Open"
+        },
+        "error": null,
+        "trace": [
+          {
+            "name": "Authentication",
+            "result": "PASS",
+            "reason": "bob"
+          },
+          {
+            "name": "OpenFGA Check",
+            "result": "PASS",
+            "reason": "can_edit_v3 · task:A1 · model 01M6EEN34SWW82AG61RX2VFY96 · HIGHER_CONSISTENCY"
+          },
+          {
+            "name": "Authorization decision",
+            "result": "ALLOW",
+            "reason": "POLICY_ALLOWED"
+          },
+          {
+            "name": "Request outcome",
+            "result": "SUCCESS",
+            "reason": "HTTP_200"
+          }
+        ],
+        "requestId": "7b925695-758b-4ba9-8412-7884e956c9aa"
+      }
+    },
+    "verification": {
+      "statusMatches": true,
+      "stateUnchanged": false
+    }
+  }
+]

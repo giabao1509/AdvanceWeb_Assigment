@@ -1,0 +1,574 @@
+{
+  "schema_version": "1.1",
+  "type_definitions": [
+    {
+      "type": "user",
+      "relations": {},
+      "metadata": null
+    },
+    {
+      "type": "tenant",
+      "relations": {
+        "member": {
+          "this": {}
+        },
+        "admin": {
+          "this": {}
+        }
+      },
+      "metadata": {
+        "relations": {
+          "member": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              }
+            ]
+          },
+          "admin": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "project",
+      "relations": {
+        "tenant": {
+          "this": {}
+        },
+        "owner": {
+          "this": {}
+        },
+        "member": {
+          "this": {}
+        },
+        "viewer": {
+          "this": {}
+        },
+        "participant": {
+          "union": {
+            "child": [
+              {
+                "computedUserset": {
+                  "relation": "owner"
+                }
+              },
+              {
+                "computedUserset": {
+                  "relation": "member"
+                }
+              },
+              {
+                "computedUserset": {
+                  "relation": "viewer"
+                }
+              }
+            ]
+          }
+        },
+        "same_tenant": {
+          "tupleToUserset": {
+            "computedUserset": {
+              "relation": "member"
+            },
+            "tupleset": {
+              "relation": "tenant"
+            }
+          }
+        },
+        "tenant_admin": {
+          "tupleToUserset": {
+            "computedUserset": {
+              "relation": "admin"
+            },
+            "tupleset": {
+              "relation": "tenant"
+            }
+          }
+        },
+        "can_read_v1": {
+          "computedUserset": {
+            "relation": "participant"
+          }
+        },
+        "can_delete_v1": {
+          "computedUserset": {
+            "relation": "participant"
+          }
+        },
+        "can_manage_members_v1": {
+          "computedUserset": {
+            "relation": "participant"
+          }
+        },
+        "can_read_v2": {
+          "computedUserset": {
+            "relation": "participant"
+          }
+        },
+        "can_delete_v2": {
+          "computedUserset": {
+            "relation": "owner"
+          }
+        },
+        "can_manage_members_v2": {
+          "computedUserset": {
+            "relation": "owner"
+          }
+        },
+        "can_read_v3": {
+          "computedUserset": {
+            "relation": "participant"
+          }
+        },
+        "can_delete_v3": {
+          "computedUserset": {
+            "relation": "owner"
+          }
+        },
+        "can_manage_members_v3": {
+          "computedUserset": {
+            "relation": "owner"
+          }
+        },
+        "v4_reader": {
+          "union": {
+            "child": [
+              {
+                "computedUserset": {
+                  "relation": "participant"
+                }
+              },
+              {
+                "computedUserset": {
+                  "relation": "tenant_admin"
+                }
+              }
+            ]
+          }
+        },
+        "v4_manager": {
+          "union": {
+            "child": [
+              {
+                "computedUserset": {
+                  "relation": "owner"
+                }
+              },
+              {
+                "computedUserset": {
+                  "relation": "tenant_admin"
+                }
+              }
+            ]
+          }
+        },
+        "can_read_v4": {
+          "intersection": {
+            "child": [
+              {
+                "computedUserset": {
+                  "relation": "v4_reader"
+                }
+              },
+              {
+                "computedUserset": {
+                  "relation": "same_tenant"
+                }
+              }
+            ]
+          }
+        },
+        "can_delete_v4": {
+          "intersection": {
+            "child": [
+              {
+                "computedUserset": {
+                  "relation": "v4_manager"
+                }
+              },
+              {
+                "computedUserset": {
+                  "relation": "same_tenant"
+                }
+              }
+            ]
+          }
+        },
+        "can_manage_members_v4": {
+          "intersection": {
+            "child": [
+              {
+                "computedUserset": {
+                  "relation": "v4_manager"
+                }
+              },
+              {
+                "computedUserset": {
+                  "relation": "same_tenant"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "metadata": {
+        "relations": {
+          "tenant": {
+            "directly_related_user_types": [
+              {
+                "type": "tenant"
+              }
+            ]
+          },
+          "owner": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              }
+            ]
+          },
+          "member": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              }
+            ]
+          },
+          "viewer": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              }
+            ]
+          },
+          "participant": {
+            "directly_related_user_types": []
+          },
+          "same_tenant": {
+            "directly_related_user_types": []
+          },
+          "tenant_admin": {
+            "directly_related_user_types": []
+          },
+          "can_read_v1": {
+            "directly_related_user_types": []
+          },
+          "can_delete_v1": {
+            "directly_related_user_types": []
+          },
+          "can_manage_members_v1": {
+            "directly_related_user_types": []
+          },
+          "can_read_v2": {
+            "directly_related_user_types": []
+          },
+          "can_delete_v2": {
+            "directly_related_user_types": []
+          },
+          "can_manage_members_v2": {
+            "directly_related_user_types": []
+          },
+          "can_read_v3": {
+            "directly_related_user_types": []
+          },
+          "can_delete_v3": {
+            "directly_related_user_types": []
+          },
+          "can_manage_members_v3": {
+            "directly_related_user_types": []
+          },
+          "v4_reader": {
+            "directly_related_user_types": []
+          },
+          "v4_manager": {
+            "directly_related_user_types": []
+          },
+          "can_read_v4": {
+            "directly_related_user_types": []
+          },
+          "can_delete_v4": {
+            "directly_related_user_types": []
+          },
+          "can_manage_members_v4": {
+            "directly_related_user_types": []
+          }
+        }
+      }
+    },
+    {
+      "type": "task",
+      "relations": {
+        "project": {
+          "this": {}
+        },
+        "assignee": {
+          "this": {}
+        },
+        "project_owner": {
+          "tupleToUserset": {
+            "computedUserset": {
+              "relation": "owner"
+            },
+            "tupleset": {
+              "relation": "project"
+            }
+          }
+        },
+        "project_member": {
+          "tupleToUserset": {
+            "computedUserset": {
+              "relation": "member"
+            },
+            "tupleset": {
+              "relation": "project"
+            }
+          }
+        },
+        "project_participant": {
+          "tupleToUserset": {
+            "computedUserset": {
+              "relation": "participant"
+            },
+            "tupleset": {
+              "relation": "project"
+            }
+          }
+        },
+        "assigned_member": {
+          "intersection": {
+            "child": [
+              {
+                "computedUserset": {
+                  "relation": "project_member"
+                }
+              },
+              {
+                "computedUserset": {
+                  "relation": "assignee"
+                }
+              }
+            ]
+          }
+        },
+        "v3_editor": {
+          "union": {
+            "child": [
+              {
+                "computedUserset": {
+                  "relation": "project_owner"
+                }
+              },
+              {
+                "computedUserset": {
+                  "relation": "assigned_member"
+                }
+              }
+            ]
+          }
+        },
+        "tenant_admin": {
+          "tupleToUserset": {
+            "computedUserset": {
+              "relation": "tenant_admin"
+            },
+            "tupleset": {
+              "relation": "project"
+            }
+          }
+        },
+        "same_tenant": {
+          "tupleToUserset": {
+            "computedUserset": {
+              "relation": "same_tenant"
+            },
+            "tupleset": {
+              "relation": "project"
+            }
+          }
+        },
+        "v4_editor": {
+          "union": {
+            "child": [
+              {
+                "computedUserset": {
+                  "relation": "v3_editor"
+                }
+              },
+              {
+                "computedUserset": {
+                  "relation": "tenant_admin"
+                }
+              }
+            ]
+          }
+        },
+        "can_read_v1": {
+          "tupleToUserset": {
+            "computedUserset": {
+              "relation": "can_read_v1"
+            },
+            "tupleset": {
+              "relation": "project"
+            }
+          }
+        },
+        "can_edit_v1": {
+          "computedUserset": {
+            "relation": "project_participant"
+          }
+        },
+        "can_read_v2": {
+          "tupleToUserset": {
+            "computedUserset": {
+              "relation": "can_read_v2"
+            },
+            "tupleset": {
+              "relation": "project"
+            }
+          }
+        },
+        "can_edit_v2": {
+          "union": {
+            "child": [
+              {
+                "computedUserset": {
+                  "relation": "project_owner"
+                }
+              },
+              {
+                "computedUserset": {
+                  "relation": "project_member"
+                }
+              }
+            ]
+          }
+        },
+        "can_read_v3": {
+          "tupleToUserset": {
+            "computedUserset": {
+              "relation": "can_read_v3"
+            },
+            "tupleset": {
+              "relation": "project"
+            }
+          }
+        },
+        "can_edit_v3": {
+          "computedUserset": {
+            "relation": "v3_editor"
+          }
+        },
+        "can_read_v4": {
+          "tupleToUserset": {
+            "computedUserset": {
+              "relation": "can_read_v4"
+            },
+            "tupleset": {
+              "relation": "project"
+            }
+          }
+        },
+        "can_edit_v4": {
+          "intersection": {
+            "child": [
+              {
+                "computedUserset": {
+                  "relation": "v4_editor"
+                }
+              },
+              {
+                "computedUserset": {
+                  "relation": "same_tenant"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "metadata": {
+        "relations": {
+          "project": {
+            "directly_related_user_types": [
+              {
+                "type": "project"
+              }
+            ]
+          },
+          "assignee": {
+            "directly_related_user_types": [
+              {
+                "type": "user",
+                "condition": "task_is_open"
+              }
+            ]
+          },
+          "project_owner": {
+            "directly_related_user_types": []
+          },
+          "project_member": {
+            "directly_related_user_types": []
+          },
+          "project_participant": {
+            "directly_related_user_types": []
+          },
+          "assigned_member": {
+            "directly_related_user_types": []
+          },
+          "v3_editor": {
+            "directly_related_user_types": []
+          },
+          "tenant_admin": {
+            "directly_related_user_types": []
+          },
+          "same_tenant": {
+            "directly_related_user_types": []
+          },
+          "v4_editor": {
+            "directly_related_user_types": []
+          },
+          "can_read_v1": {
+            "directly_related_user_types": []
+          },
+          "can_edit_v1": {
+            "directly_related_user_types": []
+          },
+          "can_read_v2": {
+            "directly_related_user_types": []
+          },
+          "can_edit_v2": {
+            "directly_related_user_types": []
+          },
+          "can_read_v3": {
+            "directly_related_user_types": []
+          },
+          "can_edit_v3": {
+            "directly_related_user_types": []
+          },
+          "can_read_v4": {
+            "directly_related_user_types": []
+          },
+          "can_edit_v4": {
+            "directly_related_user_types": []
+          }
+        }
+      }
+    }
+  ],
+  "conditions": {
+    "task_is_open": {
+      "name": "task_is_open",
+      "expression": "current_status == 'Open'",
+      "parameters": {
+        "current_status": {
+          "type_name": "TYPE_NAME_STRING"
+        }
+      }
+    }
+  }
+}

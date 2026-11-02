@@ -1,5 +1,6 @@
 import { createApp } from './app.js';
 const app = createApp();
+if (!(await app.locals.ready)) console.warn('OpenFGA not ready: Starter remains available; V1–V4 fail closed. Use npm.cmd run fga:sync or restart after recovery.');
 const port = Number(process.env.PORT || 3000);
 const server = app.listen(port, '127.0.0.1', () => console.log(`Task Authorization Lab: http://127.0.0.1:${port}`));
 server.on('error', error => { console.error(error.message); app.locals.db.close(); process.exitCode = 1; });

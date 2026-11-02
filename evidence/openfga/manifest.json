@@ -1,0 +1,341 @@
+{
+  "startedAt": "2026-11-02T15:39:39.013Z",
+  "node": "v22.17.1",
+  "platform": "win32",
+  "database": "Fresh temporary SQLite files; live data/lab.sqlite is never opened or reset.",
+  "provenance": "Current OpenFGA Starter/V1 runtime. Before is the preserved pre-OpenFGA reconstructed authentication-only snapshot, not a historical commit; after is a fresh exact current source copy.",
+  "commands": [
+    {
+      "command": "docker compose ps -q openfga",
+      "startedAt": "2026-11-02T15:39:39.014Z",
+      "finishedAt": "2026-11-02T15:39:39.318Z",
+      "expectedExitCode": 0,
+      "actualExitCode": 0,
+      "signal": null
+    },
+    {
+      "command": "Inspect running OpenFGA datastore (only safe fields exported)",
+      "startedAt": "2026-11-02T15:39:39.318Z",
+      "finishedAt": "2026-11-02T15:39:39.411Z",
+      "expectedExitCode": 0,
+      "actualExitCode": 0,
+      "signal": null
+    },
+    {
+      "command": "git diff --no-index before/src after/src",
+      "startedAt": "2026-11-02T15:39:39.949Z",
+      "finishedAt": "2026-11-02T15:39:40.013Z",
+      "expectedExitCode": 1,
+      "actualExitCode": 1,
+      "signal": null
+    },
+    {
+      "command": "node scripts/idor-regression.js --version=starter [current app]",
+      "startedAt": "2026-11-02T15:39:40.014Z",
+      "finishedAt": "2026-11-02T15:39:40.991Z",
+      "expectedExitCode": 1,
+      "actualExitCode": 1,
+      "signal": null,
+      "log": "regression-starter.txt"
+    },
+    {
+      "command": "node scripts/idor-regression.js --version=v1 [current app]",
+      "startedAt": "2026-11-02T15:39:40.992Z",
+      "finishedAt": "2026-11-02T15:39:42.309Z",
+      "expectedExitCode": 0,
+      "actualExitCode": 0,
+      "signal": null,
+      "log": "regression-v1.txt"
+    },
+    {
+      "command": "node scripts/idor-regression.js --version=v1 [reconstructed snapshot: before]",
+      "startedAt": "2026-11-02T15:39:42.310Z",
+      "finishedAt": "2026-11-02T15:39:43.683Z",
+      "expectedExitCode": 1,
+      "actualExitCode": 1,
+      "signal": null,
+      "log": "regression-snapshot-before.txt"
+    },
+    {
+      "command": "node scripts/idor-regression.js --version=v1 [reconstructed snapshot: after]",
+      "startedAt": "2026-11-02T15:39:43.684Z",
+      "finishedAt": "2026-11-02T15:39:45.390Z",
+      "expectedExitCode": 0,
+      "actualExitCode": 0,
+      "signal": null,
+      "log": "regression-snapshot-after.txt"
+    },
+    {
+      "command": "OpenFGA DSL/JSON check",
+      "startedAt": "2026-11-02T15:39:45.391Z",
+      "finishedAt": "2026-11-02T15:39:46.048Z",
+      "expectedExitCode": 0,
+      "actualExitCode": 0,
+      "signal": null,
+      "log": "model-build.txt"
+    },
+    {
+      "command": "node --test (npm.cmd test)",
+      "startedAt": "2026-11-02T15:39:46.048Z",
+      "finishedAt": "2026-11-02T15:40:13.751Z",
+      "expectedExitCode": 0,
+      "actualExitCode": 0,
+      "signal": null,
+      "log": "tests-after.txt"
+    },
+    {
+      "command": "node scripts/ui-smoke.js (npm.cmd run test:ui)",
+      "startedAt": "2026-11-02T15:40:13.752Z",
+      "finishedAt": "2026-11-02T15:40:26.644Z",
+      "expectedExitCode": 0,
+      "actualExitCode": 0,
+      "signal": null,
+      "log": "ui-after.txt"
+    },
+    {
+      "command": "git apply --check -p2 ../../authorization.diff [from snapshots/before]",
+      "startedAt": "2026-11-02T15:40:26.645Z",
+      "finishedAt": "2026-11-02T15:40:26.701Z",
+      "expectedExitCode": 0,
+      "actualExitCode": 0,
+      "signal": null
+    },
+    {
+      "command": "git rev-parse HEAD",
+      "startedAt": "2026-11-02T15:40:26.708Z",
+      "finishedAt": "2026-11-02T15:40:26.765Z",
+      "expectedExitCode": 0,
+      "actualExitCode": 0,
+      "signal": null
+    },
+    {
+      "command": "git status --porcelain",
+      "startedAt": "2026-11-02T15:40:26.765Z",
+      "finishedAt": "2026-11-02T15:40:26.838Z",
+      "expectedExitCode": 0,
+      "actualExitCode": 0,
+      "signal": null
+    }
+  ],
+  "requests": [
+    {
+      "id": "starter-idor",
+      "expectedStatus": 200,
+      "actualStatus": 200
+    },
+    {
+      "id": "v1-idor",
+      "expectedStatus": 403,
+      "actualStatus": 403
+    },
+    {
+      "id": "anonymous",
+      "expectedStatus": 401,
+      "actualStatus": 401
+    },
+    {
+      "id": "alice-legitimate",
+      "expectedStatus": 200,
+      "actualStatus": 200
+    },
+    {
+      "id": "charlie-legitimate",
+      "expectedStatus": 200,
+      "actualStatus": 200
+    },
+    {
+      "id": "member-not-assigned",
+      "expectedStatus": 403,
+      "actualStatus": 403
+    },
+    {
+      "id": "member-task-closed",
+      "expectedStatus": 403,
+      "actualStatus": 403
+    },
+    {
+      "id": "spoofed-role",
+      "expectedStatus": 403,
+      "actualStatus": 403
+    },
+    {
+      "id": "admin-cross-tenant",
+      "expectedStatus": 403,
+      "actualStatus": 403
+    },
+    {
+      "id": "admin-own-tenant",
+      "expectedStatus": 200,
+      "actualStatus": 200
+    },
+    {
+      "id": "member-assigned-open",
+      "expectedStatus": 200,
+      "actualStatus": 200
+    }
+  ],
+  "sourceSha256": {
+    "src/app.js": "99560564cebe2069fd1fc363319d3e4714116419d86eb1152c72bea5988c6ef1",
+    "src/policy.js": "5eb0db730e406be287820efb05bfaff71d84118bf16f8a4ab5b4b77865174ee8",
+    "src/auth.js": "c3f618d9de9ad688b87de2c45bd0193333d1eb8d781d6b722bcaa939d5484fb1",
+    "src/db.js": "1a58d523265185c65b8a1ad31546a1f11ba5f78ac2065032f29f9f77c3348268",
+    "src/schema.sql": "dbe9fa7bd93a84495d2d56c5ee49353fca7be118ed841846680043035a532132",
+    "src/server.js": "9f6b822f9b13fc83c656c4742beb584ac6e001129e0c08521ba528fb63d9e54e",
+    "src/reset.js": "6edd62f9f7ef3501bbd456b8be27aebc640357817f31c445995b093e8a0600ef",
+    "test/authorization.test.js": "5a3b45502e2addc845db0c762a35a0b0727aae92e823f85d04fd0d058afa79ce",
+    "test/policy.test.js": "1c3684d60fc6ad7c12bc462e88240037a0ab721454d2ea3fdf03f7e3b5762274",
+    "scripts/idor-regression.js": "1abd47d005852bd7f895290d432ce931f13b9e9d900890164af1d3d9d106eb27",
+    "scripts/lab-fixture.js": "fded53278549e01c1fd16b6c691ff6adae913faa95c9bda2120c862db2adcaae",
+    "scripts/collect-evidence.js": "8b04cc799cba2d5fa7e358e9c55a0ec698d6d2a9e2fba189cafd71bf8b9e8e5a",
+    "scripts/ui-smoke.js": "fe20a548ade9f6f10a4799300145cd04a0ad7e44f4cf77fc1a18b0bf00440c0e",
+    "scripts/openfga-sync.js": "15d34027fc96bfea5cad0c64a0b5faaa78552205b8673f01ec8b02e1b2125a5a",
+    "scripts/build-openfga-model.js": "c15405242743d52ec38a1eb285bb44dc20253fbca332080a67c33e4854119a66",
+    "scripts/render-report.py": "5fc8edc9bb358f672bd3a90f52056b0c3a0abbb60542b6b109eedda3b91264ed",
+    "public/app.js": "c8c20b0d501111a9f73a402e3e178c8a44316c07225c3fa4d7c63605154f829e",
+    "public/index.html": "410d219e8e31bc34ec48d64592185b1539a2454e9cea534337e25b9b8345f27a",
+    "public/styles.css": "de90f33fa9fd768db8be1ae7fbcc451a0b754e597452502eea0fcdb5d2b7a159",
+    "package.json": "4f9da3944b80a8bb1f6722c4578fdf6307ef9adafa61a3209b5c451889268118",
+    "package-lock.json": "5f4e6a4ce683717caf6accf9dae655afef7d62e66aba80a4f3a4c4370d9c1c3d",
+    "compose.yaml": "922658b8c6160f7f4d69a0c3b316602c20667556b24bec35dfb7184c1396063f",
+    ".env.example": "899d10e5b6d2ce05597d6cf875d0f9576ba8268e02821824db6528cea4cae68c",
+    "openfga/model.fga": "20dc64079fa5d037d9d74b87207e44fca8059ab2bce967adf7640ef653b5b827",
+    "openfga/model.json": "49ce649553fea57b43131e437be25ee90c7ef8e8506913ee98d6e1c79bdf0761",
+    "src/openfga/client.js": "a058c854f49c680fd1889bc9eb8bc46d928050f5123ae532ad09201c4c95a89e",
+    "src/openfga/relations.js": "8600405664e9266e98f921992d5ed9f0220c532494c24cd8e9d096be2d71459d",
+    "src/openfga/sync.js": "c097553364b0ee39290abf22733c942b6700b18484f7d91b549229ca7b864027",
+    "test/openfga.test.js": "1fb6b6649d9c8e31500ed164f52be9275aae7a0141c10678087da3d030f9cff5",
+    "README.md": "78ef2883c242d11365b18b42f0495e90fb8b5790af890c0d0247c90c83905cf2",
+    "POLICY.md": "1683fedc4522fb785bee37b3f6f2902b2a14e1465ea0672255629a37b93cb75d",
+    "DEMO.md": "53ecf0d57edf3f177316acc962775d5822a0b45dac7ea31a402002c1fbfff830",
+    "UI-PLAN.md": "2f6ee78466fca1985f91ac9c785fd6fac151190f774de47c513659a4e669d58d",
+    "OPENFGA-PLAN.md": "d62df0c1977bf4850e1f1eb911a4c066c86eee169298bb3623b8bf19818cd9a3",
+    "report.md": "4fbfb9a0518f2f276993548667fdf166daf5c2a54f6b8076e4a23cf4931c0671",
+    "report.html": "4ec84a10c9cdfd18c8709b9f58674884886319d6dd1374472e6583e47ac21145",
+    "technical-decisions.html": "b5206996335712007afaab6a0baedc2190f5ade59d66a4e38802c88810834177"
+  },
+  "artifactsSha256": {
+    "authorization.diff": "c8f51b8bfcc315931aae2b41e1a6b0d1507127a37311333555ab8ac97e02259e",
+    "datastore.json": "e23c87805f775d24ac1fec45326fbdbfe26424f58e79afbfcd17250ba6f7c44e",
+    "model-build.txt": "1d613f30794df9e9aa76447cf703751582feae5c0fe9d26ede31173a0ebc3f51",
+    "regression-snapshot-after.txt": "598a57a43c26dd909d8068f9b0ba9d4351562ef70cb9a00339934dfdd4b3ce49",
+    "regression-snapshot-before.txt": "1c8dbc9f23485066e8ab89a3e76cab9e35f3773e64bf81ca6b8fb650a9ba5780",
+    "regression-starter.txt": "990a640bf7559aa6c1124ec1a1be146f1944db47fb1d6954e190982d2c35e6e5",
+    "regression-v1.txt": "61172ba41d7fd60fdcb4ee4cb57aa6821aef6bf3a88dc706afaacb9f0e18c4bf",
+    "sqlite-migration.json": "433467bee93301d0a1ea3610d352e7ce26bf02ea3f1a5d7d2a7567e6e9e4ff0a",
+    "sqlite-restart.json": "daca5c6abe9af5221833f42b069938ef3002d041476563e108082d2ef9585d50",
+    "starter-idor.json": "5ef6adaedfbffb5ba78b99320be3b2f15102b256b4978316c9cd42e56714a026",
+    "tests-after.txt": "85aae65e89a2d9fec3989808738e85f96ceca9fbaba15ab81c953ff4e81fcf58",
+    "ui-after.txt": "2b5768c33994c8e3b893943147da92efe38fe388568e75c5b83f5d6b438f70b4",
+    "v1-idor.json": "5bb94fbb5a8974744637b5cd2c29f9ca87b17ed7c9c9f1c39cc0d58b15e78f28",
+    "verification-matrix.json": "04cc90baf9aa9173e5bf48bffb86a19dc29234e8549c8b0d37a6f353795a6b0a",
+    "snapshots/after/openfga/model.json": "49ce649553fea57b43131e437be25ee90c7ef8e8506913ee98d6e1c79bdf0761",
+    "snapshots/after/src/app.js": "99560564cebe2069fd1fc363319d3e4714116419d86eb1152c72bea5988c6ef1",
+    "snapshots/after/src/auth.js": "c3f618d9de9ad688b87de2c45bd0193333d1eb8d781d6b722bcaa939d5484fb1",
+    "snapshots/after/src/db.js": "1a58d523265185c65b8a1ad31546a1f11ba5f78ac2065032f29f9f77c3348268",
+    "snapshots/after/src/policy.js": "5eb0db730e406be287820efb05bfaff71d84118bf16f8a4ab5b4b77865174ee8",
+    "snapshots/after/src/reset.js": "6edd62f9f7ef3501bbd456b8be27aebc640357817f31c445995b093e8a0600ef",
+    "snapshots/after/src/schema.sql": "dbe9fa7bd93a84495d2d56c5ee49353fca7be118ed841846680043035a532132",
+    "snapshots/after/src/server.js": "9f6b822f9b13fc83c656c4742beb584ac6e001129e0c08521ba528fb63d9e54e",
+    "snapshots/before/src/app.js": "23b5c7ea1feee31676f4534f8a29202574f9191c80115bb26625b998df19fd0b",
+    "snapshots/before/src/auth.js": "c3f618d9de9ad688b87de2c45bd0193333d1eb8d781d6b722bcaa939d5484fb1",
+    "snapshots/before/src/db.js": "32adc78aa5cc15d7040ee982f1d4a583e769e7f57e481057587c88993793a8d4",
+    "snapshots/before/src/policy.js": "66e71ebcac87fc987fd5027c82322d73417965bb7fdf00946d02f806d9e15220",
+    "snapshots/before/src/schema.sql": "97b72d7a57bf60e12d3507db360e88613d98c477590f6fbee4646b299b03d0dd",
+    "snapshots/after/src/openfga/client.js": "a058c854f49c680fd1889bc9eb8bc46d928050f5123ae532ad09201c4c95a89e",
+    "snapshots/after/src/openfga/relations.js": "8600405664e9266e98f921992d5ed9f0220c532494c24cd8e9d096be2d71459d",
+    "snapshots/after/src/openfga/sync.js": "c097553364b0ee39290abf22733c942b6700b18484f7d91b549229ca7b864027"
+  },
+  "status": "PASS",
+  "datastore": {
+    "engine": "sqlite",
+    "image": "openfga/openfga:v1.22.1",
+    "imageId": "sha256:b852071314f1fda1194d341a6ebac0a4f619b3cd87a6626d2ccc7048af4ec671",
+    "databasePath": "/home/nonroot/openfga.sqlite",
+    "volume": "block6-advance_openfga-sqlite",
+    "healthy": true
+  },
+  "snapshotReconstruction": {
+    "before": "Preserved pre-OpenFGA reconstructed authentication-only snapshot, copied from evidence/snapshots/before/src; not historical source.",
+    "after": "Exact current src plus generated OpenFGA model; V1 checks a real, isolated OpenFGA store.",
+    "beforeAppSha256": "23b5c7ea1feee31676f4534f8a29202574f9191c80115bb26625b998df19fd0b",
+    "afterAppSha256": "99560564cebe2069fd1fc363319d3e4714116419d86eb1152c72bea5988c6ef1"
+  },
+  "fullSuite": {
+    "tests": 69,
+    "pass": 69,
+    "fail": 0
+  },
+  "gitHead": "28ddfb4c93bd71749cce4391861bbad263b32815",
+  "gitWorkingTree": [
+    "A  .env.example",
+    "M  .gitignore",
+    "M  DEMO.md",
+    "A  OPENFGA-PLAN.md",
+    "A  OPENFGA-PROGRESS.md",
+    "M  POLICY.md",
+    "M  README.md",
+    "M  UI-PLAN.md",
+    "A  compose.yaml",
+    "M  evidence/README.md",
+    "A  evidence/openfga/authorization.diff",
+    "A  evidence/openfga/datastore.json",
+    "A  evidence/openfga/manifest.json",
+    "AM evidence/openfga/model-build.txt",
+    "AM evidence/openfga/regression-snapshot-after.txt",
+    "AM evidence/openfga/regression-snapshot-before.txt",
+    "AM evidence/openfga/regression-starter.txt",
+    "AM evidence/openfga/regression-v1.txt",
+    "A  evidence/openfga/snapshots/after/openfga/model.json",
+    "A  evidence/openfga/snapshots/after/src/app.js",
+    "A  evidence/openfga/snapshots/after/src/auth.js",
+    "A  evidence/openfga/snapshots/after/src/db.js",
+    "A  evidence/openfga/snapshots/after/src/openfga/client.js",
+    "A  evidence/openfga/snapshots/after/src/openfga/relations.js",
+    "A  evidence/openfga/snapshots/after/src/openfga/sync.js",
+    "A  evidence/openfga/snapshots/after/src/policy.js",
+    "A  evidence/openfga/snapshots/after/src/reset.js",
+    "A  evidence/openfga/snapshots/after/src/schema.sql",
+    "A  evidence/openfga/snapshots/after/src/server.js",
+    "A  evidence/openfga/snapshots/before/src/app.js",
+    "A  evidence/openfga/snapshots/before/src/auth.js",
+    "A  evidence/openfga/snapshots/before/src/db.js",
+    "A  evidence/openfga/snapshots/before/src/policy.js",
+    "A  evidence/openfga/snapshots/before/src/schema.sql",
+    "A  evidence/openfga/sqlite-migration.json",
+    "A  evidence/openfga/sqlite-restart.json",
+    "AM evidence/openfga/starter-idor.json",
+    "AM evidence/openfga/tests-after.txt",
+    "AM evidence/openfga/ui-after.txt",
+    "AM evidence/openfga/v1-idor.json",
+    "AM evidence/openfga/verification-matrix.json",
+    "A  openfga/model.fga",
+    "A  openfga/model.json",
+    "M  package-lock.json",
+    "M  package.json",
+    "M  plan.md",
+    "M  public/app.js",
+    "M  report.html",
+    "M  report.md",
+    "A  scripts/build-openfga-model.js",
+    "M  scripts/collect-evidence.js",
+    "M  scripts/lab-fixture.js",
+    "A  scripts/openfga-sync.js",
+    "AM scripts/render-report.py",
+    "M  scripts/ui-smoke.js",
+    "M  src/app.js",
+    "M  src/db.js",
+    "A  src/openfga/client.js",
+    "A  src/openfga/relations.js",
+    "A  src/openfga/sync.js",
+    "M  src/policy.js",
+    "M  src/reset.js",
+    "M  src/schema.sql",
+    "M  src/server.js",
+    "M  technical-decisions.html",
+    "M  test/authorization.test.js",
+    "A  test/openfga.test.js",
+    "M  test/policy.test.js",
+    "?? .gitattributes"
+  ],
+  "finishedAt": "2026-11-02T15:40:26.847Z"
+}

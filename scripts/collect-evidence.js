@@ -1,22 +1,39 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { spawn } from 'node:child_process';
-import { copyFileSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { copyFileSync, cpSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { withLab } from './lab-fixture.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const output = join(root, 'evidence');
+const output = join(root, 'evidence', 'openfga');
 mkdirSync(output, { recursive: true });
 const manifest = {
   startedAt: new Date().toISOString(), node: process.version, platform: process.platform,
   database: 'Fresh temporary SQLite files; live data/lab.sqlite is never opened or reset.',
-  provenance: 'Current Starter/V1 policies plus explicitly reconstructed executable before/after snapshots; not historical commits.',
+  provenance: 'Current OpenFGA Starter/V1 runtime. Before is the preserved pre-OpenFGA reconstructed authentication-only snapshot, not a historical commit; after is a fresh exact current source copy.',
   commands: [], requests: [], sourceSha256: {}, artifactsSha256: {}, status: 'RUNNING',
 };
 const writeJson = (name, value) => writeFileSync(join(output, name), `${JSON.stringify(value, null, 2)}\n`, 'utf8');
 const hash = path => createHash('sha256').update(readFileSync(path)).digest('hex');
+
+async function verifySqliteDatastore() {
+  assert.equal(new URL(process.env.FGA_API_URL || 'http://127.0.0.1:8080').origin, 'http://127.0.0.1:8080', 'SQLite evidence expects the local Compose endpoint');
+  const id = (await run('docker', ['compose','ps','-q','openfga'], { label: 'docker compose ps -q openfga' })).stdout.trim();
+  assert.match(id, /^[0-9a-f]{12,64}$/);
+  const container = JSON.parse((await run('docker', ['inspect',id,'--format','{{json .}}'], { label: 'Inspect running OpenFGA datastore (only safe fields exported)' })).stdout);
+  const env = new Map(container.Config.Env.map(value => { const i=value.indexOf('='); return [value.slice(0,i),value.slice(i+1)]; }));
+  assert.equal(env.get('OPENFGA_DATASTORE_ENGINE'), 'sqlite');
+  assert.match(env.get('OPENFGA_DATASTORE_URI'), /^file:\/home\/nonroot\/openfga\.sqlite(?:\?|$)/);
+  assert.equal(container.State.Health.Status, 'healthy');
+  assert.ok(container.NetworkSettings.Ports['8080/tcp'].some(port => port.HostIp === '127.0.0.1' && port.HostPort === '8080'));
+  const mount = container.Mounts.find(mount => mount.Destination === '/home/nonroot');
+  assert.equal(mount?.Type, 'volume');
+  manifest.datastore = { engine: 'sqlite', image: container.Config.Image, imageId: container.Image,
+    databasePath: '/home/nonroot/openfga.sqlite', volume: mount.Name, healthy: true };
+  writeJson('datastore.json', manifest.datastore);
+}
 
 async function run(executable, args, { cwd = root, env = {}, expected = 0, log, label } = {}) {
   const startedAt = new Date().toISOString();
@@ -87,35 +104,32 @@ async function captureRequests() {
 }
 
 function makeSnapshots() {
-  const current = readFileSync(join(root, 'src/app.js'), 'utf8');
-  const begin = current.indexOf("        const membership = db.prepare('SELECT * FROM project_memberships");
-  const end = current.indexOf('        return work(req, { task, project });', begin);
-  assert.ok(begin >= 0 && end > begin, 'Authorization wrapper changed; review snapshot reconstruction before proceeding');
-  const protectedBlock = current.slice(begin, end);
-  assert.ok(protectedBlock.includes('authorize(req.params.version') && protectedBlock.includes("if (decision.allowed !== true) fail(403"));
-  const before = (current.slice(0, begin) + "        req.trace.push({ name: 'Object authorization', result: 'SKIPPED', reason: 'RECONSTRUCTED_AUTHENTICATION_ONLY' });\n" + current.slice(end))
-    .replace("import { authorize, versions } from './policy.js';", "import { versions } from './policy.js';");
-  for (const stage of ['before', 'after']) {
-    const directory = join(output, 'snapshots', stage, 'src');
-    mkdirSync(directory, { recursive: true });
-    for (const name of ['auth.js', 'db.js', 'schema.sql', 'policy.js']) copyFileSync(join(root, 'src', name), join(directory, name));
-    writeFileSync(join(directory, 'app.js'), stage === 'before' ? before : current, 'utf8');
-  }
+  const baseline = join(root, 'evidence', 'snapshots', 'before', 'src');
+  assert.match(readFileSync(join(baseline, 'app.js'), 'utf8'), /RECONSTRUCTED_AUTHENTICATION_ONLY/);
+  const before = join(output, 'snapshots', 'before');
+  const after = join(output, 'snapshots', 'after');
+  mkdirSync(before, { recursive: true }); mkdirSync(after, { recursive: true });
+  cpSync(baseline, join(before, 'src'), { recursive: true });
+  cpSync(join(root, 'src'), join(after, 'src'), { recursive: true });
+  mkdirSync(join(after, 'openfga'), { recursive: true });
+  copyFileSync(join(root, 'openfga', 'model.json'), join(after, 'openfga', 'model.json'));
   manifest.snapshotReconstruction = {
-    before: 'Current app with the membership lookup / PDP call / denial block removed from endpoint(). Authentication, lookup, validation and transactions stay in place. This reproduces the authentication-only boundary, not an original historical file.',
-    after: 'Exact copy of current src/app.js plus its local dependencies. The regression selects V1.',
-    unchangedPolicy: 'policy.js is copied unchanged into both snapshots; the before wrapper does not call authorize().',
+    before: 'Preserved pre-OpenFGA reconstructed authentication-only snapshot, copied from evidence/snapshots/before/src; not historical source.',
+    after: 'Exact current src plus generated OpenFGA model; V1 checks a real, isolated OpenFGA store.',
+    beforeAppSha256: hash(join(baseline, 'app.js')),
+    afterAppSha256: hash(join(root, 'src', 'app.js')),
   };
 }
 
 try {
+  await verifySqliteDatastore();
   await captureRequests();
   console.log('Captured 11 real HTTP cases on temporary SQLite.');
   makeSnapshots();
-  const diff = await run('git', ['diff', '--no-index', '--no-ext-diff', '--no-color', '--', 'before/src/app.js', 'after/src/app.js'], {
-    cwd: join(output, 'snapshots'), expected: 1, label: 'git diff --no-index before/src/app.js after/src/app.js',
+  const diff = await run('git', ['diff', '--no-index', '--no-ext-diff', '--no-color', '--', 'before/src', 'after/src'], {
+    cwd: join(output, 'snapshots'), expected: 1, label: 'git diff --no-index before/src after/src',
   });
-  assert.match(diff.stdout, /\+.*authorize\(req.params.version/);
+  assert.match(diff.stdout, /\+.*await authorize\(req.params.version/);
   writeFileSync(join(output, 'authorization.diff'), diff.stdout, 'utf8');
   const regressions = [
     ['starter', 'regression-starter.txt', 1, undefined],
@@ -132,6 +146,7 @@ try {
     assert.match(r.stdout, expected === 1 ? /# pass 2\b/ : /# pass 3\b/);
   }
   console.log('Regression verified: Starter/before RED (1 failure, 2 positive passes); V1/after GREEN (3 passes).');
+  await run(process.execPath, ['scripts/build-openfga-model.js', '--check'], { log: 'model-build.txt', label: 'OpenFGA DSL/JSON check' });
   const full = await run(process.execPath, ['--test'], { log: 'tests-after.txt', label: 'node --test (npm.cmd test)' });
   assert.match(full.stdout, /# fail 0\b/);
   manifest.fullSuite = { tests: Number(full.stdout.match(/# tests (\d+)/)?.[1]), pass: Number(full.stdout.match(/# pass (\d+)/)?.[1]), fail: 0 };
@@ -145,7 +160,7 @@ try {
   manifest.status = 'FAIL'; manifest.error = error.message; process.exitCode = 1;
   console.error(error.message);
 } finally {
-  for (const file of ['src/app.js', 'src/policy.js', 'src/auth.js', 'src/db.js', 'src/schema.sql', 'test/authorization.test.js', 'test/policy.test.js', 'scripts/idor-regression.js', 'scripts/lab-fixture.js', 'scripts/collect-evidence.js', 'scripts/ui-smoke.js', 'public/app.js', 'public/index.html', 'public/styles.css', 'package.json']) manifest.sourceSha256[file] = hash(join(root, file));
+  for (const file of ['src/app.js', 'src/policy.js', 'src/auth.js', 'src/db.js', 'src/schema.sql', 'src/server.js', 'src/reset.js', 'test/authorization.test.js', 'test/policy.test.js', 'scripts/idor-regression.js', 'scripts/lab-fixture.js', 'scripts/collect-evidence.js', 'scripts/ui-smoke.js', 'scripts/openfga-sync.js', 'scripts/build-openfga-model.js', 'scripts/render-report.py', 'public/app.js', 'public/index.html', 'public/styles.css', 'package.json', 'package-lock.json', 'compose.yaml', '.env.example', 'openfga/model.fga', 'openfga/model.json', 'src/openfga/client.js', 'src/openfga/relations.js', 'src/openfga/sync.js', 'test/openfga.test.js', 'README.md', 'POLICY.md', 'DEMO.md', 'UI-PLAN.md', 'OPENFGA-PLAN.md', 'report.md', 'report.html', 'technical-decisions.html']) manifest.sourceSha256[file] = hash(join(root, file));
   const git = await run('git', ['rev-parse', 'HEAD'], { label: 'git rev-parse HEAD' });
   manifest.gitHead = git.stdout.trim();
   const state = await run('git', ['status', '--porcelain'], { label: 'git status --porcelain' });

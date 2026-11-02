@@ -1,13 +1,15 @@
-﻿# Task Authorization Minilab
+# Task Authorization Minilab
 
-Ứng dụng quản lý công việc local với giao diện tiếng Việt, dữ liệu SQLite và năm phiên bản policy **Starter → V1 → V2 → V3 → V4**. Người dùng thao tác qua danh sách project, bảng task và form; request/response và authorization trace nằm trong phần **Chi tiết kỹ thuật**.
+Ứng dụng quản lý công việc local với giao diện tiếng Việt, dữ liệu SQLite và năm phiên bản policy **Starter → V1 → V2 → V3 → V4**. V1–V4 dùng **OpenFGA** với quan hệ lưu thật; Starter cố ý bỏ qua object authorization. Request/response và authorization trace nằm trong phần **Chi tiết kỹ thuật**.
 
 ## Chạy
 
-Yêu cầu Node.js **22.13 trở lên**. Dùng SQLite tích hợp `node:sqlite`; Node 22 có thể in ExperimentalWarning.
+Yêu cầu Node.js **22.17 trở lên**, Docker Engine và Docker Compose đang chạy. Dùng SQLite tích hợp `node:sqlite`; Node 22 có thể in ExperimentalWarning. Compose dựng OpenFGA **v1.22.1** với datastore **SQLite** bền trên Docker volume; không cần PostgreSQL.
 
 ```powershell
-npm.cmd install
+npm.cmd ci
+docker compose up -d --wait
+npm.cmd run fga:init
 npm.cmd start
 ```
 
@@ -24,6 +26,35 @@ npm.cmd run db:reset
 File `data/lab.sqlite` được tạo và seed khi chạy lần đầu. Restart giữ dữ liệu; **Khôi phục dữ liệu mẫu** mới nạp lại seed. Mọi version dùng chung database. Không commit database hoặc các file phụ SQLite.
 
 `test:ui` dùng database tạm riêng và Chrome/Edge headless trên Windows, lưu screenshot desktop/mobile/đăng nhập trong `.local-check/` (Git ignore). Đặt `LAB_BROWSER` nếu trình duyệt ở đường dẫn khác. Test không sửa database đang demo.
+
+## OpenFGA và đồng bộ quyền
+
+OpenFGA HTTP ở `http://127.0.0.1:8080`. Có hai database riêng: `data/lab.sqlite` lưu nghiệp vụ; `/home/nonroot/openfga.sqlite` trong volume `block6-advance_openfga-sqlite` lưu store/model/tuples của OpenFGA. Có thể sao chép `.env.example` thành `.env` để đổi cấu hình. Node nạp `.env` cho start/init/sync/reset; khi chạy test với URL khác, đặt `$env:FGA_API_URL` tương ứng. Store/model ID được pin trong từng SQLite database. Restart không reset dữ liệu; `docker compose down` giữ volume. Không dùng `down -v` nếu muốn giữ graph.
+
+Đây là **stored tuples trên SQLite**, không dùng contextual tuples. OpenFGA có schema/migration riêng, không đọc trực tiếp bảng `project_memberships`; projection/outbox vẫn cần vì có hai database. Compose dùng một connection tới SQLite và busy timeout 3 giây, phù hợp lab một instance; chưa kiểm chứng tải lớn hoặc nhiều engine cùng file.
+
+Lượt chuyển từ PostgreSQL đã giữ store/model ID, tuple/condition và dữ liệu nghiệp vụ. Container PostgreSQL cũ đã ngừng/gỡ; volume nguồn và bản export local vẫn được giữ để khôi phục. Đây là chuyển dữ liệu một lần theo schema v1.22.1, không phải lệnh migration đa phiên bản. Khi xem/backup file SQLite của OpenFGA, dừng engine sạch hoặc dùng cơ chế backup hiểu WAL; không xóa các file phụ `-wal`/`-shm`.
+
+```powershell
+npm.cmd run fga:build
+npm.cmd run fga:sync
+npm.cmd run test:fga:model
+npm.cmd run test:fga:integration
+```
+
+`fga:init` và `fga:sync` dùng chung quy trình: tạo store/model nếu chưa có binding rồi đối chiếu tuple với SQLite. Chạy lặp không tự tạo store mới. Model DSL thay đổi phải chạy build và thực hiện migration/binding có chủ đích; runtime từ chối hash khác. Chưa có lệnh tự động thay model của database demo đã pin.
+
+Tests/browser smoke yêu cầu OpenFGA thật, tạo SQLite/store riêng và chỉ dọn tài nguyên fixture. Thiếu engine là lỗi kiểm thử. Sync dùng lease SQLite 30 giây; sau khi process bị kill giữa sync, chờ lease hết hạn rồi sync/restart. Chưa hỗ trợ nhiều app instances.
+
+Nếu engine chưa sẵn sàng, Starter và danh mục tên project vẫn dùng được; V1–V4 trả 503. Khi engine phục hồi, chọn **Đồng bộ lại** ở UI pending hoặc restart app. CLI `fga:sync` sửa graph; nếu app chưa từng khởi tạo được binding, restart app sau khi CLI thành công.
+
+Mutation quan hệ đã lưu nhưng sync lỗi trả **202** với `{ operationId, committed: true, authorizationSync: 'pending' }`. UI báo **Đã lưu thay đổi, đang cập nhật quyền truy cập**, cho kiểm tra trạng thái/đồng bộ lại. Không gửi lại mutation. Khi pending, V1–V4 bị chặn để tránh dùng quyền cũ; 200/201 chỉ trả sau sync hoàn tất.
+
+HTTP bổ sung: **409 `AUTHORIZATION_CONTEXT_CHANGED`** nếu dữ liệu đổi trong lúc Check; **503** nếu engine lỗi/graph chưa ready. `GET /lab/operations/:id` xác thực và chỉ cho caller của operation xem trạng thái. `POST /lab/sync` yêu cầu token demo và kiểm tra Origin như reset; hai route nằm ngoài `/api/:version`.
+
+SDK pin **0.9.7**; override Axios **1.21.0** để tránh advisory trong dependency 1.19.0 mà SDK pin sẵn. Nếu npm lỗi CA trên Windows, thử `$env:NODE_OPTIONS='--use-system-ca'` trước `npm.cmd ci`; không tắt kiểm tra TLS.
+
+Báo cáo HTML đọc offline được tạo từ Markdown bằng `python scripts/render-report.py` (Python 3.12+); bộ render nhúng sẵn 4 sơ đồ SVG, gồm cơ chế OpenFGA Check. Kết quả local mới và giới hạn nghiệm thu được tóm tắt trong [OPENFGA-PROGRESS.md](OPENFGA-PROGRESS.md).
 
 ## Sử dụng web app
 
@@ -80,10 +111,11 @@ Response API có `{ data, error, trace, requestId }`. 401: token thiếu/sai; 40
 ## Cấu trúc và giới hạn
 
 - `src/auth.js`: principal từ token và SQLite.
-- `src/policy.js`: PDP chung; `src/app.js`: routes, validation và PEP trước read/write.
-- `src/db.js`, `src/schema.sql`: schema/seed/reset, prepared statements, foreign keys; mutation authorize và write trong cùng transaction.
+- `src/policy.js`: input validation, Starter và PDP adapter async; `src/app.js`: routes, validation và PEP với snapshot/revision trước read/write.
+- `src/openfga/`: SDK client, tuple projection, outbox/sync/lease/readiness. Model ở `openfga/model.fga`; JSON sinh bằng `fga:build`.
+- `src/db.js`, `src/schema.sql`: schema/seed/reset, foreign keys, revision triggers, outbox và operations. Không giữ transaction SQLite trong lúc chờ OpenFGA; revalidate trong transaction ngắn trước read/write.
 - `public/`: UI HTML/CSS/JavaScript, điều hướng và form, kiểm soát response cũ khi đổi ngữ cảnh.
 - `test/authorization.test.js`: HTTP permission matrix, API danh mục/chi tiết/list, validation/spoofing và persistence/reset/cascade.
 - `scripts/ui-smoke.js`: luồng browser thật qua nút và form, xử lý từ chối, response cũ và mobile.
 
-Đây là lab local: Starter cố ý có lỗ hổng, reset public có kiểm tra Origin, danh mục project cố ý discoverable. Bộ evidence tự động có trong [evidence/README.md](evidence/README.md): response IDOR trước/sau, regression đỏ/xanh, log test và diff tái dựng có kiểm chứng. Chạy `npm.cmd run evidence` để tái tạo bằng SQLite tạm; không chạm database demo. Chưa có authentication thật, concurrent load hoặc deployment. Xem [POLICY.md](POLICY.md), [UI-PLAN.md](UI-PLAN.md) và [plan.md](plan.md).
+Đây là lab local: Starter cố ý có lỗ hổng, reset public có kiểm tra Origin, danh mục project cố ý discoverable. Evidence mới ghi vào `evidence/openfga/`; artifact trực tiếp trong `evidence/` thuộc bản PDP nội bộ trước tích hợp. Xem [evidence/README.md](evidence/README.md), [POLICY.md](POLICY.md), [UI-PLAN.md](UI-PLAN.md) và [OPENFGA-PLAN.md](OPENFGA-PLAN.md). Chưa có authentication thật, concurrent load, nhiều app instances hoặc hosted deployment.
