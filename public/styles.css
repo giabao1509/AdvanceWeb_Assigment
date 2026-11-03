@@ -74,8 +74,6 @@ textarea{resize:vertical;line-height:1.6}
 button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #7ebbaa;outline-offset:3px}
 .form-grid{display:grid;grid-template-columns:1fr 2fr;gap:15px}
 form .actions{margin-top:20px}
-.form-footer{margin-top:22px}
-.member-layout{display:grid;grid-template-columns:1.2fr 1fr;gap:20px;align-items:start}
 details{margin-top:22px;border:1px solid var(--line);border-radius:10px;background:white;padding:17px 20px}
 summary{cursor:pointer;font-weight:600;font-size:13px}
 summary .muted{font-weight:400;margin-left:12px;font-size:11px}
@@ -104,7 +102,6 @@ footer{font-size:11px;color:var(--muted);padding:26px 0 0}
 [hidden]{display:none!important}
 @media(max-width:1200px){.workspace-columns{grid-template-columns:1fr}.technical-sidebar{position:static;max-height:none;overflow:visible;scrollbar-gutter:auto}}
 @media(max-width:1000px){main{padding:24px}
-.member-layout{grid-template-columns:1fr}
 .sidebar{padding:25px 14px}
 .app-layout{grid-template-columns:190px minmax(0,1fr)}
 }

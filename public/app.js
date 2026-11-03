@@ -184,7 +184,7 @@ function formError(result,feedback) {
   if(result.errorShown) { feedback.textContent=''; return; }
   const form=feedback.closest('form');
   const code=result.json.error?.code;
-  const selector={INVALID_TEXT:'#task-title',INVALID_STATUS:'#task-status',INVALID_ROLE:'#role-value, #member-role',INVALID_MEMBER:'#member-user',INVALID_ID:'#member-user, #raw-path',INVALID_FIELDS:'#raw-body',INVALID_JSON:'#raw-body'}[code];
+  const selector={INVALID_TEXT:'#task-title',INVALID_STATUS:'#task-status',INVALID_ROLE:'#role-value',INVALID_ID:'#raw-path',INVALID_FIELDS:'#raw-body',INVALID_JSON:'#raw-body'}[code];
   let control=selector && form?.querySelector(selector);
   if(code==='INVALID_TEXT' && form?.querySelector('#task-title')?.value.trim() && form.querySelector('#task-title').value.length<=200 && form.querySelector('#task-description')?.value.length>2000) control=form.querySelector('#task-description');
   if(!control) { feedback.textContent=message(result); return; }
@@ -215,8 +215,8 @@ async function openTask(id, edit) {
 }
 async function loadMembers(id,content,background=false) {
   const r=await api('GET',`projects/${encodeURIComponent(id)}/members`,undefined,{label:'Xem thành viên',background});
-  const layout=el('div',undefined,'member-layout'), list=el('section'), tools=el('section',undefined,'surface');
-  if(r.status!==200) { const deniedBox=el('div',undefined,'empty error'); deniedBox.append(el('h3','Không thể xem danh sách thành viên')); if(!r.errorShown) deniedBox.append(el('p',message(r))); deniedBox.append(el('p','Bạn vẫn có thể thử thao tác theo User ID ở form bên cạnh.','muted')); list.append(deniedBox); }
+  const list=el('section');
+  if(r.status!==200) { const deniedBox=el('div',undefined,'empty error'); deniedBox.append(el('h3','Không thể xem danh sách thành viên')); if(!r.errorShown) deniedBox.append(el('p',message(r))); list.append(deniedBox); }
   else {
     const {wrap,body}=table(['Thành viên','Vai trò','Thao tác']);
     for(const member of r.json.data) {
@@ -227,24 +227,7 @@ async function loadMembers(id,content,background=false) {
     }
     list.append(wrap);
   }
-  tools.append(el('h3','Quản lý thành viên'),el('p','Thử thao tác bằng tài khoản hiện tại. Owner của dự án được giữ cố định.','muted'));
-  const form=el('form'); form.id='member-form'; const operation=field(form,'Thao tác','member-operation','','select'); operation.add(new Option('Thêm thành viên','add')); operation.add(new Option('Đổi vai trò','role')); operation.add(new Option('Xóa thành viên','remove'));
-  const member=field(form,'User ID','member-user','admin-alpha'); member.required=true; member.pattern='[a-zA-Z0-9-]{1,64}';
-  const role=field(form,'Vai trò','member-role','','select'); role.add(new Option('Viewer','Viewer')); role.add(new Option('Member','Member'));
-  const feedback=formFeedback(form), submit=el('button','Thực hiện'); submit.type='submit'; submit.className='form-footer'; form.append(submit);
-  operation.onchange=()=>{role.disabled=operation.value==='remove';};
-  form.onsubmit=safe(async e=>{
-    e.preventDefault(); clearFormErrors(form); if(operation.value==='remove') { await confirmMember(id,member.value); return; }
-    submit.disabled=true;
-    try {
-      const add=operation.value==='add', path=`projects/${encodeURIComponent(id)}/members${add?'':`/${encodeURIComponent(member.value)}`}`;
-      const result=await api(add?'POST':'PATCH',path,add?{userId:member.value,role:role.value}:{role:role.value},{label:add?'Thêm thành viên':'Đổi vai trò',form});
-      if(pendingMutation(result)) return;
-      if(result.status>=300) {formError(result,feedback); return;}
-      await navigate(id,'members',true); writeSuccess(add?'Đã thêm thành viên vào dự án.':'Đã cập nhật vai trò thành viên.');
-    } finally {submit.disabled=false;}
-  });
-  tools.append(form); layout.append(list,tools); content.replaceChildren(layout);
+  content.replaceChildren(list);
 }
 function editMemberRole(id,member) {
   const form=el('form'); form.id='role-form';

@@ -72,12 +72,12 @@ Giao diện chính là ứng dụng quản lý công việc. **Chi tiết kỹ t
 ## 5. Quản lý thành viên
 
 1. Alice, V2, Alpha, tab Thành viên.
-2. Thao tác Thêm, User ID `admin-alpha`, role Viewer: thành công 201, danh sách cập nhật.
-3. Bấm Đổi role ở hàng admin-alpha, chọn Member và Thực hiện: role thay đổi.
+2. Mở **Công cụ demo nâng cao**, chọn POST, đường dẫn `projects/alpha/members`, token `demo-alice`, body `{"userId":"admin-alpha","role":"Viewer"}`; để query trống và headers `{}`. Gửi request: thành công 201, danh sách cập nhật.
+3. Bấm Đổi role ở hàng admin-alpha, chọn Member và **Lưu vai trò**: role thay đổi.
 4. Bấm Xóa ở hàng admin-alpha, xác nhận: thành viên biến mất.
 5. Bấm Xóa ở hàng Alice, xác nhận: 409, Owner cố định.
-6. Thử thêm Bob vốn đã có membership: 409, trùng membership.
-7. Thử User ID không tồn tại: 404.
+6. Trong công cụ nâng cao, gửi lại POST trên với body `{"userId":"bob","role":"Viewer"}`: 409, trùng membership.
+7. Thay `userId` bằng `missing`: 404, không tìm thấy người dùng.
 8. Để demo thu hồi quyền: ở V3, Alice xóa Bob; đổi tài khoản Bob rồi mở Alpha: bị từ chối dù task vẫn assign Bob. Reset sau khi thử.
 
 ## 6. Xóa project, reset và persistence

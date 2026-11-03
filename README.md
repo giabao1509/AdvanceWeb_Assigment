@@ -131,6 +131,8 @@ Mở dự án để xem công việc. Các nút xem, sửa, quản lý thành vi
 
 Owner không thể bị xóa hoặc đổi vai trò qua API thành viên. Xem/thêm/đổi/xóa thành viên đều là quyền quản lý thành viên; quyền đọc công việc không bao gồm quyền xem danh sách này. Chi tiết trình bày nằm trong [DEMO.md](DEMO.md).
 
+Tab **Thành viên** hiển thị danh sách và nút đổi vai trò/xóa ở từng hàng. Để thêm thành viên, gửi POST tới `projects/:id/members` trong **Công cụ demo nâng cao** với body như `{"userId":"admin-alpha","role":"Viewer"}`.
+
 ## 5. Khi gặp lỗi
 
 | Hiện tượng | Cách xử lý |

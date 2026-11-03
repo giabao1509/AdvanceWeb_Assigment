@@ -77,6 +77,12 @@ try {
     await waitFor(`document.getElementById('modal').open`);
   };
   const action = async (selector,label) => evaluate(`[...document.querySelector(${JSON.stringify(selector)}).querySelectorAll('button')].find(b=>b.textContent===${JSON.stringify(label)}).click()`);
+  const rawRequest = async (method,path,body) => {
+    await evaluate(`document.getElementById('demo-tools').open=true`);
+    await fill('#raw-method',method); await fill('#raw-path',path); await fill('#raw-body',JSON.stringify(body));
+    await submit('#raw-form'); await waitFor(`!document.querySelector('#raw-form button').disabled`);
+    await fill('#raw-method','GET');
+  };
   const save = async () => { await submit('#task-form'); await waitFor(`document.querySelector('#task-form button[type="submit"]') ? !document.querySelector('#task-form button[type="submit"]').disabled : document.getElementById('success-popup').open`); };
   const reset = async () => { await click('#reset'); await action('#modal','Xác nhận'); await waitFor(`document.getElementById('notice').textContent.includes('Đã khôi phục')`); assert.equal(await evaluate(`document.getElementById('success-popup').open`),true); };
   await call('Runtime.enable'); await call('Page.enable');
@@ -110,11 +116,19 @@ try {
   assert.match(await text('#success-popup'),/Đã lưu thay đổi công việc/);
   writeFileSync('.local-check/success-popup.png',Buffer.from((await call('Page.captureScreenshot',{format:'png'})).data,'base64'));
   assert.match(await text('#technical-content'),/PATCH \/api\/v2\/tasks\/A1/,'Mutation result survives background refresh');
-  await action('#page','Thành viên'); await waitFor(`!!document.getElementById('member-form')`);
-  await submit('#member-form'); await waitFor(`!!document.querySelector('[data-member="admin-alpha"]')`);
+  await action('#page','Thành viên'); await waitFor(`!!document.querySelector('[data-member="bob"]')`);
+  assert.equal(await evaluate(`!!document.getElementById('member-form')`),false,'Standalone member management form has been removed');
+  assert.doesNotMatch(await text('#project-content'),/Quản lý thành viên|form bên cạnh/);
+  writeFileSync('.local-check/members-desktop.png',Buffer.from((await call('Page.captureScreenshot',{format:'png',captureBeyondViewport:true})).data,'base64'));
+  await call('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
+  assert.equal(await evaluate('document.documentElement.scrollWidth <= window.innerWidth'),true,'Member list overflows on mobile');
+  writeFileSync('.local-check/members-mobile.png',Buffer.from((await call('Page.captureScreenshot',{format:'png',captureBeyondViewport:true})).data,'base64'));
+  await call('Emulation.setDeviceMetricsOverride',{width:1360,height:1000,deviceScaleFactor:1,mobile:false});
+  await rawRequest('POST','projects/alpha/members',{userId:'admin-alpha',role:'Viewer'});
+  await waitFor(`!!document.querySelector('[data-member="admin-alpha"]')`);
   assert.equal(await evaluate(`document.getElementById('success-popup').open`),true);
   await waitFor(`document.getElementById('success-popup').open`);
-  assert.match(await text('#success-popup'),/Đã thêm thành viên/);
+  assert.match(await text('#success-popup'),/Đã thực hiện thao tác ghi/);
   await dismissPermission();
   await action('[data-member="admin-alpha"]','Đổi role');
   await waitFor(`document.getElementById('modal').open && !!document.getElementById('role-form')`);
@@ -138,11 +152,11 @@ try {
   assert.equal(await evaluate(`document.getElementById('success-popup').open`),false);
   await click('#permission-dismiss'); await click('#close-modal');
   // Every failed membership write shows a result popup, including 404 and 409.
-  await fill('#member-operation','role'); await fill('#member-user','missing'); await submit('#member-form');
+  await rawRequest('PATCH','projects/alpha/members/missing',{role:'Viewer'});
   await waitFor(`document.getElementById('permission-popup').open`);
   assert.match(await text('#permission-popup'),/Không tìm thấy thành viên/);
   await click('#permission-dismiss');
-  await fill('#member-operation','add'); await fill('#member-user','bob'); await submit('#member-form');
+  await rawRequest('POST','projects/alpha/members',{userId:'bob',role:'Viewer'});
   await waitFor(`document.getElementById('permission-popup').open`);
   assert.match(await text('#permission-popup'),/Thành viên đã có trong dự án/);
   await click('#permission-dismiss');
@@ -161,10 +175,12 @@ try {
   await call('Emulation.setDeviceMetricsOverride',{width:1360,height:1000,deviceScaleFactor:1,mobile:false});
   assert.equal(await text('#task-form [role="status"]'),''); assert.equal(await evaluate(`document.getElementById('task-title').value`),'Forbidden draft');
   assert.equal(db.prepare('SELECT title FROM tasks WHERE id = ?').get('A1').title,'UI persisted title'); await click('#close-modal');
-  await action('#page','Thành viên'); await waitFor(`!!document.getElementById('member-form')`);
-  assert.match(await text('#project-content'),/Không thể xem danh sách/); await submit('#member-form');
+  await action('#page','Thành viên'); await waitFor(`document.getElementById('project-content')?.textContent.includes('Không thể xem danh sách')`);
+  assert.equal(await evaluate(`!!document.getElementById('member-form')`),false);
+  assert.doesNotMatch(await text('#project-content'),/form bên cạnh/);
+  await rawRequest('POST','projects/alpha/members',{userId:'admin-alpha',role:'Viewer'});
   await waitFor(`document.getElementById('permission-popup').open`);
-  assert.equal(await text('#member-form [role="status"]'),'');
+  assert.match(await text('#permission-popup'),/chưa có quyền/);
   // V1 Viewer editing succeeds; V2 introduces role checks.
   await version('v1'); await waitFor(`!!document.querySelector('[data-task="A1"]')`);
   await task('A1'); await fill('#task-title','Viewer V1 allowed'); await save(); await waitFor(`document.getElementById('page').textContent.includes('Viewer V1 allowed')`);
@@ -220,7 +236,7 @@ try {
   assert.equal(db.prepare('SELECT count(*) AS n FROM tasks WHERE projectId = ?').get('alpha').n,0);
   await reset(); await project('alpha'); await waitFor(`!!document.querySelector('[data-task="A1"]')`);
   // A committed membership change with a failed graph write is pending, never failed/complete.
-  await action('#page','Thành viên'); await waitFor(`!!document.getElementById('member-form')`);
+  await action('#page','Thành viên'); await waitFor(`!!document.querySelector('[data-member="vera"]')`);
   const originalGraphWrite=app.locals.authorization.client.writeTuples.bind(app.locals.authorization.client);
   app.locals.authorization.client.writeTuples=async()=>{throw new Error('UI fault injection: sync unavailable');};
   try {

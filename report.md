@@ -201,7 +201,37 @@ Snapshot `before` trong bằng chứng là bản authentication-only được t�
 
 Kiểm thử dùng SQLite và store riêng để không reset dữ liệu đang demo. Các lệnh tái hiện và yêu cầu môi trường nằm trong README. Bằng chứng local chưa thay thế nghiệm thu trực tiếp, chạy CI trên môi trường hosted hoặc kiểm thử tải.
 
-## 10. Khởi động và trình bày demo
+## 10. Các API hiện có
+
+Ứng dụng có **10 API nghiệp vụ** và **4 API hỗ trợ lab**. Địa chỉ mặc định là `http://127.0.0.1:3000`. Các API nghiệp vụ dùng tiền tố `/api/:version`, trong đó `:version` là `starter`, `v1`, `v2`, `v3` hoặc `v4`. Ví dụ: `GET /api/v3/tasks/A1`.
+
+Mọi API nghiệp vụ cần header `Authorization: Bearer <token>`, chẳng hạn `Bearer demo-alice`. Các phiên bản có cùng endpoint, chỉ khác quy tắc kiểm tra quyền.
+
+| Method | Đường dẫn sau `/api/:version` | Chức năng |
+| --- | --- | --- |
+| GET | `/projects` | Liệt kê ID/tên mọi dự án để thử truy cập; không trả nội dung. |
+| GET | `/projects/:id` | Xem thông tin một dự án theo quyền. |
+| GET | `/projects/:id/tasks` | Xem danh sách công việc trong dự án theo quyền. |
+| GET | `/tasks/:id` | Xem chi tiết một công việc. |
+| PATCH | `/tasks/:id` | Sửa `title`, `description`, `status` (Open/Closed). |
+| DELETE | `/projects/:id` | Xóa dự án cùng công việc và membership liên quan. |
+| GET | `/projects/:id/members` | Xem danh sách thành viên; cần quyền quản lý thành viên. |
+| POST | `/projects/:id/members` | Thêm thành viên bằng `userId` và `role` (Viewer/Member). |
+| PATCH | `/projects/:id/members/:userId` | Đổi `role` thành Viewer hoặc Member; không đổi Owner. |
+| DELETE | `/projects/:id/members/:userId` | Xóa thành viên khỏi dự án; không xóa Owner. |
+
+Các API hỗ trợ lab nằm ngoài tiền tố phiên bản:
+
+| Method | Đường dẫn | Chức năng và yêu cầu |
+| --- | --- | --- |
+| GET | `/lab/config` | Lấy phiên bản, tài khoản/token demo và ID mẫu; không cần token. |
+| POST | `/lab/reset` | Nạp lại dữ liệu mẫu và đồng bộ quyền; không bắt buộc token, có kiểm tra Origin. |
+| POST | `/lab/sync` | Đồng bộ lại quyền; cần token hợp lệ và kiểm tra Origin. |
+| GET | `/lab/operations/:operationId` | Xem trạng thái đồng bộ; chỉ tài khoản đã thực hiện được xem. |
+
+Tab Thành viên giữ danh sách cùng nút đổi vai trò/xóa ở từng hàng. Để thử API thêm thành viên hoặc request tùy chỉnh, dùng **Công cụ demo nâng cao**. Hiện chưa có API tạo dự án, tạo/xóa công việc hoặc đăng ký/đăng nhập thật; dữ liệu ban đầu được nạp bằng seed/reset.
+
+## 11. Khởi động và trình bày demo
 
 Trên Windows, cài Node.js từ 22.17 và mở Docker Desktop trước. Sau khi clone, chạy `start.bat`. Script tự tạo `.env` nếu thiếu, cài dependency, chạy OpenFGA, đồng bộ quyền và mở server ứng dụng. Lần sau vẫn chạy cùng file; cấu hình và dữ liệu cũ được giữ lại.
 
