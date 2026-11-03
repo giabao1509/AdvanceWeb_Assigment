@@ -1,5 +1,7 @@
 # Preserve generated evidence bytes across platforms.
 evidence/openfga/** -text
+# Keep the Windows launcher usable after checkout on any platform.
+start.bat text eol=crlf
 # Raw patches and TAP logs contain intentional context/blank-line whitespace.
 evidence/openfga/*.diff -whitespace
 evidence/openfga/*.txt -whitespace

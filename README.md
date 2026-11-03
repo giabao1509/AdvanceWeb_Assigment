@@ -1,121 +1,205 @@
 # Task Authorization Minilab
 
-Ứng dụng quản lý công việc local với giao diện tiếng Việt, dữ liệu SQLite và năm phiên bản policy **Starter → V1 → V2 → V3 → V4**. V1–V4 dùng **OpenFGA** với quan hệ lưu thật; Starter cố ý bỏ qua object authorization. Request/response và authorization trace nằm trong phần **Chi tiết kỹ thuật**.
+Ứng dụng quản lý dự án và công việc để học cách kiểm tra quyền truy cập. Bạn có thể đổi giữa **Starter, V1, V2, V3, V4**, dùng cùng một tài khoản và dữ liệu để thấy vì sao một thao tác được phép hoặc bị từ chối.
 
-## Chạy
+Ứng dụng web dùng Node.js và SQLite. **OpenFGA** là service kiểm tra quyền cho V1–V4, chạy bằng Docker và có SQLite riêng. Starter cố ý thiếu kiểm tra quyền trên từng tài nguyên để minh họa lỗi truy cập bằng ID của người khác.
 
-Yêu cầu Node.js **22.17 trở lên**, Docker Engine và Docker Compose đang chạy. Dùng SQLite tích hợp `node:sqlite`; Node 22 có thể in ExperimentalWarning. Compose dựng OpenFGA **v1.22.1** với datastore **SQLite** bền trên Docker volume; không cần PostgreSQL.
+## 1. Chạy bằng start.bat trên Windows
+
+Cài **Node.js từ 22.17 trở lên** (kèm npm) và **Docker Desktop có Docker Compose**. Mở Docker Desktop, đợi Linux engine sẵn sàng. Lần đầu cần mạng để tải thư viện và image Docker.
+
+Sau khi clone, nhấp đúp `start.bat`, hoặc chạy trong PowerShell tại thư mục dự án:
 
 ```powershell
+.\start.bat
+```
+
+Script sẽ thực hiện lần lượt:
+
+1. Kiểm tra Node.js, npm và Docker.
+2. Sao chép `.env.example` thành `.env` nếu chưa có. File `.env` đã có sẽ được giữ nguyên.
+3. Chạy `npm.cmd ci` để cài đúng dependency trong `package-lock.json`.
+4. Chạy Docker Compose và chờ OpenFGA qua healthcheck.
+5. Chạy `fga:init` để tạo cấu hình quyền lần đầu, hoặc đồng bộ với dữ liệu hiện có.
+6. Chạy web app và in địa chỉ truy cập, mặc định **http://127.0.0.1:3000**.
+
+**Những lần sau vẫn chỉ chạy `start.bat`.** Script cài lại dependency mỗi lần nên có thể mất thời gian và cần truy cập npm nếu cache chưa đủ. Script không khôi phục dữ liệu mẫu, không ghi đè `.env`, không tạo store/model mới nếu database đã lưu ID hợp lệ. Hãy dừng web app cũ trước khi chạy lại.
+
+Giữ cửa sổ mở trong lúc dùng ứng dụng. Nhấn **Ctrl+C** để dừng web app; nếu Windows hỏi kết thúc batch job, chọn `Y`. OpenFGA vẫn chạy nền. Muốn dừng cả OpenFGA, chạy `docker compose down`.
+
+Nếu có lỗi, script dừng tại bước đó và giữ cửa sổ để bạn đọc thông báo. Sửa nguyên nhân rồi chạy lại `start.bat`. Script không tự cài Node/Docker hoặc tự mở Docker Desktop.
+
+## 2. Cấu hình .env
+
+Khi chạy thủ công, tạo `.env` **trước khi khởi động service**:
+
+```powershell
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+```
+
+Cấu hình mặc định đủ để chạy local, không cần điền token hoặc store/model ID:
+
+```dotenv
+FGA_API_URL=http://127.0.0.1:8080
+FGA_TIMEOUT_MS=3000
+PORT=3000
+```
+
+| Biến | Ý nghĩa |
+| --- | --- |
+| `FGA_API_URL` | Địa chỉ OpenFGA mà ứng dụng gọi. Compose hiện mở cố định cổng `8080` trên máy local. |
+| `FGA_TIMEOUT_MS` | Thời gian chờ mỗi lời gọi OpenFGA, tính bằng mili giây; nhận từ `100` đến `10000`. |
+| `PORT` | Cổng web app. Ví dụ `3001` thì mở `http://127.0.0.1:3001`. |
+
+Các lệnh `start`, `fga:init`, `fga:sync`, `db:reset` tự đọc `.env`. Biến đã đặt trong môi trường của terminal được ưu tiên hơn giá trị trong file. Không commit `.env`.
+
+Đổi `FGA_API_URL` không làm Compose tự đổi cổng. Nếu muốn chuyển cổng OpenFGA, phải sửa cả `ports` trong `compose.yaml` và URL tương ứng. Database đã khởi tạo còn lưu URL/store/model đang dùng; trỏ sang engine khác cần xử lý cấu hình và dữ liệu có chủ đích, không chỉ đổi URL rồi chạy lại.
+
+## 3. Khởi động thủ công từng service
+
+Các lệnh dưới đây chạy từ thư mục dự án. Trên macOS/Linux dùng `npm` thay cho `npm.cmd` và `cp .env.example .env` nếu chưa có `.env`.
+
+### Bước 1: Tạo .env và cài thư viện
+
+```powershell
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 npm.cmd ci
+```
+
+### Bước 2: Chạy OpenFGA bằng Docker
+
+```powershell
 docker compose up -d --wait
+```
+
+Compose chạy service `migrate` để chuẩn bị schema SQLite của OpenFGA. Sau khi bước này thành công, service `openfga` mới chạy. Đây là quá trình chuẩn bị database của engine, không phải khôi phục dữ liệu mẫu của ứng dụng. OpenFGA dùng image `openfga/openfga:v1.22.1`, HTTP tại `http://127.0.0.1:8080`.
+
+Kiểm tra trạng thái hoặc đọc log khi có lỗi:
+
+```powershell
+docker compose ps -a
+docker compose logs --tail=100 migrate openfga
+```
+
+### Bước 3: Khởi tạo hoặc đồng bộ quyền
+
+```powershell
 npm.cmd run fga:init
+```
+
+Lần đầu, lệnh tạo SQLite ứng dụng, nạp dữ liệu mẫu, tạo store/model trong OpenFGA rồi đồng bộ quan hệ quyền. Những lần sau, lệnh dùng lại store/model đã lưu trong database và đối chiếu quan hệ với dữ liệu hiện có. `fga:sync` dùng cùng quy trình với `fga:init`.
+
+### Bước 4: Chạy web app
+
+```powershell
 npm.cmd start
 ```
 
-Mở **http://127.0.0.1:3000**. Server chỉ bind loopback; đổi port bằng biến môi trường `PORT`.
+Mở địa chỉ server in ra, mặc định **http://127.0.0.1:3000**. Server chỉ nhận kết nối từ máy local. `node:sqlite` trên Node 22 có thể in `ExperimentalWarning`; riêng thông báo này không có nghĩa khởi động thất bại.
+
+### Dừng, chạy lại và khôi phục dữ liệu mẫu
+
+Nhấn **Ctrl+C** tại terminal chạy web app. Sau đó, nếu cần dừng OpenFGA:
+
+```powershell
+docker compose down
+```
+
+`down` giữ Docker volume. Lần sau chạy lại bước 2–4, hoặc dùng `start.bat`. File `data/lab.sqlite` giữ các chỉnh sửa của bạn; OpenFGA lưu store/model và quan hệ trong volume `block6-advance_openfga-sqlite`.
+
+Chỉ dùng lệnh sau khi muốn **xóa dữ liệu nghiệp vụ hiện tại và nạp lại dữ liệu mẫu**; OpenFGA cần đang chạy:
+
+```powershell
+npm.cmd run db:reset
+```
+
+Giao diện cũng có nút **Khôi phục dữ liệu mẫu**. Mọi phiên bản dùng chung dữ liệu, vì vậy cần reset giữa các ca demo xóa dự án. Không dùng `docker compose down -v` nếu muốn giữ dữ liệu OpenFGA. Không xóa file SQLite hoặc các file `-wal`/`-shm` trong lúc service đang chạy.
+
+## 4. Sử dụng và thử khác biệt giữa các phiên bản
+
+Chọn tài khoản demo rồi bấm **Vào ứng dụng**. Thanh trên cùng cho đổi tài khoản và phiên bản. Danh mục hiển thị ID/tên mọi dự án để thử truy cập; quyền xem nội dung vẫn do server kiểm tra.
+
+Mở dự án để xem công việc. Các nút xem, sửa, quản lý thành viên và xóa dự án vẫn hiện để bạn thử cả trường hợp bị từ chối. Mở **Chi tiết kỹ thuật** để xem request, response, kết quả kiểm tra quyền và HTTP status. Phần **Công cụ demo nâng cao** cho gửi request tùy chỉnh; chỉ request GET được so sánh tự động.
+
+| Tình huống với dữ liệu mẫu | Kết quả cần quan sát |
+| --- | --- |
+| Alice mở Beta | Starter cho xem; V1–V4 từ chối vì không có quyền tại Beta. |
+| Vera sửa A1 trong Alpha | V1 cho sửa; V2–V4 từ chối vì Vera là Viewer. |
+| Bob sửa A2 đang Closed | V2 cho sửa; V3–V4 từ chối. Bob chỉ sửa được A1 đang Open và được giao cho mình. |
+| Admin Alpha mở Alpha khi chưa có membership | V1–V3 từ chối; V4 cho phép. V4 vẫn chặn Admin Alpha ở Beta vì khác tổ chức. |
+| Bob quản lý thành viên hoặc xóa Alpha | V1 cho phép; V2–V4 từ chối vì Bob không phải Owner. Reset sau ca xóa. |
+
+Owner không thể bị xóa hoặc đổi vai trò qua API thành viên. Xem/thêm/đổi/xóa thành viên đều là quyền quản lý thành viên; quyền đọc công việc không bao gồm quyền xem danh sách này. Chi tiết trình bày nằm trong [DEMO.md](DEMO.md).
+
+## 5. Khi gặp lỗi
+
+| Hiện tượng | Cách xử lý |
+| --- | --- |
+| Không tìm thấy Node/npm | Cài Node.js từ 22.17, mở terminal mới rồi chạy lại. Trên PowerShell dùng `npm.cmd` để tránh lỗi execution policy của `npm.ps1`. |
+| Không kết nối Docker | Mở Docker Desktop và Linux engine. Kiểm tra `docker info`, sau đó chạy lại. |
+| Cổng 3000 hoặc 8080 đang được dùng | Dừng tiến trình cũ. Muốn đổi cổng web, sửa `PORT`; muốn đổi cổng OpenFGA, xem mục cấu hình `.env`. |
+| npm báo lỗi chứng chỉ CA | `start.bat` đã bật dùng kho CA hệ thống. Khi chạy thủ công, có thể thử `$env:NODE_OPTIONS='--use-system-ca'` trước `npm.cmd ci`. Nếu vẫn lỗi, kiểm tra chứng chỉ/proxy của máy; không tắt kiểm tra TLS. |
+| V1–V4 trả 503 | Xem log OpenFGA. Khi engine hoạt động lại, chọn **Đồng bộ lại** hoặc dừng web app, chạy `fga:sync` rồi khởi động lại. |
+| Thông báo đã lưu nhưng đang cập nhật quyền, HTTP 202 | Dữ liệu đã được lưu. Kiểm tra trạng thái hoặc đồng bộ lại; không gửi lại thao tác thêm/xóa. Trong lúc chờ, các API được bảo vệ ở V1–V4 bị chặn để tránh dùng quyền cũ. |
+| `AUTHORIZATION_SYNC_BUSY` sau khi tiến trình bị tắt đột ngột | Quyền giữ lượt đồng bộ có thời hạn 30 giây. Đợi hết hạn rồi đồng bộ lại. |
+| `AUTHORIZATION_MODEL_MISMATCH` | Model đã khác bản gắn với database. `fga:build` chỉ sinh JSON, không tự chuyển database sang model mới. Cần xử lý migration/binding; không xóa dữ liệu để bỏ qua lỗi. |
+| HTTP 409 `AUTHORIZATION_CONTEXT_CHANGED` | Dữ liệu đổi trong lúc kiểm tra quyền. Tải lại dữ liệu trước khi thực hiện lại thao tác. |
+
+Nếu chạy app thủ công khi OpenFGA lỗi, Starter và danh mục tên dự án vẫn có thể hoạt động; điều đó chưa chứng minh V1–V4 sẵn sàng. `start.bat` dừng khi bước khởi tạo quyền thất bại.
+
+## 6. Kiểm thử và tạo bằng chứng
+
+Khởi động OpenFGA trước. Các lệnh kiểm thử dưới đây dùng SQLite và store riêng, không reset dữ liệu demo:
 
 ```powershell
 npm.cmd test
 npm.cmd run test:ui
 npm.cmd run test:idor -- --version=v1
-npm.cmd run evidence
-npm.cmd run db:reset
-```
-
-File `data/lab.sqlite` được tạo và seed khi chạy lần đầu. Restart giữ dữ liệu; **Khôi phục dữ liệu mẫu** mới nạp lại seed. Mọi version dùng chung database. Không commit database hoặc các file phụ SQLite.
-
-`test:ui` dùng database tạm riêng và Chrome/Edge headless trên Windows, lưu screenshot desktop/mobile/đăng nhập trong `.local-check/` (Git ignore). Đặt `LAB_BROWSER` nếu trình duyệt ở đường dẫn khác. Test không sửa database đang demo.
-
-## OpenFGA và đồng bộ quyền
-
-OpenFGA HTTP ở `http://127.0.0.1:8080`. Có hai database riêng: `data/lab.sqlite` lưu nghiệp vụ; `/home/nonroot/openfga.sqlite` trong volume `block6-advance_openfga-sqlite` lưu store/model/tuples của OpenFGA. Có thể sao chép `.env.example` thành `.env` để đổi cấu hình. Node nạp `.env` cho start/init/sync/reset; khi chạy test với URL khác, đặt `$env:FGA_API_URL` tương ứng. Store/model ID được pin trong từng SQLite database. Restart không reset dữ liệu; `docker compose down` giữ volume. Không dùng `down -v` nếu muốn giữ graph.
-
-Đây là **stored tuples trên SQLite**, không dùng contextual tuples. OpenFGA có schema/migration riêng, không đọc trực tiếp bảng `project_memberships`; projection/outbox vẫn cần vì có hai database. Compose dùng một connection tới SQLite và busy timeout 3 giây, phù hợp lab một instance; chưa kiểm chứng tải lớn hoặc nhiều engine cùng file.
-
-Lượt chuyển từ PostgreSQL đã giữ store/model ID, tuple/condition và dữ liệu nghiệp vụ. Container PostgreSQL cũ đã ngừng/gỡ; volume nguồn và bản export local vẫn được giữ để khôi phục. Đây là chuyển dữ liệu một lần theo schema v1.22.1, không phải lệnh migration đa phiên bản. Khi xem/backup file SQLite của OpenFGA, dừng engine sạch hoặc dùng cơ chế backup hiểu WAL; không xóa các file phụ `-wal`/`-shm`.
-
-```powershell
-npm.cmd run fga:build
-npm.cmd run fga:sync
 npm.cmd run test:fga:model
 npm.cmd run test:fga:integration
+npm.cmd run evidence
 ```
 
-`fga:init` và `fga:sync` dùng chung quy trình: tạo store/model nếu chưa có binding rồi đối chiếu tuple với SQLite. Chạy lặp không tự tạo store mới. Model DSL thay đổi phải chạy build và thực hiện migration/binding có chủ đích; runtime từ chối hash khác. Chưa có lệnh tự động thay model của database demo đã pin.
+`test:ui` cần Chrome hoặc Edge trên Windows. Nếu trình duyệt nằm ở vị trí khác, đặt `$env:LAB_BROWSER` trỏ tới file thực thi. Ảnh kiểm tra lưu trong `.local-check/` và được Git bỏ qua. Khi chạy test với engine ở URL khác, đặt `$env:FGA_API_URL` trong terminal vì các script test không tự đọc `.env`.
 
-Tests/browser smoke yêu cầu OpenFGA thật, tạo SQLite/store riêng và chỉ dọn tài nguyên fixture. Thiếu engine là lỗi kiểm thử. Sync dùng lease SQLite 30 giây; sau khi process bị kill giữa sync, chờ lease hết hạn rồi sync/restart. Chưa hỗ trợ nhiều app instances.
+Regression IDOR ở Starter được kỳ vọng báo lỗi vì phiên bản này cố ý có lỗ hổng; ở V1 phải vượt qua. Bằng chứng OpenFGA nằm tại `evidence/openfga/`. Các artifact trực tiếp trong `evidence/` thuộc bản trước tích hợp; xem [evidence/README.md](evidence/README.md) để phân biệt.
 
-Nếu engine chưa sẵn sàng, Starter và danh mục tên project vẫn dùng được; V1–V4 trả 503. Khi engine phục hồi, chọn **Đồng bộ lại** ở UI pending hoặc restart app. CLI `fga:sync` sửa graph; nếu app chưa từng khởi tạo được binding, restart app sau khi CLI thành công.
+Để sinh lại bản HTML của report từ Markdown, dùng Python 3.12 trở lên:
 
-Mutation quan hệ đã lưu nhưng sync lỗi trả **202** với `{ operationId, committed: true, authorizationSync: 'pending' }`. UI báo **Đã lưu thay đổi, đang cập nhật quyền truy cập**, cho kiểm tra trạng thái/đồng bộ lại. Không gửi lại mutation. Khi pending, V1–V4 bị chặn để tránh dùng quyền cũ; 200/201 chỉ trả sau sync hoàn tất.
+```powershell
+python scripts/render-report.py
+```
 
-HTTP bổ sung: **409 `AUTHORIZATION_CONTEXT_CHANGED`** nếu dữ liệu đổi trong lúc Check; **503** nếu engine lỗi/graph chưa ready. `GET /lab/operations/:id` xác thực và chỉ cho caller của operation xem trạng thái. `POST /lab/sync` yêu cầu token demo và kiểm tra Origin như reset; hai route nằm ngoài `/api/:version`.
+## 7. API và mã nguồn
 
-SDK pin **0.9.7**; override Axios **1.21.0** để tránh advisory trong dependency 1.19.0 mà SDK pin sẵn. Nếu npm lỗi CA trên Windows, thử `$env:NODE_OPTIONS='--use-system-ca'` trước `npm.cmd ci`; không tắt kiểm tra TLS.
+Token demo: `demo-alice`, `demo-bob`, `demo-vera`, `demo-charlie`, `demo-admin-alpha`, `demo-admin-beta`. Đây là cách mô phỏng đăng nhập, chưa có mật khẩu, JWT hoặc OAuth2 thật.
 
-Báo cáo HTML đọc offline được tạo từ Markdown bằng `python scripts/render-report.py` (Python 3.12+); bộ render nhúng sẵn 4 sơ đồ SVG, gồm cơ chế OpenFGA Check. Kết quả local mới và giới hạn nghiệm thu được tóm tắt trong [OPENFGA-PROGRESS.md](OPENFGA-PROGRESS.md).
-
-## Sử dụng web app
-
-1. Chọn tài khoản trên màn hình đăng nhập demo rồi bấm **Vào ứng dụng**.
-2. Thanh trên cùng cho đổi Starter–V4 hoặc đổi tài khoản. Danh sách chung hiển thị ID/tên mọi project đang tồn tại để thử truy cập.
-3. Bấm **Mở project** để xem bảng công việc. Quyền đọc nội dung được kiểm tra ở server theo version; danh mục có tên project không cấp quyền xem task/members.
-4. Bấm **Xem** để đọc task hoặc **Sửa** để sửa tiêu đề, mô tả, trạng thái. Thành công cập nhật dữ liệu thật; từ chối hiển thị lý do và không lưu bản nháp.
-5. Tab **Thành viên** hỗ trợ xem, thêm, đổi role Viewer/Member và xóa. Khi bị từ chối xem danh sách, form User ID vẫn cho thử các thao tác khác. Owner được giữ cố định; đổi/xóa Owner trả 409.
-6. **Xóa project** cần xác nhận và cascade task/membership. Khôi phục dữ liệu mẫu trước mỗi lần so sánh thao tác xóa.
-7. Mở **Chi tiết kỹ thuật** để xem kết quả thao tác vừa bấm, chọn các request gần đây và đọc trace server. Request tải lại sau mutation không thay kết quả đang xem.
-8. **Công cụ demo nâng cao** có preset, token tùy chỉnh/Anonymous, query/header, JSON body và so sánh GET Starter/V1. Chỉ GET được so sánh tự động.
-
-Các nút vẫn hiện khi thiếu quyền để demo request thật. Đổi tài khoản/version xóa dữ liệu bảo vệ, bản nháp và lịch sử kỹ thuật cũ; response đến muộn của ngữ cảnh cũ bị bỏ qua. Không thêm tạo project/task hoặc xóa task trong lần đổi UI này.
-
-Khi server từ chối quyền truy cập, ứng dụng mở popup giải thích thân thiện: chưa tham gia dự án, thiếu quyền vai trò, khác tổ chức, không được giao công việc hoặc công việc đã đóng. Popup hướng dẫn bước tiếp theo; bấm **Đã hiểu** để trở lại, bản nháp trong form vẫn được giữ nguyên. HTTP status và mã lỗi đầy đủ có trong Chi tiết kỹ thuật.
-
-Các thao tác ghi thành công (lưu task, thêm/đổi/xóa thành viên, xóa project, reset và request ghi tùy chỉnh) có popup xác nhận kết quả sau khi server xử lý. Các thao tác xem không hiện popup thành công.
-
-Nút **Đổi role** ở mỗi thành viên mở hộp thoại chọn vai trò và **Lưu vai trò**. Lỗi quyền và nghiệp vụ như không thể đổi/xóa Owner, không tìm thấy thành viên hoặc thành viên đã tồn tại mở popup; form không lặp lại thông báo. Riêng lỗi nhập liệu 400 trong form sửa task/thành viên hiện cạnh trường cần sửa, không mở popup. Trang bị chặn chỉ giữ trạng thái không thể truy cập và nút quay lại sau khi popup đã giải thích lý do.
-
-## Thử nhanh khác biệt giữa version
-
-- Alice → Starter → Beta: mở được project và đọc B1. Chuyển V1–V4: bị từ chối, không còn bảng task Beta cũ.
-- Vera → Alpha → sửa A1: Starter/V1 lưu được; V2–V4 từ chối do Viewer.
-- Bob → Alpha → sửa A2 Closed: V2 lưu được; V3/V4 từ chối. Sửa A1 Open được; A3/A4 bị từ chối do không phải assignee.
-- Admin Alpha chưa có membership → Alpha: V1–V3 từ chối, V4 được. Beta vẫn bị V4 từ chối do khác tenant.
-- Bob xóa Alpha/quản lý members: Starter/V1 được; V2–V4 bị từ chối. Reset giữa các ca destructive.
-
-Chi tiết các bước trình bày trong [DEMO.md](DEMO.md).
-
-## API
-
-Token demo: `demo-alice`, `demo-bob`, `demo-vera`, `demo-charlie`, `demo-admin-alpha`, `demo-admin-beta`. Đây là adapter mô phỏng authentication, không có JWT/OAuth2 hoặc mật khẩu mới.
-
-| Method | Path sau `/api/:version` | Policy |
+| Method | Đường dẫn sau `/api/:version` | Mục đích |
 | --- | --- | --- |
-| GET | `/projects` | Token hợp lệ; danh mục lab chỉ có ID/tên mọi project đang tồn tại |
-| GET | `/projects/:id` | Quyền đọc nội dung project theo version |
-| GET | `/projects/:id/tasks` | Quyền đọc project theo version; trả task trong project |
-| GET/PATCH | `/tasks/:id` | Đọc/sửa task theo version |
-| DELETE | `/projects/:id` | Xóa project theo version |
-| GET/POST | `/projects/:id/members` | Quản lý members theo version |
-| PATCH/DELETE | `/projects/:id/members/:userId` | Quản lý members theo version |
+| GET | `/projects` | Danh mục ID/tên dự án cho tài khoản đã xác thực |
+| GET | `/projects/:id` | Đọc thông tin dự án theo quyền |
+| GET | `/projects/:id/tasks` | Đọc công việc trong dự án theo quyền |
+| GET/PATCH | `/tasks/:id` | Đọc/sửa công việc |
+| DELETE | `/projects/:id` | Xóa dự án và các task/membership liên quan |
+| GET/POST | `/projects/:id/members` | Xem/thêm thành viên |
+| PATCH/DELETE | `/projects/:id/members/:userId` | Đổi vai trò/xóa thành viên |
 
 ```powershell
 curl.exe -i http://127.0.0.1:3000/api/starter/projects/beta/tasks -H "Authorization: Bearer demo-alice"
 curl.exe -i http://127.0.0.1:3000/api/v1/projects/beta/tasks -H "Authorization: Bearer demo-alice"
 ```
 
-PATCH task nhận `title`, `description`, `status` (Open/Closed). POST member nhận `userId`, `role`; PATCH member nhận `role` (Viewer/Member). Mutation thành công trả 200, tạo membership trả 201.
+PATCH task nhận `title`, `description`, `status` (`Open`/`Closed`). POST member nhận `userId`, `role`; PATCH member nhận `role` (`Viewer`/`Member`). Response có `{ data, error, trace, requestId }`. Các mã HTTP và tình huống lỗi được giải thích thêm trong report.
 
-Response API có `{ data, error, trace, requestId }`. 401: token thiếu/sai; 403: thiếu quyền; 404: tài nguyên/version/route không tồn tại; 400: payload sai; 409: membership trùng hoặc sửa Owner cố định. Payload có thể bị kiểm tra sau bước authorization. Response từ chối không có nội dung tài nguyên bị chặn; trace không chứa token.
+| Vị trí | Nội dung |
+| --- | --- |
+| `src/app.js`, `src/auth.js`, `src/policy.js` | Route, xác thực và gọi kiểm tra quyền trước khi đọc/ghi |
+| `src/db.js`, `src/schema.sql` | SQLite ứng dụng, dữ liệu mẫu, revision và thông tin đồng bộ |
+| `src/openfga/` | Gọi SDK OpenFGA, chuyển quan hệ SQL thành tuple và đồng bộ |
+| `openfga/model.fga`, `openfga/model.json` | Mô hình quyền gốc và JSON sinh bởi `npm.cmd run fga:build` |
+| `public/` | Giao diện web |
+| `test/`, `scripts/` | Kiểm thử, thu thập bằng chứng và công cụ hỗ trợ |
 
-## Cấu trúc và giới hạn
+Đọc [report.md](report.md) hoặc [report.html](report.html) để hiểu cơ chế; [POLICY.md](POLICY.md) để tra quy tắc chi tiết; [OPENFGA-PROGRESS.md](OPENFGA-PROGRESS.md) để xem kết quả kiểm chứng đã ghi nhận.
 
-- `src/auth.js`: principal từ token và SQLite.
-- `src/policy.js`: input validation, Starter và PDP adapter async; `src/app.js`: routes, validation và PEP với snapshot/revision trước read/write.
-- `src/openfga/`: SDK client, tuple projection, outbox/sync/lease/readiness. Model ở `openfga/model.fga`; JSON sinh bằng `fga:build`.
-- `src/db.js`, `src/schema.sql`: schema/seed/reset, foreign keys, revision triggers, outbox và operations. Không giữ transaction SQLite trong lúc chờ OpenFGA; revalidate trong transaction ngắn trước read/write.
-- `public/`: UI HTML/CSS/JavaScript, điều hướng và form, kiểm soát response cũ khi đổi ngữ cảnh.
-- `test/authorization.test.js`: HTTP permission matrix, API danh mục/chi tiết/list, validation/spoofing và persistence/reset/cascade.
-- `scripts/ui-smoke.js`: luồng browser thật qua nút và form, xử lý từ chối, response cũ và mobile.
-
-Đây là lab local: Starter cố ý có lỗ hổng, reset public có kiểm tra Origin, danh mục project cố ý discoverable. Evidence mới ghi vào `evidence/openfga/`; artifact trực tiếp trong `evidence/` thuộc bản PDP nội bộ trước tích hợp. Xem [evidence/README.md](evidence/README.md), [POLICY.md](POLICY.md), [UI-PLAN.md](UI-PLAN.md) và [OPENFGA-PLAN.md](OPENFGA-PLAN.md). Chưa có authentication thật, concurrent load, nhiều app instances hoặc hosted deployment.
+Đây là lab chạy local. Starter cố ý có lỗ hổng, người dùng được chọn phiên bản, tên dự án được công khai trong danh mục và có công cụ reset. Chưa có triển khai hosted, kiểm thử tải lớn hoặc hỗ trợ nhiều app instance.

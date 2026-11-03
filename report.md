@@ -1,221 +1,224 @@
-# Triển khai OpenFGA vào Task Authorization Minilab
+# Kiểm tra quyền truy cập với OpenFGA
 
-Báo cáo local · 02/11/2026 · Branch Block-6-Advance
+Task Authorization Minilab · Cập nhật ngày 03/11/2026
 
-## 01. Kiến trúc: OpenFGA quyết định, server thực thi
+## 01. Bài lab giải quyết vấn đề gì?
 
-Demo quản lý project/task giữ năm mức **Starter → V1 → V2 → V3 → V4**. Starter chỉ xác thực để tái hiện IDOR. Từ V1, backend gọi OpenFGA thật để kiểm tra quyền trên đúng đối tượng. Bộ chọn version, dữ liệu SQLite và giao diện tiếng Việt được giữ lại.
+Một người đã đăng nhập không có nghĩa là họ được xem hoặc sửa mọi công việc. Ví dụ, Alice phụ trách dự án Alpha. Nếu Alice đổi ID trong request sang công việc B1 của Beta, server phải kiểm tra quyền ở Beta trước khi trả nội dung.
+
+Bài lab dùng ứng dụng quản lý dự án và công việc để minh họa vấn đề này. Cùng một dữ liệu được chạy với năm bộ quy tắc: **Starter, V1, V2, V3 và V4**. Starter cố ý thiếu kiểm tra quyền trên tài nguyên. Các bản sau lần lượt giới hạn theo thành viên dự án, vai trò, người được giao việc và tổ chức.
+
+**OpenFGA là service kiểm tra quyền được tích hợp vào ứng dụng.** Từ V1 đến V4, server hỏi OpenFGA trước khi cho đọc hoặc sửa tài nguyên. OpenFGA trả kết quả cho phép hoặc từ chối; server vẫn chịu trách nhiệm xử lý HTTP và thay đổi dữ liệu.
 
 ```mermaid
 flowchart LR
-  UI[Trình duyệt] --> API[Express: xác thực và PEP]
-  API --> DB[(SQLite: nghiệp vụ)]
-  API --> FGA[OpenFGA: model và Check]
+  UI[Trình duyệt] --> API[Server ứng dụng]
+  API --> DB[(SQLite ứng dụng)]
+  API --> FGA[OpenFGA kiểm tra quyền]
   FGA --> FGA_DB[(SQLite riêng của OpenFGA)]
-  DB --> SYNC[Outbox và đồng bộ]
+  DB --> SYNC[Đồng bộ quan hệ]
   SYNC --> FGA
 ```
 
-**Authentication** xác định người gọi từ token demo; chưa có JWT/OAuth2 thật. **Authorization** quyết định người đó được làm gì với tài nguyên. OpenFGA giữ mô hình quyền và quan hệ; Express là PEP, chỉ thực thi khi `allowed === true`.
+Ứng dụng web chạy trên máy local ở cổng 3000, OpenFGA ở cổng 8080 theo cấu hình mặc định. Có **hai database SQLite riêng**: một lưu dữ liệu ứng dụng, một do OpenFGA quản lý trên Docker volume. OpenFGA không đọc trực tiếp các bảng SQL của ứng dụng.
 
-SQLite của ứng dụng (`data/lab.sqlite`) là nguồn gốc nghiệp vụ. OpenFGA có database SQLite riêng (`/home/nonroot/openfga.sqlite`) trên Docker volume để lưu model/tuples. Dịch vụ được bind loopback: ứng dụng ở port 3000, OpenFGA HTTP ở port 8080. Không cần PostgreSQL và không mở Playground.
+Cần phân biệt hai bước: **xác thực** là biết ai đang gửi yêu cầu; **kiểm tra quyền** là quyết định người đó có được làm việc cụ thể với tài nguyên cụ thể hay không. Lab mô phỏng xác thực bằng token demo, chưa có hệ thống đăng nhập thật.
 
-Chuyển datastore giữ nguyên store/model ID và quan hệ; vẫn dùng stored tuples. Hai file SQLite không dùng chung transaction, vì vậy outbox và kiểm tra revision tiếp tục cần thiết. SQLite của engine chạy một instance với một connection; chưa kiểm chứng tải ghi lớn hoặc nhiều node.
+## 02. Dữ liệu mẫu và các khái niệm cần biết
 
-Dự án mã nguồn mở được áp dụng là [OpenFGA trên GitHub](https://github.com/openfga/openfga), một authorization engine lấy cảm hứng từ Google Zanzibar. Phần kế thừa là mô hình quan hệ và cách suy ra quyền; ứng dụng không gọi dịch vụ Zanzibar của Google và chưa chứng minh quy mô/external consistency tương đương.
+Trong report, project là dự án; task là công việc trong dự án; membership là việc một người tham gia dự án với một vai trò. Tenant được hiểu là tổ chức: người và dự án đều thuộc một tổ chức xác định.
 
-Điểm tích hợp: `openfga/model.fga` khai báo policy; `relations.js` ánh xạ dữ liệu và quyền theo version; `sync.js` chiếu quan hệ sang engine; `client.js` gọi SDK `@openfga/sdk`; `policy.js` nhận verdict; wrapper `endpoint()` trong `src/app.js` enforce trước read/write. Các module tích hợp engine nằm trong `src/openfga/`.
+| Tài khoản hoặc công việc | Dữ liệu ban đầu |
+| --- | --- |
+| Alice | Owner của dự án Alpha, thuộc tổ chức Alpha |
+| Bob | Member của Alpha; được giao A1 đang Open và A2 đang Closed |
+| Vera | Viewer của Alpha |
+| Charlie | Owner của Beta, thuộc tổ chức Beta |
+| Admin Alpha / Admin Beta | Quản trị viên của tổ chức tương ứng; ban đầu chưa tham gia dự án |
+| A3 / A4 trong Alpha | A3 chưa giao cho ai; A4 được giao cho Alice |
 
-## 02. Dữ liệu và quan hệ quyền
-
-Mỗi user có một tenant và cờ tenant admin. Role project nằm trong membership; assignee của task là quan hệ riêng. Được giao task không thay thế membership.
+Viewer, Member và Owner là **vai trò trong từng dự án**. Một người là Owner ở dự án này không tự có quyền ở dự án khác. Tenant admin là quyền quản trị ở cấp tổ chức, chỉ được dùng từ V4.
 
 ```mermaid
 flowchart LR
-  U[user] -->|member/admin| T[tenant]
-  U -->|owner/member/viewer| P[project]
-  P -->|tenant| T
-  K[task] -->|project| P
-  U -->|assignee có condition| K
+  U[Người dùng] -->|thuộc / quản trị| T[Tổ chức]
+  U -->|Owner / Member / Viewer| P[Dự án]
+  P -->|thuộc| T
+  K[Công việc] -->|nằm trong| P
+  U -->|được giao| K
 ```
 
-| Dữ liệu mẫu | Ý nghĩa |
-| --- | --- |
-| Alice / Alpha | Owner project Alpha |
-| Bob / Alpha | Member; assignee A1 Open và A2 Closed |
-| Vera / Alpha | Viewer |
-| Charlie / Beta | Owner project Beta |
-| Admin Alpha / Beta | Admin trong tenant tương ứng, ban đầu chưa có membership |
-| A3 / A4 | Chưa assign / assign Alice, giúp kiểm thử nhánh Member |
+Được giao công việc và tham gia dự án là hai quan hệ khác nhau. Từ V3, Bob phải vừa là Member của Alpha, vừa được giao công việc đang Open thì mới sửa được. Nếu bị xóa khỏi Alpha, Bob mất quyền dù công việc vẫn ghi tên Bob là người được giao.
 
-Projection chuyển dữ liệu sang `tenant.member/admin`, `project.tenant/owner/member/viewer` và `task.project/assignee`. Title/description không được gửi sang OpenFGA. `tenant.member` chỉ cùng tenant; `project.member` là role Member, hai quan hệ có nghĩa khác nhau.
+Dữ liệu gốc nằm ở `data/lab.sqlite`. Khi đồng bộ, ứng dụng chuyển các quan hệ cần cho việc xét quyền sang OpenFGA. Tiêu đề và mô tả công việc vẫn nằm trong SQLite ứng dụng, không được gửi sang OpenFGA.
 
-Model chuẩn nằm trong `openfga/model.fga`; JSON sinh ra được kiểm tra khớp DSL. Một model chứa quyền V1–V4, dùng chung quan hệ. Model ID được pin trong database; tạo model mới trên engine không tự thay policy đang chạy.
+## 03. OpenFGA trả lời câu hỏi về quyền như thế nào?
 
-## 03. Cơ chế OpenFGA: model, tuple và Check
+Giả sử Bob muốn sửa A1 ở V3. Server xác thực Bob, đọc A1 từ SQLite và biết rằng A1 thuộc Alpha, đang Open. Sau đó server hỏi OpenFGA: **“Bob có quyền sửa A1 theo quy tắc V3 không?”**
 
-OpenFGA đánh giá một câu hỏi cụ thể bằng **model đã pin + quan hệ đã lưu + context tin cậy**. Ví dụ Bob gửi PATCH task A1 ở V3: backend xác thực token, đọc snapshot SQLite rồi hỏi `Check(user:bob, can_edit_v3, task:A1)` với `current_status: Open`.
+OpenFGA cần ba loại thông tin. **Model** mô tả quy tắc suy ra quyền. **Tuple** là một quan hệ đã lưu, chẳng hạn “Bob là Member của Alpha”. **Context** là dữ liệu bổ sung cho lần kiểm tra, ở đây là trạng thái hiện tại của A1 do server đọc từ SQLite.
 
 ```mermaid
 flowchart TB
   %% mechanism-openfga
-  MODEL[Model: Owner OR Member + assignee + Open] --> CHECK[OpenFGA đánh giá can_edit_v3]
-  TUPLES[Stored tuples: Bob member Alpha; A1 thuộc Alpha; Bob assignee A1] --> CHECK
-  INPUT[Check: Bob / can_edit_v3 / A1; context status Open] --> CHECK
-  CHECK -->|allowed true| PEP[Backend revalidate rồi thực thi]
-  CHECK -->|allowed false| DENY[Backend trả 403]
-  CHECK -->|lỗi dịch vụ| ERROR[Backend trả 503]
+  MODEL[Quy tắc sửa ở V3] --> CHECK[OpenFGA kiểm tra]
+  TUPLES[Quan hệ đã lưu] --> CHECK
+  INPUT[Bob, A1, trạng thái hiện tại Open] --> CHECK
+  CHECK -->|cho phép| PEP[Server kiểm tra dữ liệu rồi ghi]
+  CHECK -->|từ chối| DENY[HTTP 403]
+  CHECK -->|không kiểm tra được| ERROR[HTTP 503]
 ```
 
-| Thành phần | Dữ liệu dùng trong ví dụ |
+| Thành phần | Ví dụ Bob sửa A1 |
 | --- | --- |
-| Model | `can_edit_v3 = project_owner or assigned_member`; assigned Member phải thỏa condition Open |
-| Stored tuples | Bob là Member Alpha; A1 thuộc Alpha; Bob là assignee A1 với condition `task_is_open` |
-| Context | `current_status` lấy từ SQLite trước mutation, không lấy trạng thái mới do client đề nghị |
-| Kết quả | Bob/A1 Open → true; Bob/A2 Closed → false; Owner vẫn có nhánh sửa Closed |
+| Quy tắc | Owner được sửa; Member chỉ được sửa việc được giao và đang Open. |
+| Quan hệ đã lưu | Bob là Member Alpha; A1 thuộc Alpha; A1 được giao cho Bob. |
+| Dữ liệu lần kiểm tra | Server truyền `current_status: Open`. |
+| Câu hỏi trong API | `Check(user:bob, can_edit_v3, task:A1)` |
+| Kết quả | Cho phép. Nếu thay A1 bằng A2 đang Closed, Bob bị từ chối. |
 
-Chữ Member tự nó không có quyền mặc định: model định nghĩa hành động nào được suy ra từ quan hệ đó. Khi kiểm tra task, engine đi qua quan hệ project để tìm quyền; việc này thể hiện cơ chế ReBAC lấy cảm hứng từ Zanzibar. OpenFGA tự đọc datastore SQLite riêng, không tự JOIN bảng `project_memberships` của ứng dụng.
+OpenFGA chỉ trả lời về quyền, không tự sửa công việc. Server chỉ tiếp tục khi nhận `allowed === true` và xác nhận dữ liệu chưa thay đổi trong lúc chờ. Nếu OpenFGA lỗi, server trả 503 thay vì tự cấp quyền.
 
-Backend chỉ thực thi khi Check trả true và snapshot còn hợp lệ. OpenFGA không tự sửa task hay chặn HTTP route. Đổi selector chọn relation `_v1`…`_v4` trong cùng model; Starter bỏ Check để minh họa IDOR. Context trạng thái dùng cho condition khác với contextual tuples: bản hiện tại **lưu quan hệ bền**, không gửi lại toàn bộ quan hệ theo từng Check.
+Quy tắc nằm trong `openfga/model.fga`. Các quyền V1–V4 ở cùng một model; bộ chọn phiên bản quyết định server hỏi quyền nào. Store là vùng dữ liệu của lab trong OpenFGA. ID của store và model được lưu cố định trong SQLite ứng dụng để lần sau dùng lại đúng cấu hình.
 
-## 04. Policy tiến hóa qua Starter–V4
+## 04. Vì sao cần lần lượt Starter, V1, V2, V3 và V4?
 
-| Version | Hạn chế trước đó | Kiểm tra áp dụng | Kết quả quan sát |
+Mỗi phiên bản xử lý một điểm còn thiếu của bản trước. Bảng dưới áp dụng với dữ liệu mẫu, trước khi người dùng sửa hoặc xóa dữ liệu.
+
+| Phiên bản | Điểm còn thiếu trước đó | Quy tắc bổ sung và ví dụ |
+| --- | --- | --- |
+| Starter | Chưa kiểm tra quyền trên từng tài nguyên | Chỉ cần token hợp lệ. Alice đọc B1 của Beta được dù không tham gia Beta. Đây là lỗi cố ý của lab. |
+| V1 | Biết ID là có thể truy cập | Yêu cầu tham gia dự án chứa tài nguyên. Alice không còn đọc được B1. Tuy nhiên, mọi vai trò trong dự án vẫn có quyền thao tác rộng. |
+| V2 | Viewer và Member có thể sửa, xóa hoặc quản lý thành viên như Owner | Phân quyền theo vai trò. Vera là Viewer nên vẫn đọc A1 được, nhưng không được sửa. |
+| V3 | Member sửa được mọi công việc trong dự án | Member chỉ sửa việc được giao cho mình và đang Open. Bob sửa A1 được; A2 Closed, A3 chưa giao và A4 giao Alice đều bị chặn. |
+| V4 | Chưa giới hạn theo tổ chức và chưa có quyền admin tổ chức | Phải cùng tổ chức với dự án. Admin Alpha được quản trị Alpha dù chưa tham gia, nhưng không được truy cập Beta. |
+
+V4 giữ điều kiện V3 với người dùng thường và thêm quyền quản trị có phạm vi. Admin chỉ có đặc quyền trong tổ chức của mình. Ở V1–V3, tài khoản admin chưa có membership vẫn bị từ chối như người ngoài dự án.
+
+V1–V3 chưa kiểm tra ranh giới tổ chức. Nếu membership khác tổ chức được tạo ở một bản trước, V4 vẫn chặn người đó truy cập dự án khác tổ chức.
+
+Việc được chọn Starter hay V1 chỉ phục vụ so sánh trong lab. Khi triển khai ứng dụng thực tế, server phải quyết định bộ quy tắc được dùng; người dùng không được chọn bản yếu hơn để bỏ qua kiểm tra.
+
+Trong thuật ngữ phân quyền, V2 minh họa **RBAC**: gán quyền theo vai trò. Quan hệ tham gia dự án và được giao việc thể hiện **ReBAC**: xét quyền theo quan hệ giữa người và tài nguyên. Điều kiện trạng thái Open và tổ chức thuộc **ABAC**: xét thêm thuộc tính của người hoặc tài nguyên. Các cách này được kết hợp trong cùng quy tắc.
+
+## 05. Quyền cụ thể và những trường hợp dễ nhầm
+
+| Hành động | Viewer | Member | Owner |
 | --- | --- | --- | --- |
-| Starter | Thiếu object authorization | Chỉ token hợp lệ | Alice đọc B1 được, cố ý có IDOR |
-| V1 | Biết ID là truy cập được | Quan hệ membership project | Alice/B1 bị 403; Alice/A1 vẫn được |
-| V2 | Thành viên có quyền quá rộng | Role kết hợp action | Viewer đọc được nhưng không sửa |
-| V3 | Member sửa mọi task trong project | Member và assignee và trạng thái Open | Bob sửa A1 được, A2/A3/A4 bị chặn |
-| V4 | Chưa enforce tenant | Cùng tenant; thêm admin tenant | Admin Alpha được ở Alpha, bị chặn ở Beta |
+| Đọc dự án và công việc từ V2 | Có | Có | Có |
+| Sửa công việc ở V2 | Không | Có | Có |
+| Sửa công việc ở V3/V4 | Không | Chỉ việc được giao và đang Open | Có, kể cả Closed |
+| Xem/thêm/đổi/xóa thành viên từ V2 | Không | Không | Có |
+| Xóa dự án từ V2 | Không | Không | Có |
 
-V1–V3 không thêm tenant boundary ngầm. Membership khác tenant có thể được tạo từ version trước nhưng không vượt qua V4. Tenant admin không có đặc quyền ở V1–V3 khi chưa có membership.
+Ở V4, mọi quyền trên đều cần cùng tổ chức. Admin trong tổ chức có quyền tương đương Owner mà không cần membership. Admin vẫn chịu kiểm tra dữ liệu đầu vào và quy tắc nghiệp vụ.
 
-Member được đóng task Open của mình; không tự mở lại task Closed bằng payload `status: Open`. Backend lấy trạng thái **trước mutation** cho condition `task_is_open`. Owner/admin hợp lệ được sửa cả Closed.
+**Trạng thái được xét là trạng thái trước khi sửa.** Bob có thể đóng A1 đang Open. Sau khi A1 đã Closed, Bob không thể gửi `status: Open` để tự mở lại: server đọc trạng thái Closed từ database trước khi xét quyền. Owner hoặc admin hợp lệ có thể mở lại.
 
-Selector là công cụ lab để so sánh policy. Trong ứng dụng production, server phải cố định policy; người dùng không được chọn Starter để bỏ kiểm tra quyền.
+**Được phép quản lý thành viên chưa có nghĩa được đổi Owner.** Lab giữ Owner cố định. Kể cả người có quyền quản lý cũng nhận HTTP 409 nếu cố xóa hoặc hạ vai trò Owner. Tương tự, người có quyền sửa vẫn có thể nhận HTTP 400 nếu gửi dữ liệu không hợp lệ.
 
-## 05. Kiểm tra quyền và kết quả nghiệp vụ
+**Danh mục tên dự án không phải nội dung dự án.** Lab cho tài khoản đã xác thực thấy ID/tên mọi dự án để thử truy cập. Mở dự án, đọc công việc và quản lý thành viên vẫn được kiểm tra riêng. Các nút vẫn hiện khi thiếu quyền để người học quan sát server từ chối request thật.
 
-| Hành động từ V2 | Viewer | Member | Owner | Tenant admin hợp lệ ở V4 |
-| --- | --- | --- | --- | --- |
-| Đọc project/task | Có | Có | Có | Có |
-| Sửa task V2 | Không | Có | Có | Có |
-| Sửa task V3/V4 | Không | Assignee và Open | Có | Có |
-| Quản lý members / xóa project | Không | Không | Có | Có |
+Server lấy vai trò, tổ chức, người được giao và trạng thái từ dữ liệu của mình. Header/query tự khai vai trò không làm tăng quyền. API sửa task chỉ nhận tiêu đề, mô tả và trạng thái; client không được tự chọn model hay tên quyền OpenFGA ngoài ánh xạ đã định nghĩa.
 
-Quyền task kế thừa qua project chứa nó. Mapping version/action đến relation được khai báo ở server: `can_read_vN`, `can_edit_vN`, `can_delete_vN`, `can_manage_members_vN`. Client không được chọn model hoặc relation tùy ý.
+## 06. Nếu dữ liệu đổi trong lúc chờ OpenFGA thì sao?
 
-Version/action/role lạ bị chặn trước cả nhánh Starter/admin. Role, tenant, assignee và trạng thái lấy từ server; query/header tự khai không làm tăng quyền. PATCH chỉ nhận title, description, status.
+OpenFGA là service riêng nên một lần kiểm tra quyền phải đi qua mạng. Trong thời gian chờ, công việc có thể bị đóng hoặc Bob có thể bị thu hồi quyền. Kết quả cho phép dựa trên dữ liệu cũ khi đó không còn đủ để thực hiện thao tác.
 
-Owner cố định là quy tắc nghiệp vụ riêng. Một caller có thể được ALLOW quản lý members nhưng vẫn nhận 409 khi cố xóa/hạ quyền Owner. Tương tự, ALLOW không bỏ qua validation payload.
-
-Ngoại lệ lab được khai báo rõ: danh mục mọi project chỉ trả ID/tên cho token hợp lệ; không cấp quyền đọc nội dung. Reset local kiểm tra Origin; giao diện vẫn hiện nút thiếu quyền để người học quan sát server từ chối.
-
-## 06. Snapshot và transaction khi Check qua mạng
-
-PDP cũ chạy đồng bộ trong transaction SQLite. OpenFGA là dịch vụ ngoài process; không được truyền callback async vào helper transaction cũ rồi COMMIT trước khi Check hoàn tất.
+Server xử lý theo ba bước: đọc dữ liệu cùng số phiên bản thay đổi; gọi OpenFGA; rồi kiểm tra lại số phiên bản trước khi trả nội dung hoặc ghi dữ liệu. Số này được gọi là **revision**. Nếu revision khác, server trả HTTP 409 với mã `AUTHORIZATION_CONTEXT_CHANGED`.
 
 ```mermaid
 flowchart LR
-  A[Đọc snapshot và revision] --> B[Đóng transaction]
-  B --> C[Await OpenFGA Check]
-  C --> D[Transaction ngắn: xác nhận revision]
-  D -->|khớp và ALLOW| E[Validation, nghiệp vụ và COMMIT]
-  D -->|đã đổi| F[409, không ghi]
+  A[Đọc dữ liệu và revision] --> B[Gọi OpenFGA ngoài transaction]
+  B --> C[Mở transaction ngắn và kiểm tra lại]
+  C -->|không đổi và được phép| D[Kiểm tra đầu vào rồi đọc hoặc ghi]
+  C -->|đã đổi| E[409, không dùng kết quả cũ]
 ```
 
-Revision tăng đơn điệu bằng trigger cho SQL writes, cascade và reset. Revision nội dung phát hiện snapshot cũ; revision quan hệ xác định graph đã đồng bộ. Đổi title/status không cần ghi tuple nhưng vẫn vô hiệu hóa quyết định đang chờ.
+Ví dụ: server đọc A1 đang Open và bắt đầu hỏi quyền của Bob. Trong lúc chờ, Owner đóng A1. Dù OpenFGA trả cho phép theo thông tin trước đó, server thấy revision đã đổi và không sửa A1 bằng kết quả cũ. Cách kiểm tra này áp dụng cả khi kết quả cũ là từ chối.
 
-Sau Check, server kiểm tra revision, binding và readiness trong transaction ngắn trước đọc/ghi. Nếu task vừa đóng, membership bị thu hồi, reset hoặc project bị xóa trong thời gian chờ, trả **409 AUTHORIZATION_CONTEXT_CHANGED**. Áp dụng cho cả ALLOW và DENY cũ.
+Transaction là nhóm thao tác SQL cùng thành công hoặc cùng được hoàn tác. Server dùng transaction ngắn cho bước đọc ban đầu và bước kiểm tra rồi thực hiện cuối cùng. Server không giữ transaction SQLite mở trong lúc chờ HTTP, để tránh giữ khóa database quá lâu.
 
-Không giữ transaction SQLite mở trong lúc chờ HTTP. Check có timeout và không tự retry. Kiểm thử race dùng barrier giữ response rồi thay đổi dữ liệu, không dùng sleep để mong race xảy ra. Cơ chế này phục vụ lab local; chưa đánh giá throughput hoặc nhiều application instances.
+Các trigger SQL tăng revision khi dữ liệu thay đổi, gồm cả xóa liên quan và reset. Revision theo dõi nội dung và revision cần đồng bộ quyền có mục đích khác nhau: đổi tiêu đề làm quyết định đang chờ trở nên cũ, nhưng không cần tạo tuple mới.
 
-## 07. Đồng bộ quan hệ và phục hồi lỗi
+Khi gặp 409 do dữ liệu thay đổi, người dùng nên tải lại thông tin trước khi thao tác lại. Đây khác với lỗi 403 thiếu quyền hoặc lỗi 503 không kiểm tra được quyền.
 
-Mutation membership/delete/reset ghi SQLite và outbox trong cùng transaction, kể cả khi chạy Starter. Sau COMMIT, synchronizer đọc snapshot, đối chiếu graph, xóa tuple dư/role cũ và ghi quan hệ mới. Read API có pagination; Write chia batch.
+## 07. Vì sao phải đồng bộ và HTTP 202 có nghĩa gì?
 
-**Readiness đóng trước sync** và chỉ mở khi applied revision bằng desired revision, model/binding đúng. V1–V4 bị chặn trong thời gian graph có thể ghi dở. Lease SQLite 30 giây giới hạn một synchronizer; sau process crash cần chờ lease hết hạn rồi phục hồi.
+Khi đổi Bob từ Member thành Viewer, SQLite ứng dụng phải lưu vai trò mới và OpenFGA cũng phải bỏ quan hệ Member cũ. Hai database không có một transaction chung, nên không thể coi hai lần ghi luôn thành công cùng lúc.
 
-| Tình huống | HTTP / trạng thái |
+Ứng dụng ghi thay đổi nghiệp vụ và một dấu mốc cần đồng bộ vào SQLite trong cùng transaction. Dấu mốc này nằm trong **outbox**: nơi ghi lại rằng dữ liệu quyền cần được cập nhật. Sau đó bộ đồng bộ đối chiếu các quan hệ trong OpenFGA với SQLite, xóa quan hệ cũ và ghi quan hệ mới.
+
+Trong lúc đồng bộ chưa xong, ứng dụng tạm chặn các API được bảo vệ ở V1–V4. Chỉ khi quan hệ đã khớp và store/model đúng, các API này mới sẵn sàng trở lại. Cách này tránh dùng quyền cũ khi việc thu hồi quyền chưa hoàn tất.
+
+| Kết quả | Ý nghĩa đối với người dùng |
 | --- | --- |
-| Check xác định thiếu quyền | 403, data null |
-| Engine lỗi hoặc graph chưa ready | 503, không thực hiện nghiệp vụ |
-| Commit và sync hoàn tất | 200/201 |
-| SQLite đã commit, sync lỗi | 202, committed true, operation pending |
-| Snapshot đổi trong lúc Check | 409, không dùng quyết định cũ |
+| 200/201 sau thay đổi quan hệ | Dữ liệu đã lưu và quyền đã đồng bộ xong. |
+| 202, `committed: true` | Dữ liệu đã lưu, nhưng đồng bộ quyền chưa thành công. Không gửi lại thao tác thêm/xóa. |
+| 403 | Đã kiểm tra và xác định không có quyền; thao tác bị chặn. |
+| 503 | Engine lỗi hoặc dữ liệu quyền chưa sẵn sàng; không thể thực hiện yêu cầu được bảo vệ. |
+| 409 do context thay đổi | Dữ liệu thay đổi khi đang kiểm tra; cần tải lại. |
 
-202 không có nghĩa mutation thất bại. UI không hướng dẫn gửi lại thao tác; caller xem operation hoặc đồng bộ lại. Job tồn tại qua restart; startup/CLI/UI sync có thể đối chiếu lại graph kể cả khi remote Write đã thành công nhưng process chưa cập nhật applied revision.
+Với HTTP 202, giao diện báo **đã lưu thay đổi, đang cập nhật quyền truy cập**. Người gọi có thể xem trạng thái thao tác hoặc chọn **Đồng bộ lại**. Mỗi thao tác có operation ID; API chỉ cho tài khoản đã thực hiện xem trạng thái của nó.
 
-Check dùng HIGHER_CONSISTENCY; tùy chọn này không tạo transaction chung với SQLite. Chưa có worker nền tự retry vô hạn; recovery là thao tác rõ ràng hoặc startup. Lab chọn chặn toàn bộ V1–V4 khi pending để giảm độ phức tạp.
+Thông tin chờ đồng bộ được giữ qua lần khởi động lại. Có thể phục hồi bằng nút trên giao diện, lệnh `fga:sync` hoặc khởi động lại app. Chưa có worker nền tự thử lại liên tục. Cơ chế giữ lượt đồng bộ có thời hạn 30 giây; nếu process bị tắt đột ngột, có thể cần chờ hết hạn trước khi đồng bộ lại.
 
-Ba bảng dưới là cơ chế của ứng dụng, không phải schema bắt buộc của OpenFGA:
+## 08. Những lựa chọn kỹ thuật và chi phí đi kèm
 
-| Bảng trong SQLite ứng dụng | Trách nhiệm |
+| Lựa chọn | Vì sao chọn và phải chấp nhận điều gì? |
 | --- | --- |
-| `authorization_state` | Pin store/model, kiểm tra revision và readiness; lease tránh sync đồng thời |
-| `authorization_outbox` | Dấu mốc revision cần đồng bộ, ghi cùng transaction nghiệp vụ; sync đối chiếu graph, không replay từng event |
-| `authorization_operations` | Liên kết operation với caller/revision để theo dõi HTTP 202; trạng thái suy ra từ revision đã áp dụng |
+| SQLite lưu dữ liệu gốc của ứng dụng | Giữ truy vấn danh sách thành viên, ràng buộc SQL và reset dữ liệu mẫu. Đổi lại, phải đồng bộ quan hệ sang OpenFGA. |
+| Lưu quan hệ thật trong OpenFGA | Quan sát được cách engine lưu và suy ra quyền. Đổi lại, cần xử lý khi hai bên chưa đồng bộ. |
+| Dùng cùng một model cho V1–V4 | Dễ so sánh trên cùng dữ liệu. Model có nhiều quyền theo phiên bản; việc đổi model đã gắn với database phải được xử lý riêng. |
+| Truyền trạng thái hiện tại khi Check | Đóng công việc không cần ghi lại tuple. Server phải lấy trạng thái từ database và kiểm tra revision trước khi dùng kết quả. |
+| Đối chiếu toàn bộ quan hệ của store lab | Dễ xác định trạng thái đúng sau lỗi. Cách này chưa được tối ưu cho dữ liệu lớn. |
+| OpenFGA dùng SQLite trên Docker volume | Chạy local với ít service, giữ dữ liệu qua restart. Chưa kiểm chứng tải lớn hoặc nhiều engine cùng truy cập file. |
 
-## 08. Các quyết định kỹ thuật và đánh đổi
+**Lưu membership ở cả hai bên là lựa chọn của ứng dụng này.** OpenFGA không bắt buộc sao chép bảng membership. Một phương án khác là quản lý membership trực tiếp trong OpenFGA, rồi ghép tên người dùng từ SQLite khi hiển thị. Phương án đó chưa được triển khai và sẽ cần sửa các API thành viên, reset và xóa dự án.
 
-| Quyết định | Phương án khác | Lý do và đánh đổi |
-| --- | --- | --- |
-| Lưu tuple thật trong OpenFGA | Gửi mọi relation bằng contextual tuples | Thể hiện lưu quan hệ và suy luận; phải xử lý đồng bộ |
-| SQLite là nguồn gốc | OpenFGA là nguồn duy nhất cho membership | Giữ API/reset hiện có; phải có projection/outbox |
-| Một model cho V1–V4 | Bốn model/store riêng | So sánh cùng dữ liệu; nhiều relation trong model |
-| Status qua condition | Đồng bộ tuple mỗi lần đóng task | Tránh sync cho status; cần snapshot/revision tin cậy |
-| Diff toàn graph lab | Delta worker quy mô lớn | Dễ phục hồi và quan sát; không tối ưu tải lớn |
-| 202 sau commit pending | Trả lỗi dù dữ liệu đã lưu | Tránh người dùng lặp mutation; UI cần trạng thái riêng |
-| SDK timeout, không retry Check | Retry quyết định quyền ngầm | Hành vi lỗi rõ ràng; cần người dùng phục hồi dịch vụ |
-| Docker OpenFGA + SQLite | Datastore memory | Có persistence qua restart, giảm một DB service; SQLite phù hợp một instance local |
+Ba bảng `authorization_state`, `authorization_outbox`, `authorization_operations` lần lượt lưu cấu hình/trạng thái đồng bộ, dấu mốc cần cập nhật, và thông tin theo dõi thao tác đã lưu nhưng còn chờ. Đây là các bảng của ứng dụng để phối hợp hai hệ thống.
 
-### Vì sao membership được lưu ở cả hai bên?
+OpenFGA Check có timeout và không tự retry trong SDK của lab. Server không dùng một bộ quy tắc local để tự cấp quyền khi engine lỗi. Phần giải thích lý do bị từ chối chỉ giúp hiển thị thông báo; kết quả cấp quyền vẫn đến từ OpenFGA.
 
-Bản hiện tại coi `project_memberships` là nguồn gốc và tuple trong OpenFGA là bản chiếu. Quyết định này giữ truy vấn danh sách thành viên, ràng buộc SQL, seed/reset và nghiệp vụ cũ; chi phí là lưu trùng quan hệ, đồng bộ thu hồi quyền và xử lý trạng thái ghi dở. Ba bảng kỹ thuật ở mục 07 phát sinh từ lựa chọn tích hợp này, không phải yêu cầu của Zanzibar.
+OpenFGA là dự án mã nguồn mở lấy cảm hứng từ mô hình quan hệ của Zanzibar. Report mô tả cách tích hợp trong lab, không khẳng định lab đạt quy mô hoặc mức nhất quán của hệ thống Google. Có thể xem [mã nguồn OpenFGA](https://github.com/openfga/openfga) và [hướng dẫn chọn nơi lưu dữ liệu gốc](https://openfga.dev/docs/best-practices/source-of-truth).
 
-**Phương án OpenFGA quản lý membership duy nhất chưa được triển khai.** Khi áp dụng, API members sẽ đọc/ghi relation trực tiếp qua engine và ghép tên user từ SQLite; không cần ghi thêm membership ở ứng dụng. Đánh đổi là phải sửa các luồng đó, còn xóa project/reset vẫn phối hợp dữ liệu giữa hai hệ thống. OpenFGA cho phép chọn nơi quản lý membership theo nhu cầu ứng dụng; không bắt buộc nhân đôi dữ liệu. [Hướng dẫn chọn nguồn dữ liệu gốc](https://openfga.dev/docs/best-practices/source-of-truth).
+## 09. Đã kiểm chứng những gì?
 
-SDK pin 0.9.7; dependency Axios được override 1.21.0 vì SDK pin sẵn bản có advisory. TLS npm dùng CA hệ thống khi cần, không tắt xác thực chứng chỉ. Image engine/datastore có phiên bản cố định.
+Bộ bằng chứng được lưu tại `evidence/openfga/`. Lần chạy ghi trong manifest bắt đầu lúc 15:39 UTC ngày 02/11/2026, tức 22:39 giờ Việt Nam. Log kiểm thử của lần đó ghi **69/69 tests đạt**; riêng ma trận model kiểm tra **432 quyết định quyền** trên OpenFGA thật. Đây là kết quả của lần chạy đã lưu, không phải khẳng định rằng mỗi lần mở report đều chạy lại test.
 
-Không có local PDP cấp quyền thay OpenFGA khi dịch vụ lỗi. Chẩn đoán DENY dựa trên snapshot chỉ giúp thông báo thân thiện. Trace ghi relation/model và kết quả Check; không giả rằng engine trả đầy đủ đường suy luận.
+| Nhóm kiểm tra | Điều cần xác nhận |
+| --- | --- |
+| Quyền theo tài khoản/phiên bản | Kết quả cho phép hoặc từ chối đúng với quy tắc; bị chặn thì không sửa dữ liệu. |
+| Quan hệ bị thay đổi | Đổi role hoặc thu hồi membership không để lại quyền cũ; V4 vẫn chặn khác tổ chức. |
+| Dữ liệu đổi khi đang Check | Sửa trạng thái, thu hồi quyền, reset hoặc xóa dự án làm quyết định cũ không còn được dùng. |
+| Lỗi engine và đồng bộ | Timeout, model sai, ghi quan hệ dở và trạng thái pending được xử lý; phục hồi không lặp thao tác nghiệp vụ. |
+| Giao diện | Thử form, đổi phiên bản/tài khoản, thông báo từ chối, pending và màn hình nhỏ bằng trình duyệt thật. |
+| Khởi động lại | Dữ liệu ứng dụng, store/model ID và quyền được giữ qua restart; init lặp không tự reset dữ liệu. |
 
-## 09. Kiểm chứng và evidence local
+Regression IDOR cố ý thất bại ở Starter vì Alice đọc được công việc của Beta. Cùng yêu cầu đó phải bị chặn ở V1. Kết quả đỏ ở Starter là dấu hiệu tái hiện đúng lỗ hổng, không phải mục tiêu phải sửa cho xanh.
 
-Baseline trước sửa đạt **52/52 tests** và browser smoke. Bản OpenFGA có permission matrix chạy trên engine thật, kiểm tra mỗi tổ hợp user/version/task/action bằng expected độc lập; riêng model matrix gồm **432 quyết định**.
+Snapshot `before` trong bằng chứng là bản authentication-only được tái dựng để so sánh; không phải lịch sử commit gốc. Các artifact ở thư mục `evidence/` cấp ngoài thuộc bản trước khi tích hợp OpenFGA. Khi đối chiếu, cần đọc đúng manifest và hash của từng bộ.
 
-Các nhóm kiểm chứng bổ sung:
+Kiểm thử dùng SQLite và store riêng để không reset dữ liệu đang demo. Các lệnh tái hiện và yêu cầu môi trường nằm trong README. Bằng chứng local chưa thay thế nghiệm thu trực tiếp, chạy CI trên môi trường hosted hoặc kiểm thử tải.
 
-- Pin model ID khi có model mới; trạng thái condition thiếu/sai binding phải fail closed.
-- Đổi Member thành Viewer xóa grant cũ; membership khác tenant vẫn bị V4 chặn.
-- Revoke assignee, cascade delete, reset, pagination và batch cho graph lớn hơn seed.
-- Ghi remote dở, pending operation và phục hồi qua service mới; không lặp mutation.
-- Race thay đổi status/membership/reset/delete và cả DENY cũ; timeout HTTP thật không retry.
-- Browser thật: selector, forms, popup, pending/recovery, stale response và mobile; không có JS errors.
+## 10. Khởi động và trình bày demo
 
-`evidence/openfga/manifest.json` ghi số tests và trạng thái lần chạy hiện tại, hash source/artifacts và working tree. Cùng regression IDOR đỏ ở Starter/before, xanh ở V1/after. Before là snapshot authentication-only tái dựng đã lưu; after là source/model OpenFGA hiện tại. Không trình bày before là lịch sử commit gốc.
+Trên Windows, cài Node.js từ 22.17 và mở Docker Desktop trước. Sau khi clone, chạy `start.bat`. Script tự tạo `.env` nếu thiếu, cài dependency, chạy OpenFGA, đồng bộ quyền và mở server ứng dụng. Lần sau vẫn chạy cùng file; cấu hình và dữ liệu cũ được giữ lại.
 
-Evidence gốc ngày 29/10 ở thư mục cha được giữ riêng. Fixture tạo SQLite/store riêng và chỉ dọn tài nguyên mình sở hữu; không mở/reset dữ liệu demo. Kết quả local không thay thế nghiệm thu giảng viên hoặc hosted deployment.
-
-## 10. Chạy và trình bày demo
+Nếu muốn chạy từng bước bằng PowerShell tại thư mục dự án:
 
 ```powershell
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 npm.cmd ci
 docker compose up -d --wait
 npm.cmd run fga:init
 npm.cmd start
 ```
 
-Mở `http://127.0.0.1:3000`. Starter/Alice đọc Beta thành công; chuyển V1 bị 403. Vera sửa A1 ở V1 được nhưng V2 bị chặn. Bob sửa A2 Closed ở V2 được nhưng V3 bị chặn. Admin Alpha chưa có membership chỉ có đặc quyền từ V4 và chỉ trong Alpha.
+Mở `http://127.0.0.1:3000`, hoặc cổng đã đặt trong `.env`. Chọn Alice, mở Beta ở Starter rồi chuyển sang V1 để thấy server từ chối. Tiếp theo dùng Vera sửa A1 ở V1/V2, Bob sửa A2 ở V2/V3, và Admin Alpha mở Alpha/Beta ở V4. Dùng dữ liệu mẫu để kết quả khớp với ví dụ trong report.
 
-Mở Chi tiết kỹ thuật: V1–V4 có OpenFGA Check, relation/model và Authorization decision. Request outcome phân biệt SUCCESS, PENDING, REJECTED và ERROR. Phần nghiệp vụ giữ thông báo tiếng Việt; thông tin engine nằm ở tab kỹ thuật.
+Mở **Chi tiết kỹ thuật** sau mỗi thao tác. `OpenFGA Check` cho biết lần hỏi quyền; `Authorization decision` cho biết cho phép hay từ chối; `Request outcome` là kết quả cuối của cả request. Có quyền chưa chắc thao tác thành công vì còn kiểm tra đầu vào và quy tắc Owner cố định.
 
-```powershell
-npm.cmd test
-npm.cmd run test:ui
-npm.cmd run evidence
-npm.cmd run db:reset
-```
+Nhấn Ctrl+C để dừng web app. `docker compose down` dừng OpenFGA và giữ volume. Muốn khôi phục dữ liệu mẫu, dùng nút trên giao diện hoặc `npm.cmd run db:reset` khi OpenFGA đang chạy; lệnh này xóa các chỉnh sửa nghiệp vụ hiện có.
 
-Reset chủ động thay dữ liệu bằng seed và đồng bộ graph. Restart bình thường giữ dữ liệu; không xóa volume SQLite của OpenFGA nếu muốn giữ store/model. Khi engine phục hồi, dùng Đồng bộ lại hoặc restart app; CLI sync có thể sửa graph từ outbox.
-
-Giới hạn: token demo, Starter cố ý yếu, danh mục project discoverable, reset local, chưa có authentication thật, hosted CI/deployment, nhiều app instances hoặc benchmark tải. Mã nguồn được bàn giao trên nhánh `Block-6-Advance`; việc push repository không thay thế kiểm chứng hosted hoặc nghiệm thu trực tiếp.
+Hướng dẫn đầy đủ về `.env`, chạy từng service, kiểm thử và xử lý lỗi ở [README.md](README.md). Lab hiện phục vụ học và demo trên máy local: token giả lập, Starter cố ý yếu, có bộ chọn phiên bản và công cụ reset. Chưa có đăng nhập thật, triển khai hosted hoặc kiểm chứng nhiều app instance.
