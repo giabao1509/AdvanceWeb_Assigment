@@ -1,5 +1,5 @@
 Command: node scripts/ui-smoke.js (npm.cmd run test:ui)
-Started: 2026-11-04T14:49:01.798Z
+Started: 2026-11-04T14:56:23.519Z
 Expected exit: 0
 Actual exit: 0
 
@@ -7,5 +7,5 @@ STDOUT
 UI smoke PASS: OpenFGA V1–V4, task forms, members, delete/reset, pending sync/recovery, 503 recovery after navigation/reload without replaying mutations, failed/stale sync, anonymous/spoofing/compare, stale response, mobile; no browser JS errors.
 
 STDERR
-(node:15120) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(node:15628) ExperimentalWarning: SQLite is an experimental feature and might change at any time
 (Use `node --trace-warnings ...` to show where the warning was created)

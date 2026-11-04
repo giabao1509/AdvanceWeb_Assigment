@@ -252,3 +252,13 @@ Mở **Chi tiết kỹ thuật** sau mỗi thao tác. `OpenFGA Check` cho biết
 Nhấn Ctrl+C để dừng web app. `docker compose down` dừng OpenFGA và giữ volume. Muốn khôi phục dữ liệu mẫu, dùng nút trên giao diện hoặc `npm.cmd run db:reset` khi OpenFGA đang chạy; lệnh này xóa các chỉnh sửa nghiệp vụ hiện có.
 
 Hướng dẫn đầy đủ về `.env`, chạy từng service, kiểm thử và xử lý lỗi ở [README.md](README.md). Lab hiện phục vụ học và demo trên máy local: token giả lập, Starter cố ý yếu, có bộ chọn phiên bản và công cụ reset. Chưa có đăng nhập thật, triển khai hosted hoặc kiểm chứng nhiều app instance.
+
+## 12. Danh sách thành viên nhóm
+
+| Nhóm | MSSV | Họ và tên |
+| --- | --- | --- |
+| 5 | 23127271 | Võ Ngọc Bích Trâm |
+| 5 | 23127158 | Nguyễn Thanh Gia Bảo |
+| 5 | 23127207 | Đặng Đăng Khoa |
+| 5 | 23127006 | Trần Nguyễn Khải Luân |
+| 5 | 23127179 | Nguyễn Bảo Duy |

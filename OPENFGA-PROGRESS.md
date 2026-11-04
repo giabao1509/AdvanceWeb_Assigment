@@ -15,7 +15,7 @@ Bản tích hợp: 02/11/2026. Cập nhật khôi phục và evidence: 04/11/202
 | Browser | Forms, version selector, pending/recovery và mobile PASS; thêm 503 sau điều hướng/reload, retry lỗi, không lặp mutation, phản hồi sync sau đổi tài khoản; không JS errors |
 | Persistence restart | Fixture riêng giữ SQLite title, store ID, model ID và kết quả allow/deny qua restart container OpenFGA thật dùng SQLite |
 | Init chạy lặp | `fga:init` chạy hai lần giữ nguyên store/model, không reset nội dung SQLite demo |
-| Reports | Markdown/HTML đồng bộ, 11 mục và 4 sơ đồ; phần kiểm chứng cập nhật recovery 503. Browser QA 04/11: không tràn mobile, không chồng footer ở chế độ in, không JS errors. Kiểm chứng 8 cards quyết định kỹ thuật thuộc lượt 02/11 |
+| Reports | Markdown/HTML đồng bộ, 12 mục và 4 sơ đồ; cuối báo cáo có danh sách 5 thành viên nhóm. Browser QA 04/11: không tràn mobile, không chồng footer ở chế độ in, không JS errors. Kiểm chứng 8 cards quyết định kỹ thuật thuộc lượt 02/11 |
 | Evidence | `evidence/openfga/manifest.json` được tạo lại cho source hiện tại, gồm hash `start.bat`, tài liệu tiến độ và source/artifact khác; evidence baseline được giữ riêng |
 | Dependencies | SDK/Axios pin; npm install/audit sau override báo 0 vulnerabilities |
 | Hosted / manual acceptance | **NOT_VERIFIED**: chưa có hosted CI/deployment, giảng viên nghiệm thu hoặc benchmark nhiều app instances |

@@ -1,7 +1,7 @@
 [
   {
     "id": "starter-idor",
-    "capturedAt": "2026-11-04T14:48:38.677Z",
+    "capturedAt": "2026-11-04T14:55:56.367Z",
     "request": {
       "method": "GET",
       "path": "/api/starter/tasks/B1",
@@ -13,7 +13,7 @@
     "expectedStatus": 200,
     "response": {
       "status": 200,
-      "durationMs": 23,
+      "durationMs": 19,
       "body": {
         "data": {
           "id": "B1",
@@ -46,7 +46,7 @@
             "reason": "HTTP_200"
           }
         ],
-        "requestId": "f1b7831b-2aab-469c-81d7-d6b5f5cc6d64"
+        "requestId": "bcabf72c-ebce-4f33-90de-5947f6875c3e"
       }
     },
     "verification": {
@@ -56,7 +56,7 @@
   },
   {
     "id": "v1-idor",
-    "capturedAt": "2026-11-04T14:48:38.708Z",
+    "capturedAt": "2026-11-04T14:55:56.388Z",
     "request": {
       "method": "GET",
       "path": "/api/v1/tasks/B1",
@@ -68,7 +68,7 @@
     "expectedStatus": 403,
     "response": {
       "status": 403,
-      "durationMs": 29,
+      "durationMs": 21,
       "body": {
         "data": null,
         "error": {
@@ -83,7 +83,7 @@
           {
             "name": "OpenFGA Check",
             "result": "FAIL",
-            "reason": "can_read_v1 · task:B1 · model 01M6KGH3W4S9558H9Q035NJPMV · HIGHER_CONSISTENCY"
+            "reason": "can_read_v1 · task:B1 · model 01M6KGYFAS54YYJSB9PRT10F5H · HIGHER_CONSISTENCY"
           },
           {
             "name": "Project membership",
@@ -101,7 +101,7 @@
             "reason": "NOT_PROJECT_MEMBER"
           }
         ],
-        "requestId": "c1048e0f-4711-4ad1-940e-63f9f2e1448e"
+        "requestId": "742f834e-9754-41be-85a3-2b574c3e4fe5"
       }
     },
     "verification": {
@@ -112,7 +112,7 @@
   },
   {
     "id": "anonymous",
-    "capturedAt": "2026-11-04T14:48:38.715Z",
+    "capturedAt": "2026-11-04T14:55:56.395Z",
     "request": {
       "method": "GET",
       "path": "/api/v1/tasks/A1",
@@ -122,7 +122,7 @@
     "expectedStatus": 401,
     "response": {
       "status": 401,
-      "durationMs": 7,
+      "durationMs": 6,
       "body": {
         "data": null,
         "error": {
@@ -140,7 +140,7 @@
             "reason": "UNAUTHENTICATED"
           }
         ],
-        "requestId": "c5124280-5142-449c-9c45-7b8c08bbb014"
+        "requestId": "0aa5144b-aa47-4d7b-b032-4fcda992848a"
       }
     },
     "verification": {
@@ -151,7 +151,7 @@
   },
   {
     "id": "alice-legitimate",
-    "capturedAt": "2026-11-04T14:48:38.737Z",
+    "capturedAt": "2026-11-04T14:55:56.415Z",
     "request": {
       "method": "GET",
       "path": "/api/v1/tasks/A1",
@@ -163,7 +163,7 @@
     "expectedStatus": 200,
     "response": {
       "status": 200,
-      "durationMs": 21,
+      "durationMs": 19,
       "body": {
         "data": {
           "id": "A1",
@@ -183,7 +183,7 @@
           {
             "name": "OpenFGA Check",
             "result": "PASS",
-            "reason": "can_read_v1 · task:A1 · model 01M6KGH3W4S9558H9Q035NJPMV · HIGHER_CONSISTENCY"
+            "reason": "can_read_v1 · task:A1 · model 01M6KGYFAS54YYJSB9PRT10F5H · HIGHER_CONSISTENCY"
           },
           {
             "name": "Project membership",
@@ -201,7 +201,7 @@
             "reason": "HTTP_200"
           }
         ],
-        "requestId": "60397f45-5360-4dfc-a8ed-f2a509efc3c0"
+        "requestId": "5cb1c89a-1864-49f0-bf44-06eeb0698941"
       }
     },
     "verification": {
@@ -211,7 +211,7 @@
   },
   {
     "id": "charlie-legitimate",
-    "capturedAt": "2026-11-04T14:48:38.760Z",
+    "capturedAt": "2026-11-04T14:55:56.432Z",
     "request": {
       "method": "GET",
       "path": "/api/v1/tasks/B1",
@@ -223,7 +223,7 @@
     "expectedStatus": 200,
     "response": {
       "status": 200,
-      "durationMs": 22,
+      "durationMs": 17,
       "body": {
         "data": {
           "id": "B1",
@@ -243,7 +243,7 @@
           {
             "name": "OpenFGA Check",
             "result": "PASS",
-            "reason": "can_read_v1 · task:B1 · model 01M6KGH3W4S9558H9Q035NJPMV · HIGHER_CONSISTENCY"
+            "reason": "can_read_v1 · task:B1 · model 01M6KGYFAS54YYJSB9PRT10F5H · HIGHER_CONSISTENCY"
           },
           {
             "name": "Project membership",
@@ -261,7 +261,7 @@
             "reason": "HTTP_200"
           }
         ],
-        "requestId": "d320b94a-2153-40f8-97d6-222554750b6f"
+        "requestId": "dbef5a1d-9e19-4541-a404-cbbb1c365201"
       }
     },
     "verification": {
@@ -271,7 +271,7 @@
   },
   {
     "id": "member-not-assigned",
-    "capturedAt": "2026-11-04T14:48:38.792Z",
+    "capturedAt": "2026-11-04T14:55:56.460Z",
     "request": {
       "method": "PATCH",
       "path": "/api/v3/tasks/A4",
@@ -287,7 +287,7 @@
     "expectedStatus": 403,
     "response": {
       "status": 403,
-      "durationMs": 31,
+      "durationMs": 28,
       "body": {
         "data": null,
         "error": {
@@ -302,7 +302,7 @@
           {
             "name": "OpenFGA Check",
             "result": "FAIL",
-            "reason": "can_edit_v3 · task:A4 · model 01M6KGH3W4S9558H9Q035NJPMV · HIGHER_CONSISTENCY"
+            "reason": "can_edit_v3 · task:A4 · model 01M6KGYFAS54YYJSB9PRT10F5H · HIGHER_CONSISTENCY"
           },
           {
             "name": "Authorization decision",
@@ -315,7 +315,7 @@
             "reason": "NOT_ASSIGNEE"
           }
         ],
-        "requestId": "1c0e4b83-622f-4424-bc24-91273a4fc27c"
+        "requestId": "833ec9d2-b7e4-466e-92eb-fb0e951e3187"
       }
     },
     "verification": {
@@ -326,7 +326,7 @@
   },
   {
     "id": "member-task-closed",
-    "capturedAt": "2026-11-04T14:48:38.812Z",
+    "capturedAt": "2026-11-04T14:55:56.480Z",
     "request": {
       "method": "PATCH",
       "path": "/api/v3/tasks/A2",
@@ -357,7 +357,7 @@
           {
             "name": "OpenFGA Check",
             "result": "FAIL",
-            "reason": "can_edit_v3 · task:A2 · model 01M6KGH3W4S9558H9Q035NJPMV · HIGHER_CONSISTENCY"
+            "reason": "can_edit_v3 · task:A2 · model 01M6KGYFAS54YYJSB9PRT10F5H · HIGHER_CONSISTENCY"
           },
           {
             "name": "Authorization decision",
@@ -370,7 +370,7 @@
             "reason": "TASK_CLOSED"
           }
         ],
-        "requestId": "0b77755f-42ca-401d-a893-f097db57e5f3"
+        "requestId": "c4f2e041-1578-4c11-bb24-a7b2f0afd1c9"
       }
     },
     "verification": {
@@ -381,7 +381,7 @@
   },
   {
     "id": "spoofed-role",
-    "capturedAt": "2026-11-04T14:48:38.830Z",
+    "capturedAt": "2026-11-04T14:55:56.497Z",
     "request": {
       "method": "DELETE",
       "path": "/api/v2/projects/alpha?role=Admin",
@@ -409,7 +409,7 @@
           {
             "name": "OpenFGA Check",
             "result": "FAIL",
-            "reason": "can_delete_v2 · project:alpha · model 01M6KGH3W4S9558H9Q035NJPMV · HIGHER_CONSISTENCY"
+            "reason": "can_delete_v2 · project:alpha · model 01M6KGYFAS54YYJSB9PRT10F5H · HIGHER_CONSISTENCY"
           },
           {
             "name": "Authorization decision",
@@ -422,7 +422,7 @@
             "reason": "ROLE_DENIED"
           }
         ],
-        "requestId": "f44a7c83-a5ef-4bc8-b0bd-c918aa84c140"
+        "requestId": "2e1a2f20-2aa5-44ed-9e1e-5c8a9a206796"
       }
     },
     "verification": {
@@ -433,7 +433,7 @@
   },
   {
     "id": "admin-cross-tenant",
-    "capturedAt": "2026-11-04T14:48:38.848Z",
+    "capturedAt": "2026-11-04T14:55:56.516Z",
     "request": {
       "method": "GET",
       "path": "/api/v4/tasks/B1?tenantId=beta&role=Admin",
@@ -462,7 +462,7 @@
           {
             "name": "OpenFGA Check",
             "result": "FAIL",
-            "reason": "can_read_v4 · task:B1 · model 01M6KGH3W4S9558H9Q035NJPMV · HIGHER_CONSISTENCY"
+            "reason": "can_read_v4 · task:B1 · model 01M6KGYFAS54YYJSB9PRT10F5H · HIGHER_CONSISTENCY"
           },
           {
             "name": "Authorization decision",
@@ -475,7 +475,7 @@
             "reason": "TENANT_MISMATCH"
           }
         ],
-        "requestId": "2b5da9ab-c988-4b0d-8298-5cb2852bafac"
+        "requestId": "d9ac1d43-4fd4-4d2c-9a89-d24eac92b234"
       }
     },
     "verification": {
@@ -486,7 +486,7 @@
   },
   {
     "id": "admin-own-tenant",
-    "capturedAt": "2026-11-04T14:48:38.865Z",
+    "capturedAt": "2026-11-04T14:55:56.534Z",
     "request": {
       "method": "GET",
       "path": "/api/v4/tasks/A1",
@@ -518,7 +518,7 @@
           {
             "name": "OpenFGA Check",
             "result": "PASS",
-            "reason": "can_read_v4 · task:A1 · model 01M6KGH3W4S9558H9Q035NJPMV · HIGHER_CONSISTENCY"
+            "reason": "can_read_v4 · task:A1 · model 01M6KGYFAS54YYJSB9PRT10F5H · HIGHER_CONSISTENCY"
           },
           {
             "name": "Authorization decision",
@@ -531,7 +531,7 @@
             "reason": "HTTP_200"
           }
         ],
-        "requestId": "65b9f51d-3d64-4d18-8128-aa1327c53673"
+        "requestId": "c474d6d5-ea1b-4985-96e7-ad80a20a566f"
       }
     },
     "verification": {
@@ -541,7 +541,7 @@
   },
   {
     "id": "member-assigned-open",
-    "capturedAt": "2026-11-04T14:48:38.887Z",
+    "capturedAt": "2026-11-04T14:55:56.554Z",
     "request": {
       "method": "PATCH",
       "path": "/api/v3/tasks/A1",
@@ -557,7 +557,7 @@
     "expectedStatus": 200,
     "response": {
       "status": 200,
-      "durationMs": 21,
+      "durationMs": 20,
       "body": {
         "data": {
           "id": "A1",
@@ -577,7 +577,7 @@
           {
             "name": "OpenFGA Check",
             "result": "PASS",
-            "reason": "can_edit_v3 · task:A1 · model 01M6KGH3W4S9558H9Q035NJPMV · HIGHER_CONSISTENCY"
+            "reason": "can_edit_v3 · task:A1 · model 01M6KGYFAS54YYJSB9PRT10F5H · HIGHER_CONSISTENCY"
           },
           {
             "name": "Authorization decision",
@@ -590,7 +590,7 @@
             "reason": "HTTP_200"
           }
         ],
-        "requestId": "2b13cf88-5de8-401f-b5ce-c49f415d02d1"
+        "requestId": "96db89ea-9a15-4a78-9968-51871e1ea532"
       }
     },
     "verification": {

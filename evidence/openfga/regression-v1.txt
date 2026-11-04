@@ -1,5 +1,5 @@
 Command: node scripts/idor-regression.js --version=v1 [current app]
-Started: 2026-11-04T14:48:39.814Z
+Started: 2026-11-04T14:55:57.472Z
 Expected exit: 0
 Actual exit: 0
 
@@ -8,19 +8,19 @@ TAP version 13
 # Subtest: v1: Alice must not read Beta task B1
 ok 1 - v1: Alice must not read Beta task B1
   ---
-  duration_ms: 160.1202
+  duration_ms: 163.2634
   type: 'test'
   ...
 # Subtest: v1: Alice can still read Alpha task A1
 ok 2 - v1: Alice can still read Alpha task A1
   ---
-  duration_ms: 23.7521
+  duration_ms: 23.6814
   type: 'test'
   ...
 # Subtest: v1: Charlie can still read Beta task B1
 ok 3 - v1: Charlie can still read Beta task B1
   ---
-  duration_ms: 20.8641
+  duration_ms: 20.307
   type: 'test'
   ...
 1..3
@@ -31,8 +31,8 @@ ok 3 - v1: Charlie can still read Beta task B1
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 319.6388
+# duration_ms 359.2641
 
 STDERR
-(node:26912) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(node:20720) ExperimentalWarning: SQLite is an experimental feature and might change at any time
 (Use `node --trace-warnings ...` to show where the warning was created)
