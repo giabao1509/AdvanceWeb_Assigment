@@ -156,12 +156,12 @@ body=''
 for n,page in enumerate(pages,1):
     body+=f'<section class="sheet" id="{page["id"]}" aria-label="{html.escape(page["title"])}"><div class="kicker">AdvanceWeb · Block 6 / Báo cáo triển khai</div>'
     if n==1: body+='<header>'+''.join(intro)+'</header>'
-    body+=page['body']+f'<footer class="page-footer"><span>OpenFGA Minilab · 03/11/2026</span><span>{n:02d} / {len(pages):02d}</span></footer></section>'
+    body+=page['body']+f'<footer class="page-footer"><span>OpenFGA Minilab · 04/11/2026</span><span>{n:02d} / {len(pages):02d}</span></footer></section>'
 digest=hashlib.sha256(md.encode()).hexdigest()
 out=f'''<!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Báo cáo triển khai Task Authorization Minilab: kiến trúc, policy Starter–V4, transaction, quyết định kỹ thuật và kiểm chứng local."><title>Báo cáo triển khai · Task Authorization Minilab</title><style>{css}</style></head>
 <body><!-- Generated from report.md; SHA-256: {digest} -->
 <div class="toolbar"><strong>Báo cáo triển khai</strong><span>{len(pages)} phần · Sơ đồ nhúng sẵn · Đọc offline</span><button type="button" onclick="window.print()">In / Lưu PDF</button></div>
 <div class="layout"><nav aria-label="Mục lục"><p>NỘI DUNG</p>{''.join(toc)}</nav><main>{body}</main></div></body></html>'''
-(root/'report.html').write_text(out,encoding='utf-8')
+(root/'report.html').write_text(out,encoding='utf-8',newline='\n')
 print(f'Generated report.html: {len(pages)} sections, {diagram} SVG diagrams, source SHA-256 {digest}')

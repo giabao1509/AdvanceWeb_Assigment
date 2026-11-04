@@ -141,7 +141,7 @@ Tab **Thành viên** hiển thị danh sách và nút đổi vai trò/xóa ở t
 | Không kết nối Docker | Mở Docker Desktop và Linux engine. Kiểm tra `docker info`, sau đó chạy lại. |
 | Cổng 3000 hoặc 8080 đang được dùng | Dừng tiến trình cũ. Muốn đổi cổng web, sửa `PORT`; muốn đổi cổng OpenFGA, xem mục cấu hình `.env`. |
 | npm báo lỗi chứng chỉ CA | `start.bat` đã bật dùng kho CA hệ thống. Khi chạy thủ công, có thể thử `$env:NODE_OPTIONS='--use-system-ca'` trước `npm.cmd ci`. Nếu vẫn lỗi, kiểm tra chứng chỉ/proxy của máy; không tắt kiểm tra TLS. |
-| V1–V4 trả 503 | Xem log OpenFGA. Khi engine hoạt động lại, chọn **Đồng bộ lại** hoặc dừng web app, chạy `fga:sync` rồi khởi động lại. |
+| V1–V4 trả 503 | Xem log OpenFGA. Khi engine hoạt động lại, chọn **Đồng bộ lại** ngay tại màn hình không mở được nội dung; nút này vẫn có sau khi về danh sách hoặc tải lại trang. Chỉ đồng bộ quyền, không gửi lại thao tác đã lưu. Cũng có thể dừng web app, chạy `fga:sync` rồi khởi động lại. |
 | Thông báo đã lưu nhưng đang cập nhật quyền, HTTP 202 | Dữ liệu đã được lưu. Kiểm tra trạng thái hoặc đồng bộ lại; không gửi lại thao tác thêm/xóa. Trong lúc chờ, các API được bảo vệ ở V1–V4 bị chặn để tránh dùng quyền cũ. |
 | `AUTHORIZATION_SYNC_BUSY` sau khi tiến trình bị tắt đột ngột | Quyền giữ lượt đồng bộ có thời hạn 30 giây. Đợi hết hạn rồi đồng bộ lại. |
 | `AUTHORIZATION_MODEL_MISMATCH` | Model đã khác bản gắn với database. `fga:build` chỉ sinh JSON, không tự chuyển database sang model mới. Cần xử lý migration/binding; không xóa dữ liệu để bỏ qua lỗi. |

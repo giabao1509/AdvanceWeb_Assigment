@@ -12,6 +12,8 @@ Demo lỗi dịch vụ: dừng riêng OpenFGA bằng `docker compose stop openfg
 
 Nếu mutation quan hệ đã commit nhưng sync lỗi, HTTP là 202 và UI báo **đã lưu, đang cập nhật quyền**. Không bấm lại thao tác thêm/xóa; dùng kiểm tra trạng thái/đồng bộ lại. Browser smoke có fault injection tái hiện chính xác ranh giới này, không cần canh thời điểm tắt service.
 
+Nếu đã rời màn hình pending hoặc tải lại trang, đăng nhập và mở lại dự án ở V1–V4. Màn hình lỗi 503 có nút **Đồng bộ lại**. Nếu dịch vụ vẫn lỗi, thông báo giữ nguyên trạng thái chưa hoàn tất; khi đồng bộ thành công, ứng dụng tải lại nội dung theo tài khoản và phiên bản đang dùng. Quyền đọc vẫn được server kiểm tra, không chạy lại thao tác thay đổi thành viên/xóa trước đó.
+
 Evidence mới ở `evidence/openfga/`. Kết quả 52 tests trong manifest gốc là baseline trước OpenFGA.
 
 ## Chuẩn bị

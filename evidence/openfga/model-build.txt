@@ -1,5 +1,5 @@
 Command: OpenFGA DSL/JSON check
-Started: 2026-11-02T15:39:45.391Z
+Started: 2026-11-04T14:48:42.255Z
 Expected exit: 0
 Actual exit: 0
 

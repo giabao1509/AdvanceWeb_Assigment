@@ -1,7 +1,7 @@
 [
   {
     "id": "starter-idor",
-    "capturedAt": "2026-11-02T15:39:39.684Z",
+    "capturedAt": "2026-11-04T14:48:38.677Z",
     "request": {
       "method": "GET",
       "path": "/api/starter/tasks/B1",
@@ -46,7 +46,7 @@
             "reason": "HTTP_200"
           }
         ],
-        "requestId": "42215c7d-7616-451f-a2b2-a21f84583c7d"
+        "requestId": "f1b7831b-2aab-469c-81d7-d6b5f5cc6d64"
       }
     },
     "verification": {
@@ -56,7 +56,7 @@
   },
   {
     "id": "v1-idor",
-    "capturedAt": "2026-11-02T15:39:39.712Z",
+    "capturedAt": "2026-11-04T14:48:38.708Z",
     "request": {
       "method": "GET",
       "path": "/api/v1/tasks/B1",
@@ -68,7 +68,7 @@
     "expectedStatus": 403,
     "response": {
       "status": 403,
-      "durationMs": 28,
+      "durationMs": 29,
       "body": {
         "data": null,
         "error": {
@@ -83,7 +83,7 @@
           {
             "name": "OpenFGA Check",
             "result": "FAIL",
-            "reason": "can_read_v1 · task:B1 · model 01M6EEN34SWW82AG61RX2VFY96 · HIGHER_CONSISTENCY"
+            "reason": "can_read_v1 · task:B1 · model 01M6KGH3W4S9558H9Q035NJPMV · HIGHER_CONSISTENCY"
           },
           {
             "name": "Project membership",
@@ -101,7 +101,7 @@
             "reason": "NOT_PROJECT_MEMBER"
           }
         ],
-        "requestId": "99c3fac7-1733-4af9-a1f4-54a9819dfa8f"
+        "requestId": "c1048e0f-4711-4ad1-940e-63f9f2e1448e"
       }
     },
     "verification": {
@@ -112,7 +112,7 @@
   },
   {
     "id": "anonymous",
-    "capturedAt": "2026-11-02T15:39:39.721Z",
+    "capturedAt": "2026-11-04T14:48:38.715Z",
     "request": {
       "method": "GET",
       "path": "/api/v1/tasks/A1",
@@ -122,7 +122,7 @@
     "expectedStatus": 401,
     "response": {
       "status": 401,
-      "durationMs": 8,
+      "durationMs": 7,
       "body": {
         "data": null,
         "error": {
@@ -140,7 +140,7 @@
             "reason": "UNAUTHENTICATED"
           }
         ],
-        "requestId": "ccf44b19-e22f-45b9-b755-aa2740303b32"
+        "requestId": "c5124280-5142-449c-9c45-7b8c08bbb014"
       }
     },
     "verification": {
@@ -151,7 +151,7 @@
   },
   {
     "id": "alice-legitimate",
-    "capturedAt": "2026-11-02T15:39:39.747Z",
+    "capturedAt": "2026-11-04T14:48:38.737Z",
     "request": {
       "method": "GET",
       "path": "/api/v1/tasks/A1",
@@ -163,7 +163,7 @@
     "expectedStatus": 200,
     "response": {
       "status": 200,
-      "durationMs": 25,
+      "durationMs": 21,
       "body": {
         "data": {
           "id": "A1",
@@ -183,7 +183,7 @@
           {
             "name": "OpenFGA Check",
             "result": "PASS",
-            "reason": "can_read_v1 · task:A1 · model 01M6EEN34SWW82AG61RX2VFY96 · HIGHER_CONSISTENCY"
+            "reason": "can_read_v1 · task:A1 · model 01M6KGH3W4S9558H9Q035NJPMV · HIGHER_CONSISTENCY"
           },
           {
             "name": "Project membership",
@@ -201,7 +201,7 @@
             "reason": "HTTP_200"
           }
         ],
-        "requestId": "72b320c2-1eab-48dc-805f-0821c654a212"
+        "requestId": "60397f45-5360-4dfc-a8ed-f2a509efc3c0"
       }
     },
     "verification": {
@@ -211,7 +211,7 @@
   },
   {
     "id": "charlie-legitimate",
-    "capturedAt": "2026-11-02T15:39:39.769Z",
+    "capturedAt": "2026-11-04T14:48:38.760Z",
     "request": {
       "method": "GET",
       "path": "/api/v1/tasks/B1",
@@ -243,7 +243,7 @@
           {
             "name": "OpenFGA Check",
             "result": "PASS",
-            "reason": "can_read_v1 · task:B1 · model 01M6EEN34SWW82AG61RX2VFY96 · HIGHER_CONSISTENCY"
+            "reason": "can_read_v1 · task:B1 · model 01M6KGH3W4S9558H9Q035NJPMV · HIGHER_CONSISTENCY"
           },
           {
             "name": "Project membership",
@@ -261,7 +261,7 @@
             "reason": "HTTP_200"
           }
         ],
-        "requestId": "6519f50e-b2a4-4865-85f6-08518b0a1725"
+        "requestId": "d320b94a-2153-40f8-97d6-222554750b6f"
       }
     },
     "verification": {
@@ -271,7 +271,7 @@
   },
   {
     "id": "member-not-assigned",
-    "capturedAt": "2026-11-02T15:39:39.806Z",
+    "capturedAt": "2026-11-04T14:48:38.792Z",
     "request": {
       "method": "PATCH",
       "path": "/api/v3/tasks/A4",
@@ -287,7 +287,7 @@
     "expectedStatus": 403,
     "response": {
       "status": 403,
-      "durationMs": 36,
+      "durationMs": 31,
       "body": {
         "data": null,
         "error": {
@@ -302,7 +302,7 @@
           {
             "name": "OpenFGA Check",
             "result": "FAIL",
-            "reason": "can_edit_v3 · task:A4 · model 01M6EEN34SWW82AG61RX2VFY96 · HIGHER_CONSISTENCY"
+            "reason": "can_edit_v3 · task:A4 · model 01M6KGH3W4S9558H9Q035NJPMV · HIGHER_CONSISTENCY"
           },
           {
             "name": "Authorization decision",
@@ -315,7 +315,7 @@
             "reason": "NOT_ASSIGNEE"
           }
         ],
-        "requestId": "f7f804ba-c848-4cc7-bec0-a6aac15f2515"
+        "requestId": "1c0e4b83-622f-4424-bc24-91273a4fc27c"
       }
     },
     "verification": {
@@ -326,7 +326,7 @@
   },
   {
     "id": "member-task-closed",
-    "capturedAt": "2026-11-02T15:39:39.829Z",
+    "capturedAt": "2026-11-04T14:48:38.812Z",
     "request": {
       "method": "PATCH",
       "path": "/api/v3/tasks/A2",
@@ -342,7 +342,7 @@
     "expectedStatus": 403,
     "response": {
       "status": 403,
-      "durationMs": 23,
+      "durationMs": 19,
       "body": {
         "data": null,
         "error": {
@@ -357,7 +357,7 @@
           {
             "name": "OpenFGA Check",
             "result": "FAIL",
-            "reason": "can_edit_v3 · task:A2 · model 01M6EEN34SWW82AG61RX2VFY96 · HIGHER_CONSISTENCY"
+            "reason": "can_edit_v3 · task:A2 · model 01M6KGH3W4S9558H9Q035NJPMV · HIGHER_CONSISTENCY"
           },
           {
             "name": "Authorization decision",
@@ -370,7 +370,7 @@
             "reason": "TASK_CLOSED"
           }
         ],
-        "requestId": "9dc45977-30e6-4477-b41a-e3ab0d76f595"
+        "requestId": "0b77755f-42ca-401d-a893-f097db57e5f3"
       }
     },
     "verification": {
@@ -381,7 +381,7 @@
   },
   {
     "id": "spoofed-role",
-    "capturedAt": "2026-11-02T15:39:39.851Z",
+    "capturedAt": "2026-11-04T14:48:38.830Z",
     "request": {
       "method": "DELETE",
       "path": "/api/v2/projects/alpha?role=Admin",
@@ -394,7 +394,7 @@
     "expectedStatus": 403,
     "response": {
       "status": 403,
-      "durationMs": 21,
+      "durationMs": 17,
       "body": {
         "data": null,
         "error": {
@@ -409,7 +409,7 @@
           {
             "name": "OpenFGA Check",
             "result": "FAIL",
-            "reason": "can_delete_v2 · project:alpha · model 01M6EEN34SWW82AG61RX2VFY96 · HIGHER_CONSISTENCY"
+            "reason": "can_delete_v2 · project:alpha · model 01M6KGH3W4S9558H9Q035NJPMV · HIGHER_CONSISTENCY"
           },
           {
             "name": "Authorization decision",
@@ -422,7 +422,7 @@
             "reason": "ROLE_DENIED"
           }
         ],
-        "requestId": "a422d89a-1fa1-4373-b0eb-289fc2c33914"
+        "requestId": "f44a7c83-a5ef-4bc8-b0bd-c918aa84c140"
       }
     },
     "verification": {
@@ -433,7 +433,7 @@
   },
   {
     "id": "admin-cross-tenant",
-    "capturedAt": "2026-11-02T15:39:39.873Z",
+    "capturedAt": "2026-11-04T14:48:38.848Z",
     "request": {
       "method": "GET",
       "path": "/api/v4/tasks/B1?tenantId=beta&role=Admin",
@@ -447,7 +447,7 @@
     "expectedStatus": 403,
     "response": {
       "status": 403,
-      "durationMs": 22,
+      "durationMs": 18,
       "body": {
         "data": null,
         "error": {
@@ -462,7 +462,7 @@
           {
             "name": "OpenFGA Check",
             "result": "FAIL",
-            "reason": "can_read_v4 · task:B1 · model 01M6EEN34SWW82AG61RX2VFY96 · HIGHER_CONSISTENCY"
+            "reason": "can_read_v4 · task:B1 · model 01M6KGH3W4S9558H9Q035NJPMV · HIGHER_CONSISTENCY"
           },
           {
             "name": "Authorization decision",
@@ -475,7 +475,7 @@
             "reason": "TENANT_MISMATCH"
           }
         ],
-        "requestId": "90e8e47c-4006-49be-8425-d9797fbe9524"
+        "requestId": "2b5da9ab-c988-4b0d-8298-5cb2852bafac"
       }
     },
     "verification": {
@@ -486,7 +486,7 @@
   },
   {
     "id": "admin-own-tenant",
-    "capturedAt": "2026-11-02T15:39:39.895Z",
+    "capturedAt": "2026-11-04T14:48:38.865Z",
     "request": {
       "method": "GET",
       "path": "/api/v4/tasks/A1",
@@ -498,7 +498,7 @@
     "expectedStatus": 200,
     "response": {
       "status": 200,
-      "durationMs": 22,
+      "durationMs": 17,
       "body": {
         "data": {
           "id": "A1",
@@ -518,7 +518,7 @@
           {
             "name": "OpenFGA Check",
             "result": "PASS",
-            "reason": "can_read_v4 · task:A1 · model 01M6EEN34SWW82AG61RX2VFY96 · HIGHER_CONSISTENCY"
+            "reason": "can_read_v4 · task:A1 · model 01M6KGH3W4S9558H9Q035NJPMV · HIGHER_CONSISTENCY"
           },
           {
             "name": "Authorization decision",
@@ -531,7 +531,7 @@
             "reason": "HTTP_200"
           }
         ],
-        "requestId": "51b6eb77-d71f-4d80-9d3d-ffaa779e7b1c"
+        "requestId": "65b9f51d-3d64-4d18-8128-aa1327c53673"
       }
     },
     "verification": {
@@ -541,7 +541,7 @@
   },
   {
     "id": "member-assigned-open",
-    "capturedAt": "2026-11-02T15:39:39.922Z",
+    "capturedAt": "2026-11-04T14:48:38.887Z",
     "request": {
       "method": "PATCH",
       "path": "/api/v3/tasks/A1",
@@ -557,7 +557,7 @@
     "expectedStatus": 200,
     "response": {
       "status": 200,
-      "durationMs": 26,
+      "durationMs": 21,
       "body": {
         "data": {
           "id": "A1",
@@ -577,7 +577,7 @@
           {
             "name": "OpenFGA Check",
             "result": "PASS",
-            "reason": "can_edit_v3 · task:A1 · model 01M6EEN34SWW82AG61RX2VFY96 · HIGHER_CONSISTENCY"
+            "reason": "can_edit_v3 · task:A1 · model 01M6KGH3W4S9558H9Q035NJPMV · HIGHER_CONSISTENCY"
           },
           {
             "name": "Authorization decision",
@@ -590,7 +590,7 @@
             "reason": "HTTP_200"
           }
         ],
-        "requestId": "7b925695-758b-4ba9-8412-7884e956c9aa"
+        "requestId": "2b13cf88-5de8-401f-b5ce-c49f415d02d1"
       }
     },
     "verification": {

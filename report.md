@@ -1,6 +1,6 @@
 # Kiểm tra quyền truy cập với OpenFGA
 
-Task Authorization Minilab · Cập nhật ngày 03/11/2026
+Task Authorization Minilab · Cập nhật ngày 04/11/2026
 
 ## 01. Bài lab giải quyết vấn đề gì?
 
@@ -184,7 +184,7 @@ OpenFGA là dự án mã nguồn mở lấy cảm hứng từ mô hình quan h�
 
 ## 09. Đã kiểm chứng những gì?
 
-Bộ bằng chứng được lưu tại `evidence/openfga/`. Lần chạy ghi trong manifest bắt đầu lúc 15:39 UTC ngày 02/11/2026, tức 22:39 giờ Việt Nam. Log kiểm thử của lần đó ghi **69/69 tests đạt**; riêng ma trận model kiểm tra **432 quyết định quyền** trên OpenFGA thật. Đây là kết quả của lần chạy đã lưu, không phải khẳng định rằng mỗi lần mở report đều chạy lại test.
+Bộ bằng chứng được lưu tại `evidence/openfga/`, cập nhật ngày 04/11/2026. Log kiểm thử ghi **69/69 tests đạt**; riêng ma trận model kiểm tra **432 quyết định quyền** trên OpenFGA thật. Manifest ghi thời điểm, hash nguồn và artifact của lần chạy đã lưu; mở report không tự chạy lại test.
 
 | Nhóm kiểm tra | Điều cần xác nhận |
 | --- | --- |
@@ -192,7 +192,7 @@ Bộ bằng chứng được lưu tại `evidence/openfga/`. Lần chạy ghi tr
 | Quan hệ bị thay đổi | Đổi role hoặc thu hồi membership không để lại quyền cũ; V4 vẫn chặn khác tổ chức. |
 | Dữ liệu đổi khi đang Check | Sửa trạng thái, thu hồi quyền, reset hoặc xóa dự án làm quyết định cũ không còn được dùng. |
 | Lỗi engine và đồng bộ | Timeout, model sai, ghi quan hệ dở và trạng thái pending được xử lý; phục hồi không lặp thao tác nghiệp vụ. |
-| Giao diện | Thử form, đổi phiên bản/tài khoản, thông báo từ chối, pending và màn hình nhỏ bằng trình duyệt thật. |
+| Giao diện | Thử form, đổi phiên bản/tài khoản, pending và màn hình nhỏ; khôi phục từ 503 sau điều hướng/tải lại trang, không lặp mutation, bỏ qua phản hồi đồng bộ của tài khoản cũ. |
 | Khởi động lại | Dữ liệu ứng dụng, store/model ID và quyền được giữ qua restart; init lặp không tự reset dữ liệu. |
 
 Regression IDOR cố ý thất bại ở Starter vì Alice đọc được công việc của Beta. Cùng yêu cầu đó phải bị chặn ở V1. Kết quả đỏ ở Starter là dấu hiệu tái hiện đúng lỗ hổng, không phải mục tiêu phải sửa cho xanh.

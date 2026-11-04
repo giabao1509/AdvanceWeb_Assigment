@@ -178,3 +178,9 @@ Ngày kiểm tra: 2026-10-29.
 - `evidence/` chứa JSON response thật đã bỏ bearer token, logs stdout/stderr, diff tái dựng, snapshots thực thi được và manifest SHA-256. Xác nhận integrity 14 file code và 21 artifact, patch qua git apply --check.
 - report.md/report.html cập nhật kết quả 47/47 và liên kết evidence. Kiểm tra report HTML: 9 trang in, không chồng footer, không tràn mobile, liên kết local hợp lệ; không request ngoài hoặc lỗi JS.
 - Evidence dùng SQLite tạm riêng; không commit/push và không nghiệm thu thay giảng viên/hosted CI.
+
+### Khôi phục sau lỗi đồng bộ — 04/11/2026
+
+- Màn hình nội dung bị 503 có nút Đồng bộ lại, kể cả sau khi rời màn hình HTTP 202 hoặc tải lại trang. Nút chỉ gọi `/lab/sync`, rồi tải lại nội dung theo project/tab hiện tại; không gửi lại mutation.
+- Khóa nút khi đang đồng bộ, hiển thị lỗi ngay cạnh nút nếu chưa phục hồi; bỏ qua phản hồi nếu người dùng đã điều hướng hoặc đổi tài khoản.
+- Browser smoke kiểm tra pending → về danh sách → 503, retry thất bại, reload rồi phục hồi thành công, revision/số operation không tăng, phản hồi cũ sau đổi tài khoản và giao diện mobile.

@@ -1,6 +1,6 @@
 {
   "id": "v1-idor",
-  "capturedAt": "2026-11-02T15:39:39.712Z",
+  "capturedAt": "2026-11-04T14:48:38.708Z",
   "request": {
     "method": "GET",
     "path": "/api/v1/tasks/B1",
@@ -12,7 +12,7 @@
   "expectedStatus": 403,
   "response": {
     "status": 403,
-    "durationMs": 28,
+    "durationMs": 29,
     "body": {
       "data": null,
       "error": {
@@ -27,7 +27,7 @@
         {
           "name": "OpenFGA Check",
           "result": "FAIL",
-          "reason": "can_read_v1 · task:B1 · model 01M6EEN34SWW82AG61RX2VFY96 · HIGHER_CONSISTENCY"
+          "reason": "can_read_v1 · task:B1 · model 01M6KGH3W4S9558H9Q035NJPMV · HIGHER_CONSISTENCY"
         },
         {
           "name": "Project membership",
@@ -45,7 +45,7 @@
           "reason": "NOT_PROJECT_MEMBER"
         }
       ],
-      "requestId": "99c3fac7-1733-4af9-a1f4-54a9819dfa8f"
+      "requestId": "c1048e0f-4711-4ad1-940e-63f9f2e1448e"
     }
   },
   "verification": {

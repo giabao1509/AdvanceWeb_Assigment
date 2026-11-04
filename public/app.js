@@ -123,7 +123,32 @@ async function api(method, path, body, options = {}) {
   return result;
 }
 function denied(result, title = 'Không thể mở nội dung') {
-  const box = el('div',undefined,'empty error'); box.append(el('h2',title)); if(!result.errorShown) box.append(el('p',message(result))); box.append(button('Về danh sách dự án',()=>navigate())); return box;
+  const box = el('div',undefined,'empty error'); box.append(el('h2',title)); if(!result.errorShown) box.append(el('p',message(result)));
+  if(result.status===503) box.append(authorizationRecovery());
+  box.append(button('Về danh sách dự án',()=>navigate())); return box;
+}
+function authorizationRecovery() {
+  const stamp=generation, id=projectId, nextTab=tab, actor=user, target=version;
+  const box=el('div',undefined,'authorization-recovery');
+  const feedback=el('p','Kiểm tra dịch vụ rồi đồng bộ lại quyền truy cập. Các thao tác đã lưu sẽ không được gửi lại.','muted');
+  feedback.setAttribute('role','status');
+  const retry=button('Đồng bộ lại',async()=>{
+    if(stamp!==generation || retry.disabled) return;
+    retry.disabled=true; feedback.textContent='Đang đồng bộ quyền truy cập…';
+    try {
+      const start=performance.now();
+      const response=await fetch('/lab/sync',{method:'POST',headers:{Authorization:`Bearer demo-${actor}`}});
+      const json=await response.json();
+      if(stamp!==generation) throw new Stale();
+      record({method:'POST',url:'/lab/sync',status:response.status,json,ms:Math.round(performance.now()-start),version:target,label:'Đồng bộ quyền truy cập'});
+      if(!response.ok) { feedback.textContent='Chưa đồng bộ được quyền truy cập. Hãy kiểm tra dịch vụ rồi thử lại; các thay đổi đã lưu vẫn được giữ nguyên.'; return; }
+      await navigate(id,nextTab,true);
+    } catch(error) {
+      if(stamp!==generation || error instanceof Stale) throw new Stale();
+      feedback.textContent='Không kết nối được dịch vụ. Hãy thử đồng bộ lại sau; các thay đổi đã lưu vẫn được giữ nguyên.';
+    } finally { retry.disabled=false; }
+  });
+  box.append(feedback,retry); return box;
 }
 function pageHeading(kicker,title,description) { const box=el('div',undefined,'page-heading'), text=el('div'); text.append(el('span',kicker,'eyebrow'),el('h1',title)); if(description) text.append(el('p',description,'muted')); box.append(text); return box; }
 async function navigate(id = null, nextTab = 'tasks', preserveTechnical=false) {
@@ -216,7 +241,7 @@ async function openTask(id, edit) {
 async function loadMembers(id,content,background=false) {
   const r=await api('GET',`projects/${encodeURIComponent(id)}/members`,undefined,{label:'Xem thành viên',background});
   const list=el('section');
-  if(r.status!==200) { const deniedBox=el('div',undefined,'empty error'); deniedBox.append(el('h3','Không thể xem danh sách thành viên')); if(!r.errorShown) deniedBox.append(el('p',message(r))); list.append(deniedBox); }
+  if(r.status!==200) { const deniedBox=el('div',undefined,'empty error'); deniedBox.append(el('h3','Không thể xem danh sách thành viên')); if(!r.errorShown) deniedBox.append(el('p',message(r))); if(r.status===503) deniedBox.append(authorizationRecovery()); list.append(deniedBox); }
   else {
     const {wrap,body}=table(['Thành viên','Vai trò','Thao tác']);
     for(const member of r.json.data) {

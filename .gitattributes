@@ -1,3 +1,5 @@
+# Keep source bytes stable across checkouts so evidence hashes remain reproducible.
+* text=auto eol=lf
 # Preserve generated evidence bytes across platforms.
 evidence/openfga/** -text
 # Keep the Windows launcher usable after checkout on any platform.

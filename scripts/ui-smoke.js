@@ -249,6 +249,55 @@ try {
     writeFileSync('.local-check/pending-sync.png',Buffer.from((await call('Page.captureScreenshot',{format:'png'})).data,'base64'));
   } finally { app.locals.authorization.client.writeTuples=originalGraphWrite; }
   await action('#pending-operation','Đồng bộ lại'); await waitFor(`document.querySelectorAll('.project-card').length===2 && document.getElementById('success-popup').open`);
+  // Recovery must remain reachable after leaving the 202 screen and reloading the browser.
+  await project('alpha'); await waitFor(`!!document.querySelector('[data-task="A1"]')`);
+  await action('#page','Thành viên'); await waitFor(`!!document.querySelector('[data-member="vera"]')`);
+  app.locals.authorization.client.writeTuples=async()=>{throw new Error('UI fault injection: recovery still unavailable');};
+  let committedRevision, operationCount;
+  try {
+    await action('[data-member="vera"]','Đổi role'); await fill('#role-value','Viewer'); await submit('#role-form');
+    await waitFor(`!!document.getElementById('pending-operation')`);
+    committedRevision=app.locals.authorization.state().revision;
+    operationCount=db.prepare('SELECT count(*) AS n FROM authorization_operations').get().n;
+    await click('#home'); await waitFor(`document.querySelectorAll('.project-card').length===2`);
+    await project('alpha'); await waitFor(`!!document.querySelector('.authorization-recovery button')`);
+    assert.match(await text('#technical-content'),/503|AUTHORIZATION_NOT_READY/);
+    await click('.authorization-recovery button');
+    await waitFor(`!document.querySelector('.authorization-recovery button').disabled && document.querySelector('.authorization-recovery [role="status"]').textContent.includes('Chưa đồng bộ')`);
+    assert.equal(await evaluate(`document.getElementById('success-popup').open`),false,'Failed sync never reports success');
+    assert.equal(app.locals.authorization.ready(),false);
+  } finally { app.locals.authorization.client.writeTuples=originalGraphWrite; }
+  await evaluate(`window.recoveryReloadMarker=true`); await call('Page.reload');
+  await waitFor(`!window.recoveryReloadMarker && !!document.getElementById('login-form')`);
+  await login('alice'); await version('v2'); await waitFor(`document.querySelectorAll('.project-card').length===2`);
+  await project('alpha'); await waitFor(`!!document.querySelector('.authorization-recovery button')`);
+  await call('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
+  assert.equal(await evaluate('document.documentElement.scrollWidth <= window.innerWidth'),true,'Recovery screen overflows on mobile');
+  writeFileSync('.local-check/recovery-503-mobile.png',Buffer.from((await call('Page.captureScreenshot',{format:'png',captureBeyondViewport:true})).data,'base64'));
+  await click('.authorization-recovery button'); await waitFor(`!!document.querySelector('[data-task="A1"]')`);
+  assert.equal(app.locals.authorization.ready(),true);
+  assert.equal(await evaluate(`!!document.querySelector('.authorization-recovery')`),false);
+  assert.match(await text('#technical-content'),/POST \/lab\/sync/,'Sync trace survives the resource refresh');
+  assert.equal(app.locals.authorization.state().revision,committedRevision,'Recovery must not replay the membership mutation');
+  assert.equal(db.prepare('SELECT count(*) AS n FROM authorization_operations').get().n,operationCount);
+  assert.equal(db.prepare('SELECT role FROM project_memberships WHERE projectId=? AND userId=?').get('alpha','vera').role,'Viewer');
+  // A sync response arriving after switching accounts must not reopen the old project.
+  await action('#page','Thành viên'); await waitFor(`!!document.querySelector('[data-member="vera"]')`);
+  const originalRead=app.locals.authorization.client.readTuples.bind(app.locals.authorization.client);
+  app.locals.authorization.client.readTuples=async()=>{throw new Error('UI fault injection: read unavailable');};
+  try { await app.locals.authorization.sync(); assert.fail('Expected sync to fail'); }
+  catch(error) { assert.equal(error.message,'AUTHORIZATION_SYNC_FAILED'); }
+  finally { app.locals.authorization.client.readTuples=originalRead; }
+  await action('#page','Thành viên'); await waitFor(`!!document.querySelector('.authorization-recovery button')`);
+  await evaluate(`window.originalFetch=window.fetch; window.syncHeld=false; window.fetch=async (...args)=>{const response=await window.originalFetch(...args);if(String(args[0])==='/lab/sync'){window.syncHeld=true;await new Promise(resolve=>window.releaseSync=resolve);}return response;}; void(window.syncAttempt=document.querySelector('.authorization-recovery button').onclick(new Event('click')));`);
+  await waitFor('window.syncHeld');
+  assert.equal(await evaluate(`document.querySelector('.authorization-recovery button').disabled`),true,'Disable retry during sync');
+  await login('bob'); await evaluate(`window.releaseSync(); window.fetch=window.originalFetch;`); await evaluate('window.syncAttempt');
+  assert.equal(await text('#account-name'),'Bob');
+  assert.equal(await evaluate(`document.querySelectorAll('.project-card').length`),2);
+  assert.doesNotMatch(await text('#technical-content'),/\/lab\/sync/,'Discard sync trace from the previous account');
+  assert.equal(await evaluate(`document.getElementById('success-popup').open`),false);
+  await login('alice');
   await reset(); await project('alpha'); await waitFor(`!!document.querySelector('[data-task="A1"]')`);
   await call('Emulation.setDeviceMetricsOverride',{width:1360,height:1100,deviceScaleFactor:1,mobile:false});
   mkdirSync('.local-check',{recursive:true});
@@ -263,7 +312,7 @@ try {
   await call('Input.dispatchKeyEvent',{type:'keyUp',key:'Escape',code:'Escape',windowsVirtualKeyCode:27});
   await waitFor(`!document.getElementById('modal').open`);
   assert.deepEqual(errors,[],'Browser JS errors');
-  console.log('UI smoke PASS: OpenFGA V1–V4, task forms, members, delete/reset, pending sync/recovery, anonymous/spoofing/compare, stale response, mobile; no browser JS errors.');
+  console.log('UI smoke PASS: OpenFGA V1–V4, task forms, members, delete/reset, pending sync/recovery, 503 recovery after navigation/reload without replaying mutations, failed/stale sync, anonymous/spoofing/compare, stale response, mobile; no browser JS errors.');
 } finally {
   socket?.close(); browser.kill();
   await new Promise(resolve => server.close(resolve));
