@@ -1,0 +1,5 @@
+{"time":"2026-11-05T04:04:32.529Z","service":"payment","event":"READY","port":50592,"pid":34748}
+{"time":"2026-11-05T04:04:33.279Z","service":"payment","event":"PAYMENT_CHARGE_COMMITTED_BEFORE_RESPONSE","mode":"baseline","orderId":"5592ca47-b6b7-4737-94a2-d3323638a1eb","operationId":"baseline/5592ca47-b6b7-4737-94a2-d3323638a1eb/charge","pid":34748}
+{"time":"2026-11-05T04:04:33.845Z","service":"payment","event":"READY","port":50592,"pid":22552}
+{"time":"2026-11-05T04:04:33.979Z","service":"payment","event":"PAYMENT_CHARGE_COMMITTED_BEFORE_RESPONSE","mode":"saga","orderId":"d2bf4707-3aca-4ae6-abd3-4ad0f4076487","operationId":"saga/d2bf4707-3aca-4ae6-abd3-4ad0f4076487/charge","pid":22552}
+{"time":"2026-11-05T04:04:34.530Z","service":"payment","event":"READY","port":50592,"pid":20704}

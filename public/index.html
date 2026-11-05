@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#234c3e">
+  <title>Nếp — Checkout Lab</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='10' fill='%23234c3e'/%3E%3Ctext x='10' y='29' fill='white' font-size='28' font-family='serif'%3En%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/styles.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Nếp trang chủ"><span class="brand-mark">n</span><span>Nếp<span class="brand-sub">ĐỒ DÙNG MỖI NGÀY</span></span></a>
+    <nav class="tabs" role="tablist" aria-label="Nội dung">
+      <button id="tab-shop" role="tab" aria-selected="true" aria-controls="panel-shop">Đặt hàng</button>
+      <button id="tab-inventory" role="tab" aria-selected="false" aria-controls="panel-inventory">Kho hàng</button>
+      <button id="tab-backend" role="tab" aria-selected="false" aria-controls="panel-backend">Phản hồi backend <span class="tab-dot"></span></button>
+    </nav>
+    <section id="run-settings" class="run-settings" aria-labelledby="run-settings-title">
+      <h2 id="run-settings-title" class="visually-hidden">Thiết lập chung cho đơn mới</h2>
+      <div class="run-settings-controls">
+        <div class="run-setting"><span class="run-setting-label">Cơ chế cho đơn mới</span><div class="mode-group" role="group" aria-label="Chế độ xử lý"><button data-mode="baseline" aria-pressed="false">Baseline</button><button data-mode="saga" aria-pressed="true">Saga</button></div></div>
+        <div class="run-setting"><span class="run-setting-label">Cách chạy</span><div class="checkout-flow" role="group" aria-label="Cách chạy"><button data-flow="manual" aria-pressed="true">Thủ công</button><button data-flow="automatic" aria-pressed="false">Chạy lab</button></div></div>
+        <label id="lab-scenario-field" class="run-setting" hidden><span class="run-setting-label">Tình huống lab</span><select id="scenario"><option value="H">H0 · Đặt hàng thành công</option><option value="F1">F1 · Không thể giữ hàng</option><option value="F2">F2 · Thanh toán bị từ chối</option><option value="F3">F3 · Lỗi xác nhận sau thanh toán</option><option value="F4">F4 · Kill Payment sau khi thu tiền</option><option value="F5">F5 · Hoàn tiền tạm thời chưa khả dụng</option><option value="F6">F6 · Kill Order trước khi lưu kết quả hoàn tiền</option></select></label>
+        <label id="f4-duration-field" class="run-setting" hidden><span class="run-setting-label">Payment dừng (giây)</span><input id="f4-duration" type="number" min="0" max="60" step="0.5" value="4" aria-label="Thời gian dừng Payment của F4, tính bằng giây"></label>
+      </div>
+      <details class="run-settings-help"><summary>Hướng dẫn</summary><div class="run-settings-help-content"><p class="run-settings-scope">Thiết lập áp dụng cho đơn mới. Kho, ví và lịch sử dùng chung cho cả hai cơ chế.</p><p id="checkout-flow-note" class="run-settings-note">Tạo đơn để giữ hàng. Bạn chọn ví và thanh toán ở bước tiếp theo.</p><p id="scenario-description" class="run-settings-description" hidden></p></div></details>
+      <p id="run-settings-lock" class="run-settings-lock" role="status" hidden></p>
+    </section>
+  </header>
+  <main>
+    <div class="environment"><span><span class="live-dot"></span> CHECKOUT LAB <span class="divider">/</span> <span id="mode-caption">Saga · Tự phục hồi và bù khi có lỗi</span></span><span id="fault-badge" class="fault-badge" hidden></span></div>
+    <div id="notice" class="notice" role="status" hidden></div>
+
+    <section id="panel-shop" role="tabpanel" aria-labelledby="tab-shop">
+      <div class="intro"><div><p class="eyebrow">BỘ SƯU TẬP THƯỜNG NGÀY</p><h1>Gọn một góc nhỏ.<br>Thêm chút dễ chịu.</h1><p>Chọn một món đồ cho ngày của bạn.</p></div><div class="intro-note"><span>01 — 03</span><p>Đơn giản trong lựa chọn.<br>Rõ ràng trong từng đơn hàng.</p></div></div>
+      <div class="shop-layout">
+        <div class="products-section"><div class="section-heading"><h2>Sản phẩm</h2><span>03 món đồ được chọn</span></div><div id="products" class="products" aria-label="Chọn sản phẩm"></div>
+          <div class="small-note"><span>↗</span><p>Giá được xác nhận khi đặt hàng. Hàng đang giữ sẽ được cập nhật theo trạng thái đơn.</p></div>
+        </div>
+        <aside class="checkout-card" aria-labelledby="checkout-heading">
+          <div class="section-heading"><h2 id="checkout-heading">Đơn của bạn</h2><span id="checkout-count">01 sản phẩm</span></div>
+          <div id="selected-product" class="selected-product"></div>
+          <div class="quantity-row"><label for="quantity">Số lượng</label><div class="quantity-control"><button id="quantity-minus" aria-label="Giảm số lượng">−</button><input id="quantity" type="number" min="1" max="99" value="1" aria-label="Số lượng"><button id="quantity-plus" aria-label="Tăng số lượng">+</button></div></div>
+          <div class="totals"><div><span>Tạm tính</span><span id="subtotal"></span></div><div><span>Hình thức</span><span>Thanh toán mô phỏng</span></div><div class="total"><strong>Tổng cộng</strong><strong id="total"></strong></div></div>
+          <button id="place-order" class="primary">Tạo đơn hàng <span>↗</span></button>
+          <button id="new-order" class="secondary" hidden>Tạo đơn mới</button>
+          <p class="checkout-note">Môi trường thực hành · Không thu tiền thật</p>
+        </aside>
+      </div>
+      <section id="order-detail" class="order-detail" aria-live="polite" hidden></section>
+      <section class="recent-section"><div class="section-heading"><h2>Đơn hàng gần đây</h2><button id="refresh-orders" class="text-button">Làm mới ↻</button></div><div id="orders" class="orders-list"><div class="empty">Chưa có đơn hàng. Hãy chọn món đồ đầu tiên của bạn.</div></div></section>
+    </section>
+
+    <section id="panel-inventory" role="tabpanel" aria-labelledby="tab-inventory" hidden>
+      <div class="backend-intro"><div><p class="eyebrow">TỒN KHO & LỊCH SỬ</p><h1>Hàng đang ở đâu?</h1><p id="inventory-note">Số lượng tồn kho của từng sản phẩm, đọc trực tiếp từ DB.</p></div><button id="refresh-inventory" class="secondary">Cập nhật kho ↻</button></div>
+      <div id="stock-cards" class="stock-cards"><div class="empty">Đang đọc tồn kho.</div></div>
+      <p class="stock-note">Tồn kho đọc trực tiếp từ stock.available trong DB. Giữ chỗ làm giảm tồn kho; nhả hàng cộng lại tồn kho.</p>
+      <div class="stock-lifecycle" aria-label="Cách kho thay đổi"><div><span class="badge warning">1 · Giữ tạm</span><p>Giảm khả dụng ngay khi giữ chỗ. Chưa thanh toán thì ví chưa bị trừ.</p></div><div><span class="badge success">2 · Chốt đơn</span><p>Đơn CONFIRMED: hàng đã chốt bán. Không trừ khả dụng lần nữa; reservation vẫn là HELD.</p></div><div><span class="badge info">Nếu hủy · Nhả hàng</span><p>Release thành công mới cộng hàng lại. Đang bù chưa có nghĩa là đã nhả xong.</p></div></div><section class="history-card"><div class="section-heading"><h2>Lịch sử giữ chỗ và trả hàng</h2><span id="stock-history-count"></span></div><div class="stock-filters"><label>Sản phẩm<select id="stock-sku"><option value="">Tất cả sản phẩm</option></select></label><label>Hoạt động<select id="stock-kind"><option value="">Tất cả hoạt động</option><option value="RESERVE">Giữ chỗ</option><option value="RELEASE">Trả hàng</option></select></label></div><div id="stock-history" class="empty">Đang đọc lịch sử.</div></section>
+    </section>
+
+    <section id="panel-backend" role="tabpanel" aria-labelledby="tab-backend" hidden>
+      <div class="backend-intro"><div><p class="eyebrow">QUAN SÁT LUỒNG XỬ LÝ</p><h1>Phía sau một đơn hàng.</h1><p>Phản hồi HTTP và trạng thái thực từ Order, Inventory, Payment.</p></div><button id="refresh-traces" class="secondary">Cập nhật dữ liệu ↻</button></div>
+      <div id="services" class="snapshots service-health" aria-live="polite"></div>
+      <div class="trace-toolbar"><label for="trace-order">Đơn đang xem</label><select id="trace-order"><option value="">Chưa có đơn hàng</option></select><span id="trace-count"></span></div>
+      <div id="snapshots" class="snapshots"></div>
+      <section class="saga-card"><div class="section-heading"><h2>Tiến trình Saga</h2><div class="saga-actions"><button id="restore-refund" class="secondary" hidden>Gỡ lỗi refund và tiếp tục</button><button id="resume-saga" class="secondary" hidden>Tiếp tục Saga</button></div></div><p class="history-note">Order điều phối các bước giữ hàng → thu tiền → xác nhận. Khi gặp lỗi, Saga lưu việc còn chờ để đối soát hoặc bù bằng hoàn tiền, nhả hàng.</p><div id="saga-info" class="empty">Chọn một đơn Saga để xem phase, intent và việc còn chờ.</div><details class="technical-history"><summary>Chi tiết chuyển trạng thái Saga</summary><div id="saga-history"></div></details></section>
+      <div id="log-layout" class="trace-layout"><section class="trace-list-card"><div class="section-heading log-heading"><div><h2>Nhật ký xử lý</h2><p>Mới nhất ở trên; cuộn xuống để xem log cũ. Bấm một dòng để xem dữ liệu gốc.</p></div><button id="follow-logs" class="text-button" aria-pressed="true">Đang xem mới nhất ↑</button></div><label class="log-filter">Hiển thị<select id="log-filter"><option value="all">Tất cả hoạt động</option><option value="http">Chỉ các lượt HTTP</option><option value="workflow">Chỉ xử lý nội bộ / worker</option><option value="service">Chỉ vòng đời service</option></select></label><div id="traces" class="trace-list"><div class="empty">Chọn đơn hàng để xem phản hồi backend.</div></div></section><section id="log-detail" class="payload-card" hidden><div class="section-heading"><h2>Chi tiết hoạt động</h2><span id="trace-meta"></span><button id="close-log" class="text-button">Đóng ×</button></div><div id="payload" class="payload"></div></section></div>
+      <section class="history-card payment-history-card"><div class="section-heading"><h2>Lịch sử thanh toán</h2><span id="ledger-count"></span></div><p id="ledger-note" class="history-note">Toàn bộ khoản thu và hoàn tiền trong chế độ đang chọn, mới nhất ở trên. Không phụ thuộc vào đơn đang xem.</p><div id="ledger" class="empty">Đang đọc lịch sử thanh toán.</div></section>
+      <section class="history-card supervisor-card"><div class="section-heading"><h2>Marker và vòng đời service</h2><span>Launcher</span></div><details class="technical-history"><summary>Xem marker và dữ liệu kỹ thuật của launcher</summary><div id="process-events" class="empty">Chưa có sự kiện.</div></details></section>
+    </section>
+    <footer><span class="footer-brand">Nếp<span> / CHECKOUT LAB</span></span><span>Block 7 · Local transactions & Saga orchestration</span></footer>
+  </main>
+</body>
+</html>

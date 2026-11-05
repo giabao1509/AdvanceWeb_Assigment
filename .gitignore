@@ -1,0 +1,13 @@
+node_modules/
+public/app.js
+public/log-format.js
+.env
+data/
+logs/
+.local/
+test-results/
+.codebase-memory/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.zip

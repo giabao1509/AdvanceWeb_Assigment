@@ -1,0 +1,2 @@
+{"time":"2026-11-05T04:04:30.453Z","service":"payment","event":"READY","port":50568,"pid":20448}
+{"time":"2026-11-05T04:04:31.303Z","service":"payment","event":"REFUND_FAULT_RESTORED","mode":"saga","orderId":"ae7fc93b-be94-4d53-8bd8-ebbc2fcbe98d"}

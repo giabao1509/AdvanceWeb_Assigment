@@ -1,0 +1,633 @@
+{
+  "passed": true,
+  "capturedAt": "2026-11-05T02:50:42.020Z",
+  "results": [
+    {
+      "mode": "baseline",
+      "marker": {
+        "time": "2026-11-05T02:50:39.103Z",
+        "service": "payment",
+        "event": "PAYMENT_CHARGE_COMMITTED_BEFORE_RESPONSE",
+        "mode": "baseline",
+        "orderId": "ad0daa49-1a22-4c84-bd70-2fd01a5e8373",
+        "operationId": "baseline/ad0daa49-1a22-4c84-bd70-2fd01a5e8373/charge",
+        "pid": 25604
+      },
+      "killedPid": 25604,
+      "killedAt": "2026-11-05T02:50:39.205Z",
+      "paymentWasUnavailable": true,
+      "interrupted": {
+        "id": "ad0daa49-1a22-4c84-bd70-2fd01a5e8373",
+        "request_key": "60e02b94-a4c1-46c9-8dc4-da06489edaab",
+        "fingerprint": "[\"LAMP-01\",1,\"F4\"]",
+        "sku": "LAMP-01",
+        "product_name": "Đèn bàn Studio",
+        "quantity": 1,
+        "unit_price": 450000,
+        "total": 450000,
+        "scenario": "F4",
+        "status": "REQUIRES_REVIEW",
+        "step": "DONE",
+        "reservation_id": "221ebb60-4197-4f14-9051-ef1b7eb03d56",
+        "payment_id": null,
+        "last_error": "NETWORK_ERROR",
+        "created_at": "2026-11-05T02:50:39.000Z",
+        "updated_at": "2026-11-05T02:50:39.201Z"
+      },
+      "restoredAt": "2026-11-05T02:50:40.038Z",
+      "restartedPid": 42448,
+      "outcome": {
+        "status": 200,
+        "body": {
+          "operationId": "baseline/ad0daa49-1a22-4c84-bd70-2fd01a5e8373/charge",
+          "action": "charge",
+          "httpStatus": 201,
+          "result": {
+            "payment": {
+              "id": "3d9fd0ca-da03-4433-99f8-0964c552e400",
+              "order_id": "ad0daa49-1a22-4c84-bd70-2fd01a5e8373",
+              "amount": 450000,
+              "status": "CHARGED"
+            }
+          },
+          "createdAt": "2026-11-05T02:50:39.101Z"
+        }
+      },
+      "recoveryMs": 37,
+      "final": {
+        "order": {
+          "id": "ad0daa49-1a22-4c84-bd70-2fd01a5e8373",
+          "request_key": "60e02b94-a4c1-46c9-8dc4-da06489edaab",
+          "fingerprint": "[\"LAMP-01\",1,\"F4\"]",
+          "sku": "LAMP-01",
+          "product_name": "Đèn bàn Studio",
+          "quantity": 1,
+          "unit_price": 450000,
+          "total": 450000,
+          "scenario": "F4",
+          "status": "REQUIRES_REVIEW",
+          "step": "DONE",
+          "reservation_id": "221ebb60-4197-4f14-9051-ef1b7eb03d56",
+          "payment_id": null,
+          "last_error": "NETWORK_ERROR",
+          "created_at": "2026-11-05T02:50:39.000Z",
+          "updated_at": "2026-11-05T02:50:39.201Z"
+        },
+        "inventory": {
+          "available": true,
+          "data": {
+            "reservation": {
+              "id": "221ebb60-4197-4f14-9051-ef1b7eb03d56",
+              "order_id": "ad0daa49-1a22-4c84-bd70-2fd01a5e8373",
+              "sku": "LAMP-01",
+              "quantity": 1,
+              "status": "HELD"
+            },
+            "stock": [
+              {
+                "sku": "LAMP-01",
+                "available": 19
+              },
+              {
+                "sku": "CUP-01",
+                "available": 30
+              },
+              {
+                "sku": "BAG-01",
+                "available": 15
+              }
+            ]
+          },
+          "error": null
+        },
+        "payment": {
+          "available": true,
+          "data": {
+            "payment": {
+              "id": "3d9fd0ca-da03-4433-99f8-0964c552e400",
+              "order_id": "ad0daa49-1a22-4c84-bd70-2fd01a5e8373",
+              "amount": 450000,
+              "status": "CHARGED"
+            },
+            "ledger": [
+              {
+                "id": "fbdd8ed7-6240-4cdd-946a-ca52e0d9e62f",
+                "payment_id": "3d9fd0ca-da03-4433-99f8-0964c552e400",
+                "kind": "CHARGE",
+                "amount": 450000,
+                "operation_id": "baseline/ad0daa49-1a22-4c84-bd70-2fd01a5e8373/charge",
+                "created_at": "2026-11-05T02:50:39.101Z"
+              }
+            ]
+          },
+          "error": null
+        },
+        "capturedAt": "2026-11-05T02:50:40.069Z"
+      },
+      "traces": [
+        {
+          "id": "2c763c96-7cd9-4910-97c3-b0e92df5e923",
+          "order_id": "ad0daa49-1a22-4c84-bd70-2fd01a5e8373",
+          "service": "inventory",
+          "action": "reserve",
+          "method": "POST",
+          "path": "/reservations",
+          "operation_id": "baseline/ad0daa49-1a22-4c84-bd70-2fd01a5e8373/reserve",
+          "request_body": "{\"operationId\":\"baseline/ad0daa49-1a22-4c84-bd70-2fd01a5e8373/reserve\",\"orderId\":\"ad0daa49-1a22-4c84-bd70-2fd01a5e8373\",\"scenario\":\"F4\",\"sku\":\"LAMP-01\",\"quantity\":1}",
+          "response_body": "{\"reservation\":{\"id\":\"221ebb60-4197-4f14-9051-ef1b7eb03d56\",\"order_id\":\"ad0daa49-1a22-4c84-bd70-2fd01a5e8373\",\"sku\":\"LAMP-01\",\"quantity\":1,\"status\":\"HELD\"}}",
+          "http_status": 201,
+          "transport_error": null,
+          "started_at": "2026-11-05T02:50:39.004Z",
+          "duration_ms": 69,
+          "complete": 1
+        },
+        {
+          "id": "11b67d4c-e495-43ba-b833-7adf7b776042",
+          "order_id": "ad0daa49-1a22-4c84-bd70-2fd01a5e8373",
+          "service": "payment",
+          "action": "charge",
+          "method": "POST",
+          "path": "/payments",
+          "operation_id": "baseline/ad0daa49-1a22-4c84-bd70-2fd01a5e8373/charge",
+          "request_body": "{\"operationId\":\"baseline/ad0daa49-1a22-4c84-bd70-2fd01a5e8373/charge\",\"orderId\":\"ad0daa49-1a22-4c84-bd70-2fd01a5e8373\",\"scenario\":\"F4\",\"amount\":450000}",
+          "response_body": null,
+          "http_status": null,
+          "transport_error": "NETWORK_ERROR",
+          "started_at": "2026-11-05T02:50:39.076Z",
+          "duration_ms": 123,
+          "complete": 1
+        }
+      ]
+    },
+    {
+      "mode": "saga",
+      "marker": {
+        "time": "2026-11-05T02:50:40.174Z",
+        "service": "payment",
+        "event": "PAYMENT_CHARGE_COMMITTED_BEFORE_RESPONSE",
+        "mode": "saga",
+        "orderId": "feb84aea-66ea-44de-8410-4f1d22f7b5df",
+        "operationId": "saga/feb84aea-66ea-44de-8410-4f1d22f7b5df/charge",
+        "pid": 42448
+      },
+      "killedPid": 42448,
+      "killedAt": "2026-11-05T02:50:40.205Z",
+      "paymentWasUnavailable": true,
+      "interrupted": {
+        "id": "feb84aea-66ea-44de-8410-4f1d22f7b5df",
+        "request_key": "71756e0d-b03a-4e06-be6e-b56197b4a335",
+        "fingerprint": "[\"LAMP-01\",1,\"F4\"]",
+        "sku": "LAMP-01",
+        "product_name": "Đèn bàn Studio",
+        "quantity": 1,
+        "unit_price": 450000,
+        "total": 450000,
+        "scenario": "F4",
+        "status": "RECOVERING",
+        "step": "CHARGE_PENDING",
+        "reservation_id": "4d3c3da9-3198-4467-8c7b-cbc60f534809",
+        "payment_id": null,
+        "last_error": "NETWORK_ERROR",
+        "created_at": "2026-11-05T02:50:40.091Z",
+        "updated_at": "2026-11-05T02:50:40.199Z"
+      },
+      "restoredAt": "2026-11-05T02:50:41.045Z",
+      "restartedPid": 34136,
+      "outcome": {
+        "status": 200,
+        "body": {
+          "operationId": "saga/feb84aea-66ea-44de-8410-4f1d22f7b5df/charge",
+          "action": "charge",
+          "httpStatus": 201,
+          "result": {
+            "payment": {
+              "id": "9d00b690-1991-4b96-b04b-b8d80a7bd92f",
+              "order_id": "feb84aea-66ea-44de-8410-4f1d22f7b5df",
+              "amount": 450000,
+              "status": "CHARGED"
+            }
+          },
+          "createdAt": "2026-11-05T02:50:40.172Z"
+        }
+      },
+      "recoveryMs": 967,
+      "final": {
+        "order": {
+          "id": "feb84aea-66ea-44de-8410-4f1d22f7b5df",
+          "request_key": "71756e0d-b03a-4e06-be6e-b56197b4a335",
+          "fingerprint": "[\"LAMP-01\",1,\"F4\"]",
+          "sku": "LAMP-01",
+          "product_name": "Đèn bàn Studio",
+          "quantity": 1,
+          "unit_price": 450000,
+          "total": 450000,
+          "scenario": "F4",
+          "status": "CONFIRMED",
+          "step": "DONE",
+          "reservation_id": "4d3c3da9-3198-4467-8c7b-cbc60f534809",
+          "payment_id": "9d00b690-1991-4b96-b04b-b8d80a7bd92f",
+          "last_error": null,
+          "created_at": "2026-11-05T02:50:40.091Z",
+          "updated_at": "2026-11-05T02:50:41.973Z"
+        },
+        "inventory": {
+          "available": true,
+          "data": {
+            "reservation": {
+              "id": "4d3c3da9-3198-4467-8c7b-cbc60f534809",
+              "order_id": "feb84aea-66ea-44de-8410-4f1d22f7b5df",
+              "sku": "LAMP-01",
+              "quantity": 1,
+              "status": "HELD"
+            },
+            "stock": [
+              {
+                "sku": "LAMP-01",
+                "available": 19
+              },
+              {
+                "sku": "CUP-01",
+                "available": 30
+              },
+              {
+                "sku": "BAG-01",
+                "available": 15
+              }
+            ]
+          },
+          "error": null
+        },
+        "payment": {
+          "available": true,
+          "data": {
+            "payment": {
+              "id": "9d00b690-1991-4b96-b04b-b8d80a7bd92f",
+              "order_id": "feb84aea-66ea-44de-8410-4f1d22f7b5df",
+              "amount": 450000,
+              "status": "CHARGED"
+            },
+            "ledger": [
+              {
+                "id": "0c23554f-61a3-4c66-b2d2-83f748ec2a5e",
+                "payment_id": "9d00b690-1991-4b96-b04b-b8d80a7bd92f",
+                "kind": "CHARGE",
+                "amount": 450000,
+                "operation_id": "saga/feb84aea-66ea-44de-8410-4f1d22f7b5df/charge",
+                "created_at": "2026-11-05T02:50:40.172Z"
+              }
+            ]
+          },
+          "error": null
+        },
+        "capturedAt": "2026-11-05T02:50:42.007Z"
+      },
+      "traces": [
+        {
+          "id": "047ef54d-a117-4c4a-ba06-75cb8cd72d67",
+          "order_id": "feb84aea-66ea-44de-8410-4f1d22f7b5df",
+          "service": "inventory",
+          "action": "reserve.query",
+          "method": "GET",
+          "path": "/operations/saga%2Ffeb84aea-66ea-44de-8410-4f1d22f7b5df%2Freserve",
+          "operation_id": "saga/feb84aea-66ea-44de-8410-4f1d22f7b5df/reserve",
+          "request_body": null,
+          "response_body": "{\"error\":\"OPERATION_NOT_FOUND\"}",
+          "http_status": 404,
+          "transport_error": null,
+          "started_at": "2026-11-05T02:50:40.094Z",
+          "duration_ms": 9,
+          "complete": 1
+        },
+        {
+          "id": "6f86ea96-0749-4967-bdd6-73a7bb49ada0",
+          "order_id": "feb84aea-66ea-44de-8410-4f1d22f7b5df",
+          "service": "inventory",
+          "action": "reserve",
+          "method": "POST",
+          "path": "/reservations",
+          "operation_id": "saga/feb84aea-66ea-44de-8410-4f1d22f7b5df/reserve",
+          "request_body": "{\"operationId\":\"saga/feb84aea-66ea-44de-8410-4f1d22f7b5df/reserve\",\"orderId\":\"feb84aea-66ea-44de-8410-4f1d22f7b5df\",\"scenario\":\"F4\",\"sku\":\"LAMP-01\",\"quantity\":1}",
+          "response_body": "{\"reservation\":{\"id\":\"4d3c3da9-3198-4467-8c7b-cbc60f534809\",\"order_id\":\"feb84aea-66ea-44de-8410-4f1d22f7b5df\",\"sku\":\"LAMP-01\",\"quantity\":1,\"status\":\"HELD\"}}",
+          "http_status": 201,
+          "transport_error": null,
+          "started_at": "2026-11-05T02:50:40.104Z",
+          "duration_ms": 18,
+          "complete": 1
+        },
+        {
+          "id": "e7c2397d-a4ac-4b45-a246-5371391bbdee",
+          "order_id": "feb84aea-66ea-44de-8410-4f1d22f7b5df",
+          "service": "payment",
+          "action": "charge.query",
+          "method": "GET",
+          "path": "/operations/saga%2Ffeb84aea-66ea-44de-8410-4f1d22f7b5df%2Fcharge",
+          "operation_id": "saga/feb84aea-66ea-44de-8410-4f1d22f7b5df/charge",
+          "request_body": null,
+          "response_body": "{\"error\":\"OPERATION_NOT_FOUND\"}",
+          "http_status": 404,
+          "transport_error": null,
+          "started_at": "2026-11-05T02:50:40.130Z",
+          "duration_ms": 15,
+          "complete": 1
+        },
+        {
+          "id": "d8182c54-eaf5-4174-bfb8-e7c244897528",
+          "order_id": "feb84aea-66ea-44de-8410-4f1d22f7b5df",
+          "service": "payment",
+          "action": "charge",
+          "method": "POST",
+          "path": "/payments",
+          "operation_id": "saga/feb84aea-66ea-44de-8410-4f1d22f7b5df/charge",
+          "request_body": "{\"operationId\":\"saga/feb84aea-66ea-44de-8410-4f1d22f7b5df/charge\",\"orderId\":\"feb84aea-66ea-44de-8410-4f1d22f7b5df\",\"scenario\":\"F4\",\"amount\":450000}",
+          "response_body": null,
+          "http_status": null,
+          "transport_error": "NETWORK_ERROR",
+          "started_at": "2026-11-05T02:50:40.147Z",
+          "duration_ms": 51,
+          "complete": 1
+        },
+        {
+          "id": "48f6d0d9-92a1-4962-81ca-afa02e4d79a7",
+          "order_id": "feb84aea-66ea-44de-8410-4f1d22f7b5df",
+          "service": "payment",
+          "action": "charge.query",
+          "method": "GET",
+          "path": "/operations/saga%2Ffeb84aea-66ea-44de-8410-4f1d22f7b5df%2Fcharge",
+          "operation_id": "saga/feb84aea-66ea-44de-8410-4f1d22f7b5df/charge",
+          "request_body": null,
+          "response_body": "{\"operationId\":\"saga/feb84aea-66ea-44de-8410-4f1d22f7b5df/charge\",\"action\":\"charge\",\"httpStatus\":201,\"result\":{\"payment\":{\"id\":\"9d00b690-1991-4b96-b04b-b8d80a7bd92f\",\"order_id\":\"feb84aea-66ea-44de-8410-4f1d22f7b5df\",\"amount\":450000,\"status\":\"CHARGED\"}},\"createdAt\":\"2026-11-05T02:50:40.172Z\"}",
+          "http_status": 200,
+          "transport_error": null,
+          "started_at": "2026-11-05T02:50:41.958Z",
+          "duration_ms": 13,
+          "complete": 1
+        }
+      ]
+    }
+  ],
+  "processEvents": [
+    {
+      "time": "2026-11-05T02:50:37.214Z",
+      "service": "inventory",
+      "event": "READY",
+      "port": 59696,
+      "pid": 2144
+    },
+    {
+      "time": "2026-11-05T02:50:38.088Z",
+      "service": "payment",
+      "event": "READY",
+      "port": 59697,
+      "pid": 25604
+    },
+    {
+      "time": "2026-11-05T02:50:38.961Z",
+      "service": "order",
+      "event": "READY",
+      "port": 59695,
+      "pid": 3536
+    },
+    {
+      "time": "2026-11-05T02:50:39.002Z",
+      "service": "order",
+      "event": "ORDER_CREATED",
+      "mode": "baseline",
+      "orderId": "ad0daa49-1a22-4c84-bd70-2fd01a5e8373",
+      "scenario": "F4"
+    },
+    {
+      "time": "2026-11-05T02:50:39.074Z",
+      "service": "order",
+      "event": "HTTP",
+      "mode": "baseline",
+      "orderId": "ad0daa49-1a22-4c84-bd70-2fd01a5e8373",
+      "serviceTarget": "inventory",
+      "action": "reserve",
+      "method": "POST",
+      "path": "/reservations",
+      "operationId": "baseline/ad0daa49-1a22-4c84-bd70-2fd01a5e8373/reserve",
+      "status": 201,
+      "durationMs": 69,
+      "request": {
+        "operationId": "baseline/ad0daa49-1a22-4c84-bd70-2fd01a5e8373/reserve",
+        "orderId": "ad0daa49-1a22-4c84-bd70-2fd01a5e8373",
+        "scenario": "F4",
+        "sku": "LAMP-01",
+        "quantity": 1
+      },
+      "response": {
+        "reservation": {
+          "id": "221ebb60-4197-4f14-9051-ef1b7eb03d56",
+          "order_id": "ad0daa49-1a22-4c84-bd70-2fd01a5e8373",
+          "sku": "LAMP-01",
+          "quantity": 1,
+          "status": "HELD"
+        }
+      }
+    },
+    {
+      "time": "2026-11-05T02:50:39.103Z",
+      "service": "payment",
+      "event": "PAYMENT_CHARGE_COMMITTED_BEFORE_RESPONSE",
+      "mode": "baseline",
+      "orderId": "ad0daa49-1a22-4c84-bd70-2fd01a5e8373",
+      "operationId": "baseline/ad0daa49-1a22-4c84-bd70-2fd01a5e8373/charge",
+      "pid": 25604
+    },
+    {
+      "time": "2026-11-05T02:50:39.200Z",
+      "service": "order",
+      "event": "HTTP",
+      "mode": "baseline",
+      "orderId": "ad0daa49-1a22-4c84-bd70-2fd01a5e8373",
+      "serviceTarget": "payment",
+      "action": "charge",
+      "method": "POST",
+      "path": "/payments",
+      "operationId": "baseline/ad0daa49-1a22-4c84-bd70-2fd01a5e8373/charge",
+      "status": null,
+      "error": "NETWORK_ERROR",
+      "durationMs": 123,
+      "request": {
+        "operationId": "baseline/ad0daa49-1a22-4c84-bd70-2fd01a5e8373/charge",
+        "orderId": "ad0daa49-1a22-4c84-bd70-2fd01a5e8373",
+        "scenario": "F4",
+        "amount": 450000
+      },
+      "response": null
+    },
+    {
+      "time": "2026-11-05T02:50:39.205Z",
+      "service": "payment",
+      "event": "PROCESS_KILLED",
+      "pid": 25604
+    },
+    {
+      "time": "2026-11-05T02:50:39.953Z",
+      "service": "payment",
+      "event": "READY",
+      "port": 59697,
+      "pid": 42448
+    },
+    {
+      "time": "2026-11-05T02:50:40.093Z",
+      "service": "order",
+      "event": "ORDER_CREATED",
+      "mode": "saga",
+      "orderId": "feb84aea-66ea-44de-8410-4f1d22f7b5df",
+      "scenario": "F4"
+    },
+    {
+      "time": "2026-11-05T02:50:40.104Z",
+      "service": "order",
+      "event": "HTTP",
+      "mode": "saga",
+      "orderId": "feb84aea-66ea-44de-8410-4f1d22f7b5df",
+      "serviceTarget": "inventory",
+      "action": "reserve.query",
+      "method": "GET",
+      "path": "/operations/saga%2Ffeb84aea-66ea-44de-8410-4f1d22f7b5df%2Freserve",
+      "operationId": "saga/feb84aea-66ea-44de-8410-4f1d22f7b5df/reserve",
+      "status": 404,
+      "durationMs": 9,
+      "response": {
+        "error": "OPERATION_NOT_FOUND"
+      }
+    },
+    {
+      "time": "2026-11-05T02:50:40.123Z",
+      "service": "order",
+      "event": "HTTP",
+      "mode": "saga",
+      "orderId": "feb84aea-66ea-44de-8410-4f1d22f7b5df",
+      "serviceTarget": "inventory",
+      "action": "reserve",
+      "method": "POST",
+      "path": "/reservations",
+      "operationId": "saga/feb84aea-66ea-44de-8410-4f1d22f7b5df/reserve",
+      "status": 201,
+      "durationMs": 18,
+      "request": {
+        "operationId": "saga/feb84aea-66ea-44de-8410-4f1d22f7b5df/reserve",
+        "orderId": "feb84aea-66ea-44de-8410-4f1d22f7b5df",
+        "scenario": "F4",
+        "sku": "LAMP-01",
+        "quantity": 1
+      },
+      "response": {
+        "reservation": {
+          "id": "4d3c3da9-3198-4467-8c7b-cbc60f534809",
+          "order_id": "feb84aea-66ea-44de-8410-4f1d22f7b5df",
+          "sku": "LAMP-01",
+          "quantity": 1,
+          "status": "HELD"
+        }
+      }
+    },
+    {
+      "time": "2026-11-05T02:50:40.146Z",
+      "service": "order",
+      "event": "HTTP",
+      "mode": "saga",
+      "orderId": "feb84aea-66ea-44de-8410-4f1d22f7b5df",
+      "serviceTarget": "payment",
+      "action": "charge.query",
+      "method": "GET",
+      "path": "/operations/saga%2Ffeb84aea-66ea-44de-8410-4f1d22f7b5df%2Fcharge",
+      "operationId": "saga/feb84aea-66ea-44de-8410-4f1d22f7b5df/charge",
+      "status": 404,
+      "durationMs": 15,
+      "response": {
+        "error": "OPERATION_NOT_FOUND"
+      }
+    },
+    {
+      "time": "2026-11-05T02:50:40.174Z",
+      "service": "payment",
+      "event": "PAYMENT_CHARGE_COMMITTED_BEFORE_RESPONSE",
+      "mode": "saga",
+      "orderId": "feb84aea-66ea-44de-8410-4f1d22f7b5df",
+      "operationId": "saga/feb84aea-66ea-44de-8410-4f1d22f7b5df/charge",
+      "pid": 42448
+    },
+    {
+      "time": "2026-11-05T02:50:40.199Z",
+      "service": "order",
+      "event": "HTTP",
+      "mode": "saga",
+      "orderId": "feb84aea-66ea-44de-8410-4f1d22f7b5df",
+      "serviceTarget": "payment",
+      "action": "charge",
+      "method": "POST",
+      "path": "/payments",
+      "operationId": "saga/feb84aea-66ea-44de-8410-4f1d22f7b5df/charge",
+      "status": null,
+      "error": "NETWORK_ERROR",
+      "durationMs": 51,
+      "request": {
+        "operationId": "saga/feb84aea-66ea-44de-8410-4f1d22f7b5df/charge",
+        "orderId": "feb84aea-66ea-44de-8410-4f1d22f7b5df",
+        "scenario": "F4",
+        "amount": 450000
+      },
+      "response": null
+    },
+    {
+      "time": "2026-11-05T02:50:40.201Z",
+      "service": "order",
+      "event": "RETRY_PENDING",
+      "mode": "saga",
+      "orderId": "feb84aea-66ea-44de-8410-4f1d22f7b5df",
+      "step": "CHARGE_PENDING",
+      "reason": "NETWORK_ERROR"
+    },
+    {
+      "time": "2026-11-05T02:50:40.205Z",
+      "service": "payment",
+      "event": "PROCESS_KILLED",
+      "pid": 42448
+    },
+    {
+      "time": "2026-11-05T02:50:40.973Z",
+      "service": "payment",
+      "event": "READY",
+      "port": 59697,
+      "pid": 34136
+    },
+    {
+      "time": "2026-11-05T02:50:41.972Z",
+      "service": "order",
+      "event": "HTTP",
+      "mode": "saga",
+      "orderId": "feb84aea-66ea-44de-8410-4f1d22f7b5df",
+      "serviceTarget": "payment",
+      "action": "charge.query",
+      "method": "GET",
+      "path": "/operations/saga%2Ffeb84aea-66ea-44de-8410-4f1d22f7b5df%2Fcharge",
+      "operationId": "saga/feb84aea-66ea-44de-8410-4f1d22f7b5df/charge",
+      "status": 200,
+      "durationMs": 13,
+      "response": {
+        "operationId": "saga/feb84aea-66ea-44de-8410-4f1d22f7b5df/charge",
+        "action": "charge",
+        "httpStatus": 201,
+        "result": {
+          "payment": {
+            "id": "9d00b690-1991-4b96-b04b-b8d80a7bd92f",
+            "order_id": "feb84aea-66ea-44de-8410-4f1d22f7b5df",
+            "amount": 450000,
+            "status": "CHARGED"
+          }
+        },
+        "createdAt": "2026-11-05T02:50:40.172Z"
+      }
+    },
+    {
+      "time": "2026-11-05T02:50:41.974Z",
+      "service": "order",
+      "event": "ORDER_CONFIRMED",
+      "mode": "saga",
+      "orderId": "feb84aea-66ea-44de-8410-4f1d22f7b5df"
+    }
+  ]
+}

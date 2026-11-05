@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><meta name="report-source-sha256" content="e7e095e2fd14ca941cb1d7145220bc02b3675db65eeaf6d59e70334b66f0a887"><title>Block 7 — Checkout với Baseline và Saga</title><style>
+:root{color-scheme:light;--ink:#263b40;--muted:#687b7d;--line:#dce7e4;--green:#22685f;--paper:#f4f7f5;--amber:#94631d}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:26px}body{margin:0;background:var(--paper);color:var(--ink);font-family:system-ui,'Segoe UI',Arial,sans-serif;font-size:15px;line-height:1.8}a{color:var(--green);text-underline-offset:3px}a:focus-visible{outline:3px solid #8cc7b7;outline-offset:4px}.topbar{padding:18px max(28px,calc((100vw - 1240px)/2));border-bottom:1px solid var(--line);background:#fff;display:flex;justify-content:space-between;gap:18px;align-items:center;font-size:11px;color:var(--muted);letter-spacing:.7px}.topbar strong{color:var(--green);letter-spacing:1.5px}.topbar span:last-child{letter-spacing:0}.layout{display:grid;grid-template-columns:205px minmax(0,1fr);gap:36px;max-width:1240px;margin:40px auto 0;padding:0 28px}.toc{position:sticky;top:28px;align-self:start;padding:14px 0;font-size:12px}.toc-title{font-size:10px;letter-spacing:1.7px;color:var(--muted);margin:0 0 18px 12px}.toc a{display:flex;gap:12px;padding:10px 12px;margin:3px 0;color:var(--muted);text-decoration:none;border-radius:6px;line-height:1.6}.toc a:hover{background:#e8f0ec;color:var(--green)}.toc-num{color:#9aaca4;font:11px/1.9 Consolas,monospace}.toc-note{font-size:10px;color:var(--muted);border-top:1px solid var(--line);margin:22px 12px 0;padding-top:16px;line-height:1.7}.document{min-width:0;background:#fff;border:1px solid var(--line);border-radius:14px;padding:46px 48px 24px;box-shadow:0 4px 20px #294d3b03}.hero{padding-bottom:26px;border-bottom:1px solid var(--line)}h1{font-size:40px;line-height:1.2;letter-spacing:-1.5px;color:#21463e;margin:0 0 16px;font-weight:650}.hero .kicker{font-size:11px;font-weight:600;letter-spacing:.8px;color:var(--green);margin:18px 0}.hero>p:last-child{font-size:16px;line-height:1.85;color:#586d6b;margin-bottom:0}section{padding-top:30px;margin-top:15px;border-top:1px solid var(--line)}.hero+section{border-top:0;margin-top:0}h2{font-size:23px;letter-spacing:-.6px;line-height:1.45;margin:0 0 18px;color:#234e46;font-weight:650}h3{font-size:16px;margin:27px 0 12px;line-height:1.5;font-weight:650}p{margin:0 0 16px}strong{font-weight:650;color:#254c43}code{font-family:Consolas,'Courier New',monospace;font-size:.84em;background:#edf4ef;color:#295b50;padding:2px 5px;border-radius:4px;overflow-wrap:anywhere}pre{background:#f3f6f4;border:1px solid var(--line);border-radius:9px;padding:18px 20px;margin:18px 0 22px;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere;break-inside:avoid}pre code{padding:0;background:none;border-radius:0;color:#375d52;font-size:11px;line-height:1.7}.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:9px;margin:20px 0 24px}table{border-collapse:collapse;width:100%;font-size:12px;line-height:1.65;table-layout:auto}thead{background:#edf4ef;color:#395e51}th,td{text-align:left;vertical-align:top;padding:12px 13px;border-bottom:1px solid #e5ece7;overflow-wrap:anywhere}th{font-size:11px;font-weight:650}tbody tr:last-child td{border-bottom:0}tbody tr:nth-child(even){background:#fbfcfa}td:first-child{font-weight:550}td code{font-size:10px;padding:2px 3px}figure{margin:23px 0 26px;border:1px solid var(--line);border-radius:11px;background:#fafcf9;overflow:hidden}.diagram-scroll{overflow-x:auto;padding:16px 12px}.diagram-scroll svg{display:block;width:100%;height:auto;min-width:660px}.diagram-scroll text{font-family:system-ui,'Segoe UI',Arial,sans-serif;fill:#37574d;font-size:13px}.diagram-scroll .title{font-size:17px;font-weight:650;fill:#234e46}.diagram-scroll .small{font-size:12px;fill:#6c8075}.diagram-scroll .state{font-family:Consolas,'Courier New',monospace;font-size:15px;font-weight:600}.diagram-scroll .edge{font-size:11px;fill:#64776a}.diagram-scroll .wire{fill:none;stroke:#789d8b;stroke-width:1.8}.diagram-scroll .warn-wire{fill:none;stroke:#b19a70;stroke-width:1.8}figcaption{font-size:10px;line-height:1.6;border-top:1px solid var(--line);padding:12px 18px;color:var(--muted);background:#fff}.document-footer{font-size:10px;color:var(--muted);border-top:1px solid var(--line);margin-top:30px;padding:20px 0 0;display:flex;justify-content:space-between;gap:14px}.page-footer{max-width:1240px;padding:26px 28px 35px;margin:auto;text-align:right;font-size:10px;color:var(--muted)}ul,ol{padding-left:22px}li{margin:7px 0}::selection{background:#d8eadf}
+@media(max-width:1050px){.layout{grid-template-columns:170px minmax(0,1fr);gap:22px}.document{padding:34px 30px}h1{font-size:34px}.toc{font-size:11px}.diagram-scroll{padding:12px 8px}}
+@media(max-width:780px){.topbar{padding:15px 20px;font-size:10px;align-items:flex-start}.layout{display:block;margin:20px auto 0;padding:0 16px}.toc{position:static;padding:0 0 18px}.toc-title,.toc-note{display:none}.toc-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px 10px}.toc a{padding:7px 5px;font-size:10px;margin:0}.toc-num{font-size:10px}.document{padding:28px 22px 20px;border-radius:10px}body{font-size:14px;line-height:1.85}h1{font-size:32px;letter-spacing:-1px}h2{font-size:21px}.hero>p:last-child{font-size:14px}.hero .kicker{font-size:10px}section{padding-top:24px}th,td{padding:10px;font-size:11px}th{font-size:10px}.table-wrap{margin:17px 0 22px}td code{font-size:9px}.document-footer{flex-direction:column;gap:4px}.page-footer{padding:22px 18px}pre{padding:14px}pre code{font-size:10px}}
+@media(max-width:780px){.log-table{table-layout:fixed}.log-table th:first-child{width:94px}.log-table th:nth-child(2){width:46px}.log-table td:first-child code,.log-table td:nth-child(2) code,.log-table th:nth-child(2){white-space:nowrap;overflow-wrap:normal}}
+@page{size:A4;margin:15mm 16mm 17mm}
+@media print{html{scroll-behavior:auto}body{background:#fff;font-size:10.3pt;line-height:1.55;color:#233a35}.topbar,.toc,.page-footer{display:none}.layout{display:block;max-width:none;margin:0;padding:0}.document{border:0;border-radius:0;box-shadow:none;padding:0}.hero{padding-bottom:16px}h1{font-size:27pt}h2{font-size:17pt;margin-bottom:11px;break-after:avoid}h3{font-size:11pt;break-after:avoid;margin-top:18px}p{margin-bottom:11px;orphans:3;widows:3}section{padding-top:19px;margin-top:8px}table{font-size:8pt;line-height:1.45}th,td{padding:8px 9px}th{font-size:8pt}thead{display:table-header-group}tr{break-inside:avoid}.table-wrap{overflow:visible;border-radius:5px;margin:12px 0 16px}td code{font-size:7pt}pre code{font-size:8pt}pre{padding:12px 14px;margin:12px 0}figure{break-inside:avoid;margin:16px 0}.diagram-scroll{overflow:visible;padding:10px}.diagram-scroll svg{min-width:0;width:100%}figcaption{font-size:7.5pt;padding:8px 12px}.document-footer{font-size:7.5pt}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}a{color:inherit;text-decoration:none}}
+
+.api-table{table-layout:fixed}.api-table th:first-child{width:78px}.api-table th:nth-child(2){width:210px}.api-table td:nth-child(2) code{white-space:nowrap;overflow-wrap:normal}
+@media screen and (max-width:780px){.api-table{min-width:640px}}
+@media print{.api-table th:first-child{width:58px}.api-table th:nth-child(2){width:190px}}
+</style></head>
+<body><div class="topbar"><strong>ADVANCED WEB / BLOCK 7</strong><span>Báo cáo hệ thống · 05.11.2026</span></div>
+<div class="layout"><nav class="toc" aria-label="Mục lục"><div class="toc-title">NỘI DUNG</div><div class="toc-links"><a href="#section-1"><span class="toc-num">01</span><span>Bài toán: đơn lỗi nhưng hàng và tiền vẫn còn</span></a><a href="#section-2"><span class="toc-num">02</span><span>Kiến trúc và vai trò các thành phần</span></a><a href="#section-3"><span class="toc-num">03</span><span>Hai cách xử lý cùng một đơn hàng</span></a><a href="#section-4"><span class="toc-num">04</span><span>Đọc phản hồi backend như thế nào?</span></a><a href="#section-5"><span class="toc-num">05</span><span>Danh sách API đã triển khai</span></a><a href="#section-6"><span class="toc-num">06</span><span>Hướng dẫn demo trên UI</span></a><a href="#section-7"><span class="toc-num">07</span><span>Chạy lab và đọc dữ liệu</span></a></div><div class="toc-note">Baseline · Saga<br>TypeScript / Express / SQLite<br><br>Tài liệu mở được offline.<br>Ctrl+P để in hoặc lưu PDF.</div></nav>
+<main class="document" id="content"><header class="hero">
+<h1>Checkout với Baseline và Saga</h1>
+<p class="kicker">Block 7 · Giao dịch qua nhiều service</p>
+<p>Lab minh họa việc đặt hàng qua ba service: Order, Inventory và Payment. Người dùng có thể tạo đơn, thanh toán, hủy và xem dữ liệu thực trong SQLite. Hai lựa chọn <strong>Baseline</strong> và <strong>Saga</strong> cho thấy hệ thống xử lý khác nhau thế nào khi một bước gặp lỗi.</p>
+</header>
+<section id="section-1"><h2>1. Bài toán: đơn lỗi nhưng hàng và tiền vẫn còn</h2>
+<p>Luồng nghiệp vụ là <strong>Tạo đơn → Giữ hàng → Thu tiền → Xác nhận đơn</strong>. Mỗi service có DB riêng, nên transaction tại Order không thể rollback khoản thu đã được lưu ở Payment.</p>
+<p>Ví dụ, mua một đèn bàn giá <strong>450.000 ₫</strong>: Inventory giữ một sản phẩm, Payment đã thu tiền, nhưng Order gặp lỗi ở bước xác nhận. Nếu chỉ dừng luồng và báo lỗi, hàng vẫn bị giữ và khoản thu vẫn tồn tại. Đây là lỗi mà Baseline dùng để minh họa.</p>
+<p>Một đơn hoàn tất phải thỏa trạng thái của cả ba bên:</p>
+<div class="table-wrap"><table><thead><tr><th scope="col">Kết quả</th><th scope="col">Order</th><th scope="col">Inventory</th><th scope="col">Payment</th></tr></thead><tbody>
+<tr><td>Thành công</td><td><code>CONFIRMED</code></td><td>Một reservation <code>HELD</code> theo đơn</td><td>Một charge thành công</td></tr>
+<tr><td>Hủy đã xử lý xong</td><td><code>CANCELLED</code></td><td>Không còn hàng bị giữ</td><td>Chưa thu tiền hoặc đã <code>REFUNDED</code></td></tr>
+</tbody></table></div>
+<p>Đơn đang đối soát tiền hoặc đang hoàn tiền, nhả hàng vẫn chưa hoàn tất.</p>
+</section>
+<section id="section-2"><h2>2. Kiến trúc và vai trò các thành phần</h2>
+<figure><div class="diagram-scroll"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 490" role="img" aria-labelledby="arch-title arch-desc">
+<title id="arch-title">UI độc lập và ba service sở hữu ba DB dùng chung cho hai cơ chế</title><desc id="arch-desc">UI và launcher ở port 3000 tiếp tục hoạt động khi Order dừng. UI đọc API riêng của ba service. Order ở port 3003 điều phối Inventory và Payment. Mỗi service sở hữu một SQLite dùng chung cho Baseline và Saga.</desc>
+<defs><marker id="arch-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#789d8b"/></marker></defs>
+<g class="wire" marker-end="url(#arch-arrow)"><path d="M205 197H285"/><path d="M570 155H645V80H725"/><path d="M570 230H645V320H725"/><path d="M427 270V350"/><path d="M847 130V165"/><path d="M847 370V405"/></g>
+<g fill="none" stroke="#a5b8b1" stroke-width="1.5" stroke-dasharray="5 5" marker-end="url(#arch-arrow)"><path d="M115 140V10H847V30"/><path d="M115 255V480H990V320H970"/></g><text x="430" y="30" text-anchor="middle" class="edge">UI đọc API kho khi Order dừng</text><text x="430" y="468" text-anchor="middle" class="edge">UI đọc API ledger khi Order dừng</text>
+<rect x="25" y="140" width="180" height="115" rx="13" fill="#fff" stroke="#d5e2d9"/><text x="115" y="178" text-anchor="middle" class="title">UI · :3000</text><text x="115" y="205" text-anchor="middle">Đặt hàng + quan sát</text><text x="115" y="228" text-anchor="middle" class="small">Launcher kill / restore</text>
+<rect x="285" y="115" width="285" height="155" rx="13" fill="#e8f2eb" stroke="#8eb6a0"/><text x="427" y="155" text-anchor="middle" class="title">Order · :3003</text><text x="427" y="185" text-anchor="middle">Public API + Saga record</text><text x="427" y="211" text-anchor="middle">Baseline / Saga</text><text x="427" y="242" text-anchor="middle" class="small">Lưu intent · history · resume</text>
+<rect x="725" y="30" width="245" height="100" rx="13" fill="#fff" stroke="#c8dbcd"/><text x="847" y="69" text-anchor="middle" class="title">Inventory · :3001</text><text x="847" y="101" text-anchor="middle" class="small">Tồn kho + reservation</text>
+<rect x="725" y="270" width="245" height="100" rx="13" fill="#fff" stroke="#c8dbcd"/><text x="847" y="309" text-anchor="middle" class="title">Payment · :3002</text><text x="847" y="341" text-anchor="middle" class="small">Charge + refund ledger</text>
+<text x="245" y="180" text-anchor="middle" class="edge">HTTP</text><text x="706" y="57" text-anchor="end" class="edge">Reserve / Release / Query</text><text x="706" y="297" text-anchor="end" class="edge">Charge / Refund / Query</text>
+<rect x="315" y="350" width="225" height="70" rx="9" fill="#f0f4ee" stroke="#d0ddcc"/><text x="427" y="379" text-anchor="middle">Order SQLite</text><text x="427" y="402" text-anchor="middle" class="small">Dùng chung Baseline / Saga</text>
+<rect x="748" y="165" width="200" height="60" rx="9" fill="#f0f4ee" stroke="#d0ddcc"/><text x="848" y="190" text-anchor="middle">Inventory SQLite</text><text x="848" y="213" text-anchor="middle" class="small">Dùng chung Baseline / Saga</text>
+<rect x="748" y="405" width="200" height="60" rx="9" fill="#f0f4ee" stroke="#d0ddcc"/><text x="848" y="430" text-anchor="middle">Payment SQLite</text><text x="848" y="453" text-anchor="middle" class="small">Dùng chung Baseline / Saga</text>
+</svg></div><figcaption>Ba process nghiệp vụ, mỗi service có một SQLite dùng chung cho hai cơ chế. UI/launcher độc lập, chỉ đọc nghiệp vụ qua HTTP.</figcaption></figure>
+<div class="table-wrap"><table><thead><tr><th scope="col">Thành phần</th><th scope="col">Trách nhiệm</th></tr></thead><tbody>
+<tr><td>UI/launcher</td><td>Phục vụ giao diện, chuyển tiếp API và điều khiển dừng/khởi động service khi demo.</td></tr>
+<tr><td>Order</td><td>Tính tổng tiền, lưu đơn và điều phối các bước. Với Saga, tiếp tục công việc còn dở sau lỗi hoặc khởi động lại.</td></tr>
+<tr><td>Inventory</td><td>Giữ chỗ làm giảm tồn kho; nhả hàng cộng lại tồn kho.</td></tr>
+<tr><td>Payment</td><td>Trừ ví khi thu tiền, cộng ví khi hoàn tiền. Lịch sử giữ cả khoản thu lẫn khoản hoàn.</td></tr>
+<tr><td>SQLite</td><td>Mỗi service sở hữu một DB, giữ dữ liệu qua lần khởi động lại.</td></tr>
+</tbody></table></div>
+<p>Ba service chạy trong <strong>ba process riêng</strong>, trao đổi qua HTTP. UI chạy độc lập nên khi Order dừng, người xem vẫn đọc được kho và lịch sử thanh toán.</p>
+<p>Baseline và Saga dùng chung dữ liệu trong <strong>ba file</strong>: <code>data/order.sqlite</code>, <code>data/inventory.sqlite</code>, <code>data/payment.sqlite</code>. Đổi nút Baseline/Saga chỉ chọn cách xử lý cho đơn mới; không đổi kho, ví hay lịch sử. Đơn cũ tiếp tục dùng cơ chế đã lưu trong <code>orders.mode</code>.</p>
+<p>Nếu máy đã có hai bộ DB cũ, lần chuyển đổi đầu tiên sẽ gộp tồn kho, số dư và lịch sử. Vì vậy số lượng hiện tại có thể khác dữ liệu mẫu của một lần cài mới; dữ liệu nguồn vẫn được giữ lại.</p>
+<p>Stack được giữ gọn: <strong>Node.js 22.17.1+, TypeScript strict, Express 5, SQLite qua <code>node:sqlite</code></strong>, UI HTML/CSS/TypeScript thuần. <code>tsx</code> chạy mã TypeScript; <code>node:test</code> kiểm thử HTTP và Playwright kiểm tra UI. Payment là mô phỏng có dữ liệu thật trong SQLite, không kết nối cổng thanh toán ngoài.</p>
+</section>
+<section id="section-3"><h2>3. Hai cách xử lý cùng một đơn hàng</h2>
+<p>Thanh chọn ở đầu trang có hai cách chạy. <strong>Thủ công</strong> cho phép tạo đơn, chọn ví rồi thanh toán hoặc hủy. Sau khi tạo, đơn ở trạng thái chờ thanh toán; hệ thống không tự thu tiền. <strong>Chạy lab</strong> thực hiện cả luồng theo tình huống H0–F6 đã chọn để minh họa lỗi.</p>
+<h3>Baseline: dừng ở bước lỗi</h3>
+<p>Order lần lượt giữ hàng, thu tiền rồi xác nhận. Nếu một bước bị từ chối, đơn báo chưa hoàn tất (<code>FAILED</code>); những bước đã thành công trước đó vẫn giữ nguyên. Nếu mất phản hồi, đơn cần kiểm tra (<code>REQUIRES_REVIEW</code>) vì chưa biết bên kia đã xử lý hay chưa. Baseline không tự khôi phục toàn bộ luồng sau khi Order khởi động lại.</p>
+<h3>Saga: lưu bước trước khi gọi, bù khi cần</h3>
+<p>Saga lưu bước đang làm vào DB trước khi gọi service khác. Mỗi thao tác có một mã cố định, dùng lại khi thử lại hoặc phục hồi. Nhờ đó, Order có thể hỏi kết quả cũ thay vì thu tiền hay hoàn tiền thêm lần nữa.</p>
+<p>Order đóng vai trò điều phối: tiếp tục khi đã rõ kết quả, đối soát khi mất phản hồi và bù khi không thể hoàn tất đơn. <strong>Bù</strong> là một hành động nghiệp vụ mới, chẳng hạn hoàn lại khoản đã thu rồi nhả hàng; không phải xóa lịch sử thanh toán.</p>
+<figure><div class="diagram-scroll"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 455" role="img" aria-labelledby="state-title state-desc">
+<title id="state-title">Trạng thái Saga khi thành công, chưa rõ kết quả hoặc cần bù</title><desc id="state-desc">Processing đi tới Confirmed khi thành công, Recovering khi chưa rõ kết quả, Compensating khi cần bù, hoặc Cancelled khi reserve bị từ chối. Recovering đối soát để tiếp tục hoặc bù. Compensating chỉ chuyển Cancelled khi bù xong.</desc>
+<defs><marker id="state-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#789d8b"/></marker><marker id="warn-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#b19a70"/></marker></defs>
+<g class="wire" marker-end="url(#state-arrow)"><path d="M270 174H315V72H690"/><path d="M270 193H380"/><path d="M600 190H640V127H160V160"/><path d="M600 342H690"/><path d="M160 225V412H800V375"/></g>
+<g class="warn-wire" marker-end="url(#warn-arrow)"><path d="M270 211C321 211 307 342 380 342"/><path d="M490 225V310"/></g>
+<rect x="50" y="160" width="220" height="65" rx="11" fill="#e8f2eb" stroke="#8eb6a0"/><text x="160" y="198" text-anchor="middle" class="state">PROCESSING</text>
+<rect x="690" y="40" width="220" height="65" rx="11" fill="#dfeee2" stroke="#9abc9d"/><text x="800" y="79" text-anchor="middle" class="state">CONFIRMED</text>
+<rect x="380" y="160" width="220" height="65" rx="11" fill="#fff4df" stroke="#dbc6a3"/><text x="490" y="199" text-anchor="middle" class="state">RECOVERING</text>
+<rect x="380" y="310" width="220" height="65" rx="11" fill="#fff4df" stroke="#dbc6a3"/><text x="490" y="349" text-anchor="middle" class="state">COMPENSATING</text>
+<rect x="690" y="310" width="220" height="65" rx="11" fill="#edf1ec" stroke="#c4d2c5"/><text x="800" y="349" text-anchor="middle" class="state">CANCELLED</text>
+<text x="490" y="58" text-anchor="middle" class="edge">Các bước thành công</text><text x="325" y="181" text-anchor="middle" class="edge">Chưa rõ</text><text x="433" y="116" text-anchor="middle" class="edge">Đối soát, tiếp tục với cùng operation ID</text><text x="231" y="292" class="edge">Lỗi sau reserve / charge</text><text x="504" y="270" class="edge">Đã rõ, cần bù</text><text x="645" y="328" text-anchor="middle" class="edge">Bù xong</text><text x="480" y="437" text-anchor="middle" class="edge">Reserve bị từ chối: không có side effect cần bù</text>
+</svg></div><figcaption>Pending còn việc phải làm: chỉ kết thúc khi xác nhận thành công hoặc bù đầy đủ.</figcaption></figure>
+<p>Mặc định, mỗi bước có <strong>một lần gọi đầu và tối đa ba lần thử lại</strong>. Bộ đếm được lưu trong DB, nên khởi động lại không làm mới giới hạn. Khi hết lượt, hệ thống dừng gọi tự động và giữ công việc còn dở để xử lý tiếp.</p>
+<div class="table-wrap"><table><thead><tr><th scope="col">Trường hợp</th><th scope="col">Trạng thái hiển thị</th><th scope="col">Cần hiểu thế nào?</th></tr></thead><tbody>
+<tr><td>Đã giữ hàng, khách chưa thanh toán</td><td>Chờ thanh toán (<code>AWAITING_PAYMENT</code>)</td><td>Chờ người dùng bấm thanh toán hoặc hủy.</td></tr>
+<tr><td>Bước xử lý thông thường hết lượt thử</td><td>Cần kiểm tra (<code>REQUIRES_REVIEW</code>)</td><td>Khắc phục lỗi rồi tiếp tục cùng đơn.</td></tr>
+<tr><td>Hoàn tiền hoặc nhả hàng chưa xong</td><td>Đang bù (<code>COMPENSATING</code>)</td><td>Chưa thể báo hủy hoàn tất, kể cả khi đã hết lượt thử.</td></tr>
+<tr><td>F4: chưa rõ kết quả thu tiền</td><td>Đang kiểm tra (<code>RECOVERING</code>)</td><td>Chờ Payment trở lại để tra cứu khoản thu cũ; không thu tiền mới.</td></tr>
+</tbody></table></div>
+<p>Ví dụ, đã thu 450.000 ₫ nhưng hoàn tiền đang lỗi: đơn vẫn <strong>Đang bù</strong> cho đến khi hoàn tiền và nhả hàng xong. Hết lượt thử không có nghĩa là đã hủy thành công.</p>
+<p><strong>Chống xử lý trùng (idempotency):</strong> gửi lại cùng mã thao tác và nội dung sẽ nhận kết quả đã lưu. Nếu dùng lại mã đó với nội dung khác, API trả <code>409</code>. Kết quả và thay đổi tiền/hàng được lưu cùng một transaction tại service xử lý.</p>
+</section>
+<section id="section-4"><h2>4. Đọc phản hồi backend như thế nào?</h2>
+<p>Trong tab <strong>Phản hồi backend</strong>, chọn đơn cần xem. Ba thẻ trạng thái cho biết Order, Inventory và Payment đang ghi nhận gì. Phần <strong>Tiến trình Saga</strong> giải thích bước đang chạy, việc còn chờ và số lượt thử lại. Lịch sử thanh toán bên dưới chứa khoản thu và hoàn tiền của tất cả đơn.</p>
+<p>Tab <strong>Kho hàng</strong> hiển thị một số <strong>Tồn kho</strong> cho mỗi sản phẩm, đọc trực tiếp từ <code>stock.available</code> trong DB. Giữ chỗ làm số này giảm, release làm số này tăng lại. Xác nhận đơn không trừ thêm lần nữa; reservation của đơn thành công vẫn là <code>HELD</code> vì lab chưa có bước giao hàng. Lịch sử bên dưới ghi từng lần giữ/nhả, mới nhất ở trên.</p>
+<p>Nhật ký xử lý ghi bằng câu dễ đọc; bấm một dòng để xem request, response hoặc sự kiện gốc. Log mới nhất ở trên, cuộn xuống để xem log cũ. Một số dòng là xử lý nội bộ hoặc dừng/khởi động service nên không có HTTP response. Kho và thanh toán vẫn đọc được khi Order dừng; nếu service tương ứng cũng dừng, UI ghi rõ dữ liệu cũ hoặc chưa đọc được.</p>
+<p>Một response mô tả <strong>kết quả của lượt gọi đó</strong>; snapshot mô tả <strong>trạng thái hiện tại</strong>. Ví dụ, response charge trước đó vẫn ghi <code>CHARGED</code>, dù snapshot Payment hiện là <code>REFUNDED</code>. Cả hai đều đúng ở thời điểm tương ứng.</p>
+<h3>Ví dụ F3: đã thu tiền nhưng xác nhận đơn bị lỗi</h3>
+<p>Với đơn Saga trị giá 450.000 ₫, nhật ký có thể được đọc theo thứ tự sau. Các lượt <code>query</code> là bước kiểm tra kết quả cũ trước khi gửi thao tác.</p>
+<div class="table-wrap"><table class="log-table"><thead><tr><th scope="col">Lượt gọi</th><th scope="col">HTTP</th><th scope="col">Cần hiểu điều gì?</th></tr></thead><tbody>
+<tr><td><code>reserve</code></td><td><code>201</code></td><td>Reservation được tạo, trạng thái <code>HELD</code>.</td></tr>
+<tr><td><code>charge</code></td><td><code>201</code></td><td>Payment đã ghi nhận thu 450.000 ₫, trạng thái <code>CHARGED</code>.</td></tr>
+<tr><td><code>refund</code></td><td><code>200</code></td><td>Payment chuyển sang <code>REFUNDED</code>; ledger vẫn giữ charge và thêm refund.</td></tr>
+<tr><td><code>release</code></td><td><code>200</code></td><td>Reservation chuyển sang <code>RELEASED</code>; hàng được trả lại tồn khả dụng.</td></tr>
+</tbody></table></div>
+<p>Confirm chạy trong local transaction của Order, nên không có dòng HTTP gọi service confirm riêng. Nhật ký <code>ORDER_TRANSITION</code> ghi thay đổi trạng thái này. Sau khi refund và release xong, snapshot là <strong><code>CANCELLED / RELEASED / REFUNDED</code></strong>.</p>
+<h3>Những phản hồi dễ hiểu nhầm</h3>
+<div class="table-wrap"><table><thead><tr><th scope="col">Phản hồi</th><th scope="col">Ý nghĩa trong lab</th></tr></thead><tbody>
+<tr><td>Order trả <code>202</code></td><td>Đơn đã được lưu và tiếp nhận xử lý; chưa có nghĩa đã xác nhận.</td></tr>
+<tr><td>Query operation trả <code>404</code></td><td>Chưa thấy kết quả đã lưu. Đây có thể là bước kiểm tra bình thường; không chứng minh request cũ sẽ không tới muộn. Retry vẫn phải dùng cùng ID.</td></tr>
+<tr><td>Query operation trả <code>200</code></td><td>Tra cứu thành công. Đọc <code>status</code>, <code>httpStatus</code>, <code>result</code> để biết operation đã thành công hay bị từ chối dứt khoát.</td></tr>
+<tr><td>Payment trả <code>402</code> và <code>PAYMENT_DECLINED</code></td><td>Thanh toán bị từ chối rõ ràng; Saga release hàng rồi hủy đơn.</td></tr>
+<tr><td><code>409</code></td><td>Có thể là hết hàng hoặc xung đột idempotency; đọc trường <code>error</code> để phân biệt.</td></tr>
+<tr><td>Refund trả <code>503</code></td><td>Hoàn tiền tạm chưa thực hiện được. Giữ <code>COMPENSATING</code>; hết lượt dừng gọi và chờ khắc phục. Chưa được báo đã hủy xong.</td></tr>
+<tr><td><code>TIMEOUT</code> / <code>NETWORK_ERROR</code></td><td>Không nhận được response hợp lệ; không phải HTTP status do Payment trả và không chứng minh chưa thu tiền.</td></tr>
+<tr><td><code>UNAVAILABLE</code> trong snapshot</td><td>Service hiện không truy cập được; không diễn giải thành “không có charge”.</td></tr>
+<tr><td>Trace <code>complete=0</code></td><td>Order chưa lưu response của lượt gọi đó. Không phải trạng thái <code>PENDING</code> của operation.</td></tr>
+</tbody></table></div>
+<p>API tra cứu operation đọc kết quả đã lưu theo đúng mã thao tác. Bản hiện tại ghi <code>SUCCEEDED</code> hoặc <code>FAILED</code>, chưa tạo bản ghi <code>PENDING</code>. Tiếp tục Saga dùng lại đơn và các mã thao tác cũ.</p>
+</section>
+<section id="section-5"><h2>5. Danh sách API đã triển khai</h2>
+<p>Các bảng ghi <strong>route gốc tại từng service</strong>. Ngoài health và <code>/lab</code>, tiền tố chung là <code>/api/:mode</code>, với <code>mode</code> bằng <code>baseline</code> hoặc <code>saga</code>. Hai cơ chế đọc cùng dữ liệu.</p>
+<h3>Order — cổng 3003</h3>
+<div class="table-wrap"><table class="api-table"><thead><tr><th scope="col">Phương thức</th><th scope="col">Route sau <code>/api/:mode</code></th><th scope="col">Chức năng</th></tr></thead><tbody>
+<tr><td><code>GET</code></td><td><code>/config</code></td><td>Cấu hình fault, giới hạn retry, chu kỳ worker và thời gian dừng F4 mặc định.</td></tr>
+<tr><td><code>GET</code></td><td><code>/products</code></td><td>Catalog có giá server và tồn khả dụng đọc từ Inventory.</td></tr>
+<tr><td><code>POST</code></td><td><code>/orders</code></td><td>Tạo đơn; trả <code>202</code>, <code>order_id</code>, <code>saga_id</code>, create ID và đường dẫn đọc đơn.</td></tr>
+<tr><td><code>GET</code></td><td><code>/orders</code></td><td>Toàn bộ đơn Baseline/Saga, mới nhất ở trên.</td></tr>
+<tr><td><code>GET</code></td><td><code>/orders/:id</code></td><td>Đơn và Saga record nếu có.</td></tr>
+<tr><td><code>POST</code></td><td><code>/orders/:id/pay</code></td><td>Thanh toán đơn thủ công đang chờ; chọn <code>walletId</code>.</td></tr>
+<tr><td><code>POST</code></td><td><code>/orders/:id/cancel</code></td><td>Yêu cầu hủy đơn thủ công trước khi bắt đầu thanh toán.</td></tr>
+<tr><td><code>GET</code></td><td><code>/orders/:id/saga</code></td><td>Phase, intent, pending work, retry, lịch sử và operation IDs.</td></tr>
+<tr><td><code>GET</code></td><td><code>/sagas/:id</code></td><td>Cùng dữ liệu với <code>/orders/:id/saga</code>.</td></tr>
+<tr><td><code>POST</code></td><td><code>/sagas/:id/resume</code></td><td>Cấp lại lượt cho Saga đã dừng, tiếp tục bước cũ với ID cũ; trả <code>202</code>.</td></tr>
+<tr><td><code>GET</code></td><td><code>/orders/:id/traces</code></td><td>Các lượt HTTP của Order, gồm request, response, lỗi kết nối và cờ <code>complete</code>.</td></tr>
+<tr><td><code>GET</code></td><td><code>/orders/:id/snapshot</code></td><td>Tổng hợp trạng thái Order, Inventory và Payment; báo riêng service không đọc được.</td></tr>
+</tbody></table></div>
+<p>Tạo đơn nhận <code>sku</code>, <code>quantity</code>, <code>checkout_mode</code>, <code>scenario</code>; F4 có thêm <code>f4_downtime_ms</code> (0–60000). Gửi lại yêu cầu tạo đơn dùng cùng <code>Idempotency-Key</code> hoặc <code>create_op_id</code>. Giá và tổng tiền do server tính; xác nhận/hủy cuối Saga xử lý nội bộ tại Order.</p>
+<h3>Inventory — cổng 3001</h3>
+<div class="table-wrap"><table class="api-table"><thead><tr><th scope="col">Phương thức</th><th scope="col">Route sau <code>/api/:mode</code></th><th scope="col">Chức năng</th></tr></thead><tbody>
+<tr><td><code>GET</code></td><td><code>/stock</code></td><td>Tồn khả dụng theo SKU.</td></tr>
+<tr><td><code>GET</code></td><td><code>/items</code></td><td>Catalog, tồn khả dụng và tổng số đang giữ cho từng sản phẩm.</td></tr>
+<tr><td><code>GET</code></td><td><code>/movements</code></td><td>Toàn bộ lịch sử giữ/release; lọc bằng <code>orderId</code>, <code>sku</code>, <code>kind</code> (<code>RESERVE</code> hoặc <code>RELEASE</code>).</td></tr>
+<tr><td><code>POST</code></td><td><code>/reservations</code></td><td>Giữ hàng bằng <code>orderId</code>, <code>sku</code>, <code>quantity</code>, <code>operationId</code>; thành công trả <code>201</code>.</td></tr>
+<tr><td><code>POST</code></td><td><code>/reservations/:id/release</code></td><td>Nhả reservation bằng <code>orderId</code>, <code>operationId</code>; replay không tăng kho thêm.</td></tr>
+<tr><td><code>GET</code></td><td><code>/operations/:operationId</code></td><td>Kết quả reserve/release đã lưu của đúng operation.</td></tr>
+<tr><td><code>GET</code></td><td><code>/orders/:orderId/state</code></td><td>Reservation, tồn kho và movements liên quan để đối chiếu đơn.</td></tr>
+</tbody></table></div>
+<h3>Payment — cổng 3002</h3>
+<div class="table-wrap"><table class="api-table"><thead><tr><th scope="col">Phương thức</th><th scope="col">Route sau <code>/api/:mode</code></th><th scope="col">Chức năng</th></tr></thead><tbody>
+<tr><td><code>GET</code></td><td><code>/wallets</code></td><td>Ví và số dư hiện tại dùng chung cho hai cơ chế.</td></tr>
+<tr><td><code>GET</code></td><td><code>/ledger</code></td><td>Toàn bộ charge/refund, kèm đơn, ví và ID; có bộ lọc <code>orderId</code>.</td></tr>
+<tr><td><code>POST</code></td><td><code>/payments</code></td><td>Thu tiền bằng <code>orderId</code>, <code>amount</code>, <code>walletId</code>, <code>operationId</code>; thành công trả <code>201</code>.</td></tr>
+<tr><td><code>POST</code></td><td><code>/payments/:id/refund</code></td><td>Hoàn payment gốc bằng <code>orderId</code>, <code>operationId</code>; giữ cả charge và refund trong ledger.</td></tr>
+<tr><td><code>GET</code></td><td><code>/operations/:operationId</code></td><td>Kết quả charge/refund đã lưu; đây là API Order dùng đối soát F4/F6.</td></tr>
+<tr><td><code>GET</code></td><td><code>/orders/:orderId/state</code></td><td>Payment và ledger của một đơn.</td></tr>
+<tr><td><code>POST</code></td><td><code>/faults/:orderId/restore</code></td><td>Gỡ lỗi refund F5 của đơn; chỉ bật khi cho phép fault injection.</td></tr>
+</tbody></table></div>
+<p>Mã operation chứa dấu <code>/</code> phải được encode khi đặt vào URL. API tra cứu chỉ đọc kết quả, không thay đổi tiền hay kho.</p>
+<h3>Health và launcher/UI — cổng 3000</h3>
+<div class="table-wrap"><table class="api-table"><thead><tr><th scope="col">Phương thức</th><th scope="col">Route</th><th scope="col">Chức năng</th></tr></thead><tbody>
+<tr><td><code>GET</code></td><td><code>/health</code></td><td>Có ở cả bốn cổng 3000–3003. Trả service, trạng thái và PID; ba service nghiệp vụ có thêm <code>instanceId</code>.</td></tr>
+<tr><td><code>GET</code></td><td><code>/api/:mode/config</code></td><td>Cấu hình lab từ launcher để UI chọn case, thời gian F4 và hiển thị retry.</td></tr>
+<tr><td><code>GET</code></td><td><code>/lab/health</code></td><td>Health của ba service, quyền điều khiển và trạng thái/thời điểm tự phục hồi F4.</td></tr>
+<tr><td><code>GET</code></td><td><code>/lab/events</code></td><td>Sự kiện launcher, service và lệnh UI; lọc bằng <code>orderId</code>, <code>mode</code>, <code>since</code>.</td></tr>
+<tr><td><code>POST</code></td><td><code>/lab/services/:service/:action</code></td><td><code>service</code>: order/inventory/payment; <code>action</code>: start/stop. Chỉ điều khiển child process của launcher.</td></tr>
+</tbody></table></div>
+<p>Qua cổng UI, thêm <code>/inventory</code> hoặc <code>/payments</code> trước route của service tương ứng. Ví dụ, tra cứu refund là <code>GET /api/saga/payments/operations/:operationId</code>. Khi người dùng thanh toán, UI gọi Order rồi Order gọi Payment.</p>
+<p>Điều khiển service cần chạy launcher và bật fault. Service khởi động lại chưa có nghĩa là đơn đã xử lý xong.</p>
+</section>
+<section id="section-6"><h2>6. Hướng dẫn demo trên UI</h2>
+<p>Chạy app theo mục 7 và mở <strong>http://127.0.0.1:3000</strong>. Dùng thanh chọn đầu trang để chọn cơ chế và cách chạy. Khi đổi tình huống, bấm <strong>Tạo đơn mới</strong> rồi tạo đơn khác. Đổi nút Baseline/Saga không thay đổi cơ chế của đơn cũ.</p>
+<p>Các bước dưới đây thực hiện trực tiếp trên UI. Nút <strong>Chạy lab</strong> tạo lỗi có chủ đích để người trình bày quan sát; không cần chạy script kiểm thử.</p>
+<h3>Đặt hàng, thanh toán và hủy thủ công</h3>
+<ol>
+<li>Chọn <strong>Saga → Thủ công</strong>, chọn một đèn bàn, số lượng 1 rồi bấm <strong>Tạo đơn hàng</strong>.</li>
+<li>Khi đơn báo <strong>Chờ thanh toán</strong>, mở <strong>Kho hàng</strong>: tồn kho giảm 1, có một dòng giữ chỗ. Ví chưa bị trừ.</li>
+<li>Trở lại <strong>Đặt hàng</strong>, chọn <strong>Ví chính</strong>, bấm <strong>Thanh toán</strong>. Đợi <strong>Đã xác nhận</strong>: ví giảm 450.000 ₫, tồn kho không giảm thêm.</li>
+<li>Tạo đơn mới rồi bấm <strong>Hủy đơn</strong> trước khi thanh toán. Kho tăng lại 1, có dòng nhả hàng và không phát sinh khoản thu cho đơn này.</li>
+</ol>
+<p>Đơn thành công vẫn có reservation <code>HELD</code>: lượng hàng đó đã dành cho đơn, lab chưa có bước xuất giao hàng. Đơn chờ thanh toán không tự hết hạn; hãy hủy nếu không dùng nữa.</p>
+<h3>H0–F3: so sánh Baseline và Saga</h3>
+<p>Chọn <strong>Baseline → Chạy lab</strong>, chọn từng tình huống rồi bấm <strong>Chạy lab</strong> ở phần Đặt hàng. Xem kết quả trong <strong>Phản hồi backend</strong> và <strong>Kho hàng</strong>. Sau đó chọn <strong>Saga</strong>, tạo đơn mới với cùng tình huống và so sánh:</p>
+<div class="table-wrap"><table><thead><tr><th scope="col">Tình huống</th><th scope="col">Quan sát ở Baseline</th><th scope="col">Quan sát ở Saga</th></tr></thead><tbody>
+<tr><td>H0 — thành công</td><td>Đơn xác nhận, có một khoản thu; tồn kho giảm theo số lượng đặt.</td><td>Kết quả tương tự.</td></tr>
+<tr><td>F1 — không giữ được hàng</td><td>Đơn lỗi; kho và ví không đổi.</td><td>Đơn hủy; kho và ví không đổi.</td></tr>
+<tr><td>F2 — từ chối thanh toán</td><td>Đơn lỗi, hàng vẫn bị giữ; chưa thu tiền.</td><td>Nhả hàng rồi hủy đơn; chưa thu tiền.</td></tr>
+<tr><td>F3 — lỗi xác nhận sau khi thu tiền</td><td>Đơn lỗi, hàng còn giữ và tiền đã thu.</td><td>Hoàn tiền, nhả hàng rồi hủy; lịch sử giữ cả khoản thu và khoản hoàn.</td></tr>
+</tbody></table></div>
+<p>Hai cơ chế dùng chung kho và ví. Ví dụ, Baseline F2 giữ lại một sản phẩm; Saga F2 sau đó chỉ nhả phần hàng của đơn Saga, không xử lý hộ đơn Baseline trước đó.</p>
+<h3>F4 — đã thu tiền nhưng mất phản hồi</h3>
+<ol>
+<li>Chọn <strong>Saga → Chạy lab → F4</strong>. Đặt <strong>Payment dừng</strong> khoảng <strong>15 giây</strong> để đủ thời gian quan sát, rồi bấm <strong>Chạy lab F4</strong>.</li>
+<li>Mở <strong>Phản hồi backend</strong>. Payment không truy cập được; đơn ở <code>RECOVERING</code>. Kho vẫn giữ hàng. Payment đã lưu khoản thu và trừ ví, nhưng Order chưa nhận được phản hồi.</li>
+<li>Chờ hết thời gian đã chọn. Payment tự khởi động lại; <strong>không cần bấm Tiếp tục Saga</strong>.</li>
+<li>Quan sát log tra cứu khoản thu cũ. Order tìm thấy kết quả rồi chuyển sang <strong>Đã xác nhận</strong>.</li>
+</ol>
+<p>Kết quả cần chỉ ra: <strong>chỉ một khoản thu, ví chỉ bị trừ một lần</strong>. Hết lượt thử trong thời gian Payment dừng không làm đơn bị hủy: hệ thống chờ Payment phục hồi rồi tra cứu lại. Với Baseline, Payment vẫn tự trở lại nhưng đơn còn <strong>Cần kiểm tra</strong>, không tự xác nhận.</p>
+<h3>F5 — hoàn tiền lỗi và hết lượt thử</h3>
+<ol>
+<li>Chọn <strong>Saga → Chạy lab → F5</strong>, tạo đơn rồi mở <strong>Phản hồi backend</strong>.</li>
+<li>Đơn báo <strong>Đang bù</strong>: đã thu tiền nhưng xác nhận lỗi, còn bước hoàn tiền đang bị chặn. Payment là <code>CHARGED</code>, Inventory là <code>HELD</code>.</li>
+<li>Đợi bộ đếm đạt <strong>3 / 3</strong> với cấu hình mặc định. Đơn vẫn <code>COMPENSATING</code>, còn việc <strong>refund → release → cancel</strong>; hệ thống dừng thử tự động.</li>
+<li>Bấm <strong>Gỡ lỗi refund và tiếp tục</strong>. Đợi hoàn tiền, nhả hàng rồi hủy xong.</li>
+</ol>
+<p>Kết quả cuối: <strong>CANCELLED / RELEASED / REFUNDED</strong>. Lịch sử thanh toán có một khoản thu và một khoản hoàn; ví được cộng lại một lần. Hết lượt thử chỉ làm dừng gọi tự động, chưa có nghĩa là đã xử lý xong cho khách.</p>
+<h3>F6 — Order dừng giữa quá trình bù</h3>
+<ol>
+<li>Chọn <strong>Saga → Chạy lab → F6</strong>, tạo đơn rồi mở <strong>Phản hồi backend</strong>.</li>
+<li>Order bị dừng sau khi Payment đã hoàn tiền, trước khi Order lưu kết quả đó. UI vẫn đọc được Payment là <code>REFUNDED</code> và Inventory là <code>HELD</code>. Tiến trình đã lưu trước khi dừng còn chờ hoàn tiền (<code>REFUND_PENDING</code>).</li>
+<li>Bấm <strong>Khôi phục service</strong> trên thẻ <strong>Order</strong>. Giữ nguyên đơn đang xem, không tạo đơn mới.</li>
+<li>Theo dõi log: Order tra cứu kết quả hoàn tiền cũ, sau đó nhả hàng và hủy đơn.</li>
+</ol>
+<p>Kết quả cuối cũng là <strong>CANCELLED / RELEASED / REFUNDED</strong>. Chỉ có một lần hoàn tiền và một lần nhả hàng. Điểm cần chứng minh là Order tiếp tục được công việc từ DB sau khi khởi động lại, dù lần trước chưa kịp lưu phản hồi.</p>
+<h3>Phân biệt demo và kiểm thử tự động</h3>
+<p>Demo trên dùng giao diện để giải thích hành vi. Các lệnh <code>npm.cmd test</code>, <code>npm.cmd run test:f4</code>, <code>npm.cmd run test:retry</code>, <code>npm.cmd run test:ui:recovery</code> chạy kiểm thử với DB và cổng riêng; không phải các bước cần bấm khi demo.</p>
+<p>Bộ ảnh và dữ liệu F5/F6 đã lưu được trỏ bởi <code>evidence/latest-v3.json</code>. Bộ matrix/video tổng thể ở <code>evidence/latest-run.json</code> thuộc phiên bản trước, chưa phản ánh đầy đủ UI hiện tại.</p>
+</section>
+<section id="section-7"><h2>7. Chạy lab và đọc dữ liệu</h2>
+<p>Cần Node.js 22.17.1 trở lên. Cài dependencies, tạo <code>.env</code> nếu chưa có rồi chạy launcher:</p>
+<pre><code class="language-powershell">npm.cmd install
+if (!(Test-Path .env)) { Copy-Item .env.example .env }
+npm.cmd run dev</code></pre>
+<p>Mở <code>http://127.0.0.1:3000</code>. <code>.env</code> có <code>ENABLE_FAULTS=true</code>, <code>SAGA_MAX_RETRIES=3</code> và <code>F4_DOWNTIME_MS=4000</code>. Thời gian dừng F4 cũng chọn được trên UI, áp dụng cho đơn mới. Muốn chạy từng service, dùng các lệnh <code>start:inventory</code>, <code>start:payment</code>, <code>start:order</code>, <code>start:ui</code> trong các terminal riêng; chế độ này không có launcher quản lý kill/restore.</p>
+<p>Để đối chiếu một đơn, bấm <strong>Sao chép mã đơn</strong> trên UI rồi chạy:</p>
+<pre><code class="language-powershell">$orderId = &#x27;DAN_MA_DON_VAO_DAY&#x27;
+npm.cmd run db:inspect -- saga $orderId</code></pre>
+<p>Lệnh đọc trực tiếp ba DB, không thay đổi dữ liệu. Với đơn Baseline, thay <code>saga</code> bằng <code>baseline</code>. Đọc các nhóm sau:</p>
+<div class="table-wrap"><table><thead><tr><th scope="col">Nhóm dữ liệu</th><th scope="col">Cách đối chiếu</th></tr></thead><tbody>
+<tr><td><code>order</code>, <code>saga</code></td><td>Trạng thái đơn, bước còn chờ và số lượt thử lại. F5 hết lượt vẫn đang bù; F6 trước khôi phục còn chờ kết quả refund.</td></tr>
+<tr><td><code>stock</code>, <code>reservations</code>, <code>movements</code></td><td>Tồn kho hiện tại, hàng của đơn đang <code>HELD</code> hay <code>RELEASED</code>, các lần giữ/nhả đã ghi.</td></tr>
+<tr><td><code>payments</code>, <code>ledger</code>, <code>wallets</code></td><td>Khoản thu/hoàn của đơn và số dư ví hiện tại. F4 chỉ có một <code>CHARGE</code>; F5/F6 sau hoàn tất có một <code>CHARGE</code> và một <code>REFUND</code>.</td></tr>
+<tr><td><code>paymentOperations</code></td><td>Mã thao tác và kết quả đã lưu; dùng để thấy F4/F6 tra cứu lại đúng thao tác cũ.</td></tr>
+</tbody></table></div>
+<p>Trong lúc Payment hoặc Order dừng, lệnh vẫn đọc được DB của chúng. Đây là cách thấy F4 đã thu tiền hoặc F6 đã hoàn tiền dù Order chưa ghi nhận kết quả. Tồn kho và số dư ví là dữ liệu chung của mọi đơn, nên cần đối chiếu lịch sử của đúng mã đơn.</p>
+<p>Nếu muốn xem bằng SQLite viewer, chạy <code>npm.cmd run db:export</code> rồi mở các file tại đường dẫn được in ra. Bản xuất đã gồm dữ liệu WAL; xuất lại khi cần xem thay đổi mới. Không chỉ sao chép file <code>.sqlite</code> đang chạy vì giao dịch mới có thể còn trong file WAL.</p>
+<p>Chỉ dùng <code>npm.cmd run db:reset</code> sau khi dừng app và muốn xóa dữ liệu demo. Không cần reset giữa các bước của cùng một demo.</p>
+</section><footer class="document-footer"><span>Block 7 · Baseline &amp; Saga orchestration</span><span>Kiểm chứng local · 05/11/2026</span></footer></main></div>
+<div class="page-footer">Mỗi kết luận về đơn hàng cần được đối chiếu ở cả ba service.</div></body></html>

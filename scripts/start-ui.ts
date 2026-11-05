@@ -1,0 +1,10 @@
+import { config } from '../src/shared/config.js';
+import { Lab } from './lab.js';
+import { buildUI } from './build-ui.js';
+import { startUI } from './ui-server.js';
+const lab = new Lab(process.cwd(), { ui:config.uiPort, order:config.orderPort, inventory:config.inventoryPort, payment:config.paymentPort }, { DATA_DIR:config.dataDir,LOG_DIR:config.logDir,ENABLE_FAULTS:String(config.faults),SAGA_MAX_RETRIES:String(config.maxRetries),F4_DOWNTIME_MS:String(config.f4DowntimeMs),RECOVERY_INTERVAL_MS:String(config.interval),MANAGE_SERVICES:'false' });
+buildUI();
+const close = await startUI(lab);
+process.once('SIGINT',()=>{void close().then(()=>process.exit(0));});
+process.once('SIGTERM',()=>{void close().then(()=>process.exit(0));});
+console.log(`UI: ${lab.url()}. Chạy service thủ công; dùng npm run dev để có điều khiển kill/restart từ UI.`);

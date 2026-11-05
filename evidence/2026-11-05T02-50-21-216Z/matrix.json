@@ -1,0 +1,760 @@
+[
+  {
+    "mode": "baseline",
+    "scenario": "H",
+    "snapshot": {
+      "order": {
+        "id": "16d86804-ff82-4156-bc4c-1284058917cd",
+        "request_key": "c6ac9cfc-9003-4c95-b93f-13ad9ffe3efc",
+        "fingerprint": "[\"LAMP-01\",1,\"H\"]",
+        "sku": "LAMP-01",
+        "product_name": "Đèn bàn Studio",
+        "quantity": 1,
+        "unit_price": 450000,
+        "total": 450000,
+        "scenario": "H",
+        "status": "CONFIRMED",
+        "step": "DONE",
+        "reservation_id": "23bb0628-4587-43a6-a04b-c1a48b1a9184",
+        "payment_id": "33ac01ab-13cc-4739-bdee-579c0c38a37a",
+        "last_error": null,
+        "created_at": "2026-11-05T02:50:33.002Z",
+        "updated_at": "2026-11-05T02:50:33.124Z"
+      },
+      "inventory": {
+        "available": true,
+        "data": {
+          "reservation": {
+            "id": "23bb0628-4587-43a6-a04b-c1a48b1a9184",
+            "order_id": "16d86804-ff82-4156-bc4c-1284058917cd",
+            "sku": "LAMP-01",
+            "quantity": 1,
+            "status": "HELD"
+          },
+          "stock": [
+            {
+              "sku": "LAMP-01",
+              "available": 19
+            },
+            {
+              "sku": "CUP-01",
+              "available": 30
+            },
+            {
+              "sku": "BAG-01",
+              "available": 15
+            }
+          ]
+        },
+        "error": null
+      },
+      "payment": {
+        "available": true,
+        "data": {
+          "payment": {
+            "id": "33ac01ab-13cc-4739-bdee-579c0c38a37a",
+            "order_id": "16d86804-ff82-4156-bc4c-1284058917cd",
+            "amount": 450000,
+            "status": "CHARGED"
+          },
+          "ledger": [
+            {
+              "id": "9ec5a9bc-8d5d-4fff-9521-71d315bb0151",
+              "payment_id": "33ac01ab-13cc-4739-bdee-579c0c38a37a",
+              "kind": "CHARGE",
+              "amount": 450000,
+              "operation_id": "baseline/16d86804-ff82-4156-bc4c-1284058917cd/charge",
+              "created_at": "2026-11-05T02:50:33.113Z"
+            }
+          ]
+        },
+        "error": null
+      },
+      "capturedAt": "2026-11-05T02:50:33.156Z"
+    }
+  },
+  {
+    "mode": "baseline",
+    "scenario": "F1",
+    "snapshot": {
+      "order": {
+        "id": "472d47a9-ddd0-4977-9ad1-70d05fac73fd",
+        "request_key": "57c0fdea-d120-4580-b13c-d9d3748044e1",
+        "fingerprint": "[\"LAMP-01\",1,\"F1\"]",
+        "sku": "LAMP-01",
+        "product_name": "Đèn bàn Studio",
+        "quantity": 1,
+        "unit_price": 450000,
+        "total": 450000,
+        "scenario": "F1",
+        "status": "FAILED",
+        "step": "DONE",
+        "reservation_id": null,
+        "payment_id": null,
+        "last_error": "OUT_OF_STOCK",
+        "created_at": "2026-11-05T02:50:33.169Z",
+        "updated_at": "2026-11-05T02:50:33.186Z"
+      },
+      "inventory": {
+        "available": true,
+        "data": {
+          "reservation": null,
+          "stock": [
+            {
+              "sku": "LAMP-01",
+              "available": 19
+            },
+            {
+              "sku": "CUP-01",
+              "available": 30
+            },
+            {
+              "sku": "BAG-01",
+              "available": 15
+            }
+          ]
+        },
+        "error": null
+      },
+      "payment": {
+        "available": true,
+        "data": {
+          "payment": null,
+          "ledger": []
+        },
+        "error": null
+      },
+      "capturedAt": "2026-11-05T02:50:33.294Z"
+    }
+  },
+  {
+    "mode": "baseline",
+    "scenario": "F2",
+    "snapshot": {
+      "order": {
+        "id": "6bba24d8-fc1c-4bad-bee8-3d6a75dc237d",
+        "request_key": "b402f5d5-d692-4782-9cc0-dec2b5e72b3c",
+        "fingerprint": "[\"LAMP-01\",1,\"F2\"]",
+        "sku": "LAMP-01",
+        "product_name": "Đèn bàn Studio",
+        "quantity": 1,
+        "unit_price": 450000,
+        "total": 450000,
+        "scenario": "F2",
+        "status": "FAILED",
+        "step": "DONE",
+        "reservation_id": "fac9e8c0-733a-477e-9ee3-c6d8f50422d3",
+        "payment_id": null,
+        "last_error": "PAYMENT_DECLINED",
+        "created_at": "2026-11-05T02:50:33.306Z",
+        "updated_at": "2026-11-05T02:50:33.362Z"
+      },
+      "inventory": {
+        "available": true,
+        "data": {
+          "reservation": {
+            "id": "fac9e8c0-733a-477e-9ee3-c6d8f50422d3",
+            "order_id": "6bba24d8-fc1c-4bad-bee8-3d6a75dc237d",
+            "sku": "LAMP-01",
+            "quantity": 1,
+            "status": "HELD"
+          },
+          "stock": [
+            {
+              "sku": "LAMP-01",
+              "available": 18
+            },
+            {
+              "sku": "CUP-01",
+              "available": 30
+            },
+            {
+              "sku": "BAG-01",
+              "available": 15
+            }
+          ]
+        },
+        "error": null
+      },
+      "payment": {
+        "available": true,
+        "data": {
+          "payment": null,
+          "ledger": []
+        },
+        "error": null
+      },
+      "capturedAt": "2026-11-05T02:50:33.446Z"
+    }
+  },
+  {
+    "mode": "baseline",
+    "scenario": "F3",
+    "snapshot": {
+      "order": {
+        "id": "a567a823-bde0-4665-acaa-a88faed26308",
+        "request_key": "2983a34a-0996-41cc-b6db-f6b89ca41fda",
+        "fingerprint": "[\"LAMP-01\",1,\"F3\"]",
+        "sku": "LAMP-01",
+        "product_name": "Đèn bàn Studio",
+        "quantity": 1,
+        "unit_price": 450000,
+        "total": 450000,
+        "scenario": "F3",
+        "status": "FAILED",
+        "step": "DONE",
+        "reservation_id": "6902503e-20bf-4801-8f9b-5a24c92222b0",
+        "payment_id": "5714a71c-1c4c-4141-ad46-9948ca1969b5",
+        "last_error": "CONFIRM_REJECTED",
+        "created_at": "2026-11-05T02:50:33.456Z",
+        "updated_at": "2026-11-05T02:50:33.488Z"
+      },
+      "inventory": {
+        "available": true,
+        "data": {
+          "reservation": {
+            "id": "6902503e-20bf-4801-8f9b-5a24c92222b0",
+            "order_id": "a567a823-bde0-4665-acaa-a88faed26308",
+            "sku": "LAMP-01",
+            "quantity": 1,
+            "status": "HELD"
+          },
+          "stock": [
+            {
+              "sku": "LAMP-01",
+              "available": 17
+            },
+            {
+              "sku": "CUP-01",
+              "available": 30
+            },
+            {
+              "sku": "BAG-01",
+              "available": 15
+            }
+          ]
+        },
+        "error": null
+      },
+      "payment": {
+        "available": true,
+        "data": {
+          "payment": {
+            "id": "5714a71c-1c4c-4141-ad46-9948ca1969b5",
+            "order_id": "a567a823-bde0-4665-acaa-a88faed26308",
+            "amount": 450000,
+            "status": "CHARGED"
+          },
+          "ledger": [
+            {
+              "id": "150342da-8c51-4c2b-9f21-3e271834de60",
+              "payment_id": "5714a71c-1c4c-4141-ad46-9948ca1969b5",
+              "kind": "CHARGE",
+              "amount": 450000,
+              "operation_id": "baseline/a567a823-bde0-4665-acaa-a88faed26308/charge",
+              "created_at": "2026-11-05T02:50:33.479Z"
+            }
+          ]
+        },
+        "error": null
+      },
+      "capturedAt": "2026-11-05T02:50:33.570Z"
+    }
+  },
+  {
+    "mode": "baseline",
+    "scenario": "F5",
+    "snapshot": {
+      "order": {
+        "id": "3b78d4be-4728-4eb1-b06e-60411c30a993",
+        "request_key": "cd095336-0db6-48e6-9efb-6966af9ca935",
+        "fingerprint": "[\"LAMP-01\",1,\"F5\"]",
+        "sku": "LAMP-01",
+        "product_name": "Đèn bàn Studio",
+        "quantity": 1,
+        "unit_price": 450000,
+        "total": 450000,
+        "scenario": "F5",
+        "status": "FAILED",
+        "step": "DONE",
+        "reservation_id": "730e78c3-9a33-42fc-a1f7-7792aec04c02",
+        "payment_id": "67a7599b-dde9-4b33-955d-38392491369f",
+        "last_error": "CONFIRM_REJECTED",
+        "created_at": "2026-11-05T02:50:33.580Z",
+        "updated_at": "2026-11-05T02:50:33.612Z"
+      },
+      "inventory": {
+        "available": true,
+        "data": {
+          "reservation": {
+            "id": "730e78c3-9a33-42fc-a1f7-7792aec04c02",
+            "order_id": "3b78d4be-4728-4eb1-b06e-60411c30a993",
+            "sku": "LAMP-01",
+            "quantity": 1,
+            "status": "HELD"
+          },
+          "stock": [
+            {
+              "sku": "LAMP-01",
+              "available": 16
+            },
+            {
+              "sku": "CUP-01",
+              "available": 30
+            },
+            {
+              "sku": "BAG-01",
+              "available": 15
+            }
+          ]
+        },
+        "error": null
+      },
+      "payment": {
+        "available": true,
+        "data": {
+          "payment": {
+            "id": "67a7599b-dde9-4b33-955d-38392491369f",
+            "order_id": "3b78d4be-4728-4eb1-b06e-60411c30a993",
+            "amount": 450000,
+            "status": "CHARGED"
+          },
+          "ledger": [
+            {
+              "id": "35b3155e-b8bd-412c-af0f-618ce1ad48fe",
+              "payment_id": "67a7599b-dde9-4b33-955d-38392491369f",
+              "kind": "CHARGE",
+              "amount": 450000,
+              "operation_id": "baseline/3b78d4be-4728-4eb1-b06e-60411c30a993/charge",
+              "created_at": "2026-11-05T02:50:33.604Z"
+            }
+          ]
+        },
+        "error": null
+      },
+      "capturedAt": "2026-11-05T02:50:33.699Z"
+    }
+  },
+  {
+    "mode": "saga",
+    "scenario": "H",
+    "snapshot": {
+      "order": {
+        "id": "8ee947fb-cb48-44b4-be26-365600b6d3d2",
+        "request_key": "0a05b870-bf72-44be-a745-795c1f0d0301",
+        "fingerprint": "[\"LAMP-01\",1,\"H\"]",
+        "sku": "LAMP-01",
+        "product_name": "Đèn bàn Studio",
+        "quantity": 1,
+        "unit_price": 450000,
+        "total": 450000,
+        "scenario": "H",
+        "status": "CONFIRMED",
+        "step": "DONE",
+        "reservation_id": "e491bfb3-18b0-4ba3-b4f1-9f509557dc75",
+        "payment_id": "be23cd05-9df6-4321-a998-b6099dd36770",
+        "last_error": null,
+        "created_at": "2026-11-05T02:50:33.710Z",
+        "updated_at": "2026-11-05T02:50:33.771Z"
+      },
+      "inventory": {
+        "available": true,
+        "data": {
+          "reservation": {
+            "id": "e491bfb3-18b0-4ba3-b4f1-9f509557dc75",
+            "order_id": "8ee947fb-cb48-44b4-be26-365600b6d3d2",
+            "sku": "LAMP-01",
+            "quantity": 1,
+            "status": "HELD"
+          },
+          "stock": [
+            {
+              "sku": "LAMP-01",
+              "available": 19
+            },
+            {
+              "sku": "CUP-01",
+              "available": 30
+            },
+            {
+              "sku": "BAG-01",
+              "available": 15
+            }
+          ]
+        },
+        "error": null
+      },
+      "payment": {
+        "available": true,
+        "data": {
+          "payment": {
+            "id": "be23cd05-9df6-4321-a998-b6099dd36770",
+            "order_id": "8ee947fb-cb48-44b4-be26-365600b6d3d2",
+            "amount": 450000,
+            "status": "CHARGED"
+          },
+          "ledger": [
+            {
+              "id": "0143cb55-90c6-4c17-8124-78773b3e0df1",
+              "payment_id": "be23cd05-9df6-4321-a998-b6099dd36770",
+              "kind": "CHARGE",
+              "amount": 450000,
+              "operation_id": "saga/8ee947fb-cb48-44b4-be26-365600b6d3d2/charge",
+              "created_at": "2026-11-05T02:50:33.756Z"
+            }
+          ]
+        },
+        "error": null
+      },
+      "capturedAt": "2026-11-05T02:50:33.826Z"
+    }
+  },
+  {
+    "mode": "saga",
+    "scenario": "F1",
+    "snapshot": {
+      "order": {
+        "id": "d8346fe5-3a55-4601-85c0-933fa4006bd2",
+        "request_key": "ed1d8633-a19a-4a70-a00e-6a9282f36200",
+        "fingerprint": "[\"LAMP-01\",1,\"F1\"]",
+        "sku": "LAMP-01",
+        "product_name": "Đèn bàn Studio",
+        "quantity": 1,
+        "unit_price": 450000,
+        "total": 450000,
+        "scenario": "F1",
+        "status": "CANCELLED",
+        "step": "DONE",
+        "reservation_id": null,
+        "payment_id": null,
+        "last_error": null,
+        "created_at": "2026-11-05T02:50:33.838Z",
+        "updated_at": "2026-11-05T02:50:33.865Z"
+      },
+      "inventory": {
+        "available": true,
+        "data": {
+          "reservation": null,
+          "stock": [
+            {
+              "sku": "LAMP-01",
+              "available": 19
+            },
+            {
+              "sku": "CUP-01",
+              "available": 30
+            },
+            {
+              "sku": "BAG-01",
+              "available": 15
+            }
+          ]
+        },
+        "error": null
+      },
+      "payment": {
+        "available": true,
+        "data": {
+          "payment": null,
+          "ledger": []
+        },
+        "error": null
+      },
+      "capturedAt": "2026-11-05T02:50:33.965Z"
+    }
+  },
+  {
+    "mode": "saga",
+    "scenario": "F2",
+    "snapshot": {
+      "order": {
+        "id": "5c83a5a9-1807-4635-8fce-cef57cf4854c",
+        "request_key": "feb25c3a-a5bb-43d9-80d9-771c44c3ffa4",
+        "fingerprint": "[\"LAMP-01\",1,\"F2\"]",
+        "sku": "LAMP-01",
+        "product_name": "Đèn bàn Studio",
+        "quantity": 1,
+        "unit_price": 450000,
+        "total": 450000,
+        "scenario": "F2",
+        "status": "CANCELLED",
+        "step": "DONE",
+        "reservation_id": "dd2ee100-677d-471d-a17e-e24d0eeff193",
+        "payment_id": null,
+        "last_error": null,
+        "created_at": "2026-11-05T02:50:33.978Z",
+        "updated_at": "2026-11-05T02:50:34.074Z"
+      },
+      "inventory": {
+        "available": true,
+        "data": {
+          "reservation": {
+            "id": "dd2ee100-677d-471d-a17e-e24d0eeff193",
+            "order_id": "5c83a5a9-1807-4635-8fce-cef57cf4854c",
+            "sku": "LAMP-01",
+            "quantity": 1,
+            "status": "RELEASED"
+          },
+          "stock": [
+            {
+              "sku": "LAMP-01",
+              "available": 19
+            },
+            {
+              "sku": "CUP-01",
+              "available": 30
+            },
+            {
+              "sku": "BAG-01",
+              "available": 15
+            }
+          ]
+        },
+        "error": null
+      },
+      "payment": {
+        "available": true,
+        "data": {
+          "payment": null,
+          "ledger": []
+        },
+        "error": null
+      },
+      "capturedAt": "2026-11-05T02:50:34.117Z"
+    }
+  },
+  {
+    "mode": "saga",
+    "scenario": "F3",
+    "snapshot": {
+      "order": {
+        "id": "3c18a2eb-c0c9-4220-a42d-783f902cb28b",
+        "request_key": "9c8af4d5-d11c-43c5-aa29-0682eab0088e",
+        "fingerprint": "[\"LAMP-01\",1,\"F3\"]",
+        "sku": "LAMP-01",
+        "product_name": "Đèn bàn Studio",
+        "quantity": 1,
+        "unit_price": 450000,
+        "total": 450000,
+        "scenario": "F3",
+        "status": "CANCELLED",
+        "step": "DONE",
+        "reservation_id": "4889d7e0-094a-4f14-8cb8-2b77abdbe42a",
+        "payment_id": "a52c6d5e-dcc3-464d-8324-a9ffc7ad200c",
+        "last_error": null,
+        "created_at": "2026-11-05T02:50:34.129Z",
+        "updated_at": "2026-11-05T02:50:34.226Z"
+      },
+      "inventory": {
+        "available": true,
+        "data": {
+          "reservation": {
+            "id": "4889d7e0-094a-4f14-8cb8-2b77abdbe42a",
+            "order_id": "3c18a2eb-c0c9-4220-a42d-783f902cb28b",
+            "sku": "LAMP-01",
+            "quantity": 1,
+            "status": "RELEASED"
+          },
+          "stock": [
+            {
+              "sku": "LAMP-01",
+              "available": 19
+            },
+            {
+              "sku": "CUP-01",
+              "available": 30
+            },
+            {
+              "sku": "BAG-01",
+              "available": 15
+            }
+          ]
+        },
+        "error": null
+      },
+      "payment": {
+        "available": true,
+        "data": {
+          "payment": {
+            "id": "a52c6d5e-dcc3-464d-8324-a9ffc7ad200c",
+            "order_id": "3c18a2eb-c0c9-4220-a42d-783f902cb28b",
+            "amount": 450000,
+            "status": "REFUNDED"
+          },
+          "ledger": [
+            {
+              "id": "36e5c736-bd7c-43dc-9b88-e22d9bb6d8df",
+              "payment_id": "a52c6d5e-dcc3-464d-8324-a9ffc7ad200c",
+              "kind": "CHARGE",
+              "amount": 450000,
+              "operation_id": "saga/3c18a2eb-c0c9-4220-a42d-783f902cb28b/charge",
+              "created_at": "2026-11-05T02:50:34.171Z"
+            },
+            {
+              "id": "7ab6c2f7-0ebd-4fd3-a095-9e83021c6df0",
+              "payment_id": "a52c6d5e-dcc3-464d-8324-a9ffc7ad200c",
+              "kind": "REFUND",
+              "amount": 450000,
+              "operation_id": "saga/3c18a2eb-c0c9-4220-a42d-783f902cb28b/refund",
+              "created_at": "2026-11-05T02:50:34.194Z"
+            }
+          ]
+        },
+        "error": null
+      },
+      "capturedAt": "2026-11-05T02:50:34.244Z"
+    }
+  },
+  {
+    "mode": "saga",
+    "scenario": "F5",
+    "snapshot": {
+      "order": {
+        "id": "55b9cb5f-b740-4869-b1fa-a5fab2eb318a",
+        "request_key": "ad3b90ab-301c-45c9-be7f-7c0ebe05b7ee",
+        "fingerprint": "[\"LAMP-01\",1,\"F5\"]",
+        "sku": "LAMP-01",
+        "product_name": "Đèn bàn Studio",
+        "quantity": 1,
+        "unit_price": 450000,
+        "total": 450000,
+        "scenario": "F5",
+        "status": "CANCELLED",
+        "step": "DONE",
+        "reservation_id": "9bf12e20-7be9-4054-af11-83d232ffadbf",
+        "payment_id": "bd64113d-bb11-4602-8e2c-f065617f1399",
+        "last_error": null,
+        "created_at": "2026-11-05T02:50:34.256Z",
+        "updated_at": "2026-11-05T02:50:36.280Z"
+      },
+      "inventory": {
+        "available": true,
+        "data": {
+          "reservation": {
+            "id": "9bf12e20-7be9-4054-af11-83d232ffadbf",
+            "order_id": "55b9cb5f-b740-4869-b1fa-a5fab2eb318a",
+            "sku": "LAMP-01",
+            "quantity": 1,
+            "status": "RELEASED"
+          },
+          "stock": [
+            {
+              "sku": "LAMP-01",
+              "available": 19
+            },
+            {
+              "sku": "CUP-01",
+              "available": 30
+            },
+            {
+              "sku": "BAG-01",
+              "available": 15
+            }
+          ]
+        },
+        "error": null
+      },
+      "payment": {
+        "available": true,
+        "data": {
+          "payment": {
+            "id": "bd64113d-bb11-4602-8e2c-f065617f1399",
+            "order_id": "55b9cb5f-b740-4869-b1fa-a5fab2eb318a",
+            "amount": 450000,
+            "status": "REFUNDED"
+          },
+          "ledger": [
+            {
+              "id": "9869d759-9f00-44f0-abf0-ead68c61e236",
+              "payment_id": "bd64113d-bb11-4602-8e2c-f065617f1399",
+              "kind": "CHARGE",
+              "amount": 450000,
+              "operation_id": "saga/55b9cb5f-b740-4869-b1fa-a5fab2eb318a/charge",
+              "created_at": "2026-11-05T02:50:34.299Z"
+            },
+            {
+              "id": "df94f670-264b-454b-8873-bd0da283ae66",
+              "payment_id": "bd64113d-bb11-4602-8e2c-f065617f1399",
+              "kind": "REFUND",
+              "amount": 450000,
+              "operation_id": "saga/55b9cb5f-b740-4869-b1fa-a5fab2eb318a/refund",
+              "created_at": "2026-11-05T02:50:36.245Z"
+            }
+          ]
+        },
+        "error": null
+      },
+      "capturedAt": "2026-11-05T02:50:36.358Z"
+    },
+    "pending": {
+      "order": {
+        "id": "55b9cb5f-b740-4869-b1fa-a5fab2eb318a",
+        "request_key": "ad3b90ab-301c-45c9-be7f-7c0ebe05b7ee",
+        "fingerprint": "[\"LAMP-01\",1,\"F5\"]",
+        "sku": "LAMP-01",
+        "product_name": "Đèn bàn Studio",
+        "quantity": 1,
+        "unit_price": 450000,
+        "total": 450000,
+        "scenario": "F5",
+        "status": "COMPENSATING",
+        "step": "REFUND_PENDING",
+        "reservation_id": "9bf12e20-7be9-4054-af11-83d232ffadbf",
+        "payment_id": "bd64113d-bb11-4602-8e2c-f065617f1399",
+        "last_error": "REFUND_TEMPORARILY_UNAVAILABLE",
+        "created_at": "2026-11-05T02:50:34.256Z",
+        "updated_at": "2026-11-05T02:50:34.332Z"
+      },
+      "inventory": {
+        "available": true,
+        "data": {
+          "reservation": {
+            "id": "9bf12e20-7be9-4054-af11-83d232ffadbf",
+            "order_id": "55b9cb5f-b740-4869-b1fa-a5fab2eb318a",
+            "sku": "LAMP-01",
+            "quantity": 1,
+            "status": "HELD"
+          },
+          "stock": [
+            {
+              "sku": "LAMP-01",
+              "available": 18
+            },
+            {
+              "sku": "CUP-01",
+              "available": 30
+            },
+            {
+              "sku": "BAG-01",
+              "available": 15
+            }
+          ]
+        },
+        "error": null
+      },
+      "payment": {
+        "available": true,
+        "data": {
+          "payment": {
+            "id": "bd64113d-bb11-4602-8e2c-f065617f1399",
+            "order_id": "55b9cb5f-b740-4869-b1fa-a5fab2eb318a",
+            "amount": 450000,
+            "status": "CHARGED"
+          },
+          "ledger": [
+            {
+              "id": "9869d759-9f00-44f0-abf0-ead68c61e236",
+              "payment_id": "bd64113d-bb11-4602-8e2c-f065617f1399",
+              "kind": "CHARGE",
+              "amount": 450000,
+              "operation_id": "saga/55b9cb5f-b740-4869-b1fa-a5fab2eb318a/charge",
+              "created_at": "2026-11-05T02:50:34.299Z"
+            }
+          ]
+        },
+        "error": null
+      },
+      "capturedAt": "2026-11-05T02:50:34.373Z"
+    }
+  }
+]

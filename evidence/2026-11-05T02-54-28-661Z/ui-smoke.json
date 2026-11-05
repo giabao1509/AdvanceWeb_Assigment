@@ -1,0 +1,16 @@
+{
+  "passed": true,
+  "capturedAt": "2026-11-05T02:55:01.262Z",
+  "checks": [
+    "3 products",
+    "happy checkout",
+    "backend request/response",
+    "Saga F3 refund/release",
+    "reload order persistence",
+    "Baseline F3 orphan charge/reservation",
+    "mode isolation and stale response guard",
+    "390px shop/backend no overflow",
+    "no browser JS errors"
+  ],
+  "errors": []
+}

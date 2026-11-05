@@ -1,0 +1,186 @@
+{
+  "passed": true,
+  "capturedAt": "2026-11-05T02:50:52.481Z",
+  "node": "v22.17.1",
+  "httpTests": 14,
+  "matrixCases": 10,
+  "killPaymentModes": 2,
+  "coordinatorRestart": true,
+  "uiChecks": 9,
+  "artifacts": [
+    {
+      "file": "backend-saga-refund.png",
+      "sha256": "56d94e20156b22ac9970c9224b0e409315845a67b95b2c80256e33b2c879d8aa"
+    },
+    {
+      "file": "http-tests.txt",
+      "sha256": "80ddf976915ee4fd216e8c19e6028f0dd68c515018e80dafbce71acbb60bf0cd"
+    },
+    {
+      "file": "kill-payment-logs/inventory.jsonl",
+      "sha256": "7ed903c9fdea21159d208f38788e698b2e541f3e80d0c6b3dcea8131d2f8841f"
+    },
+    {
+      "file": "kill-payment-logs/order.jsonl",
+      "sha256": "fb33ed0f6933be13224444c301512491839d87ed1be3deb9b9e74fe1927d5afc"
+    },
+    {
+      "file": "kill-payment-logs/payment.jsonl",
+      "sha256": "5931d1f9dfc4a3e53ed1562125d9146a035c4b3eb883d6b3777ef56b058e79e2"
+    },
+    {
+      "file": "kill-payment.json",
+      "sha256": "089ae0104e29ce9c924f8c32e8eed625346a33f7f7e9d6b288bf76e8c8247c49"
+    },
+    {
+      "file": "matrix-logs/inventory.jsonl",
+      "sha256": "075c0865a083e9af63aba8a1ad23bebf14301aec60aed3217b573c62abcf2d57"
+    },
+    {
+      "file": "matrix-logs/order.jsonl",
+      "sha256": "f394cabe6b1af7b132443e4c2e5289a0eef3c488ab7e86a4bb0e873d57cfc40d"
+    },
+    {
+      "file": "matrix-logs/payment.jsonl",
+      "sha256": "91efdc22714ad87d7253389223edf3d439d694b3abad802d61c7fa0b6605c12b"
+    },
+    {
+      "file": "matrix.json",
+      "sha256": "a29da9d086aef4d72a99725e544fdcccb767cb157794c31efce5c3d95a33bb91"
+    },
+    {
+      "file": "restart-order-logs/inventory.jsonl",
+      "sha256": "801710bd78dcac8d7b6c40fb66154a1a62809c67e7a8a4244dfbcc5c486bdb4c"
+    },
+    {
+      "file": "restart-order-logs/order.jsonl",
+      "sha256": "37e309de860133b9a36dd1dae5e6176866ea2b19b033874007e74108aedf58c9"
+    },
+    {
+      "file": "restart-order-logs/payment.jsonl",
+      "sha256": "86224753c70c7bf5003e6b7dfd53177027a380f69b17e44bb5e9143928d0a8db"
+    },
+    {
+      "file": "restart-order.json",
+      "sha256": "6cc13932205148d6a8931216c86541f9675a0bd0dbcbd261c93c6c2800ed714c"
+    },
+    {
+      "file": "storefront-desktop.png",
+      "sha256": "04649aabfd3599ed1dad6c79183b40d55b08755fd4a600097de2da6112d6fb5c"
+    },
+    {
+      "file": "storefront-mobile.png",
+      "sha256": "fdbb2781250115e607077879ddac0f866e39094f43884cc5211b7a2b889d9834"
+    },
+    {
+      "file": "typecheck.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "ui-smoke.json",
+      "sha256": "3dad8cd559f2ce242febc57dea247819f0324734110afb622d349072a6ce0e5d"
+    }
+  ],
+  "sources": [
+    {
+      "file": "package.json",
+      "sha256": "91053969589699bb7f27068ee2c446bcc2a2760de432e2d365ef99fe4fbf94a5"
+    },
+    {
+      "file": "package-lock.json",
+      "sha256": "4fb0ae9982503a8bb98d6401bf3c37b43adca68f8726db2a9f07cb32810948dc"
+    },
+    {
+      "file": "tsconfig.json",
+      "sha256": "88b0694425eb290b2ac9eb8dee5d5d4ecf983664c6e9d99e0e6dc1df4edcb03d"
+    },
+    {
+      "file": "src/inventory/server.ts",
+      "sha256": "81319d450ea05a1f4efc4d1f1c5fae4544258162e7ce68abc1244a64760c56af"
+    },
+    {
+      "file": "src/order/engine.ts",
+      "sha256": "c17a55cc47f13fa07fa817d56c575de3e84ec5eb7a7a0581f03eb00c25abab6d"
+    },
+    {
+      "file": "src/order/server.ts",
+      "sha256": "ebe351b92f0a11f984a548cfae4c9414effc83e4735df4735c0b8988e19b4dde"
+    },
+    {
+      "file": "src/order/store.ts",
+      "sha256": "62abc23225fb87f3da6d37861f925b8d0b4b98efc0752835add7b44ae95392a3"
+    },
+    {
+      "file": "src/payment/server.ts",
+      "sha256": "ff69e0b183853e4cc3df3a537b31def24e3eca8736434b41bad5914e709aa3e8"
+    },
+    {
+      "file": "src/shared/config.ts",
+      "sha256": "684efdbbe92987962ce820ea9f78ed94d6124502f1b3bda6ad2b3d8bf5633233"
+    },
+    {
+      "file": "src/shared/db.ts",
+      "sha256": "f3b6bae5f4fecf972b73d4dc2f6b58228992c60fc066cb50355f2fd7b92960fa"
+    },
+    {
+      "file": "src/shared/http.ts",
+      "sha256": "d51d65ae67b1ea4a3ce86785f3a2f755ae05611131b566bee0d4b082c527aaac"
+    },
+    {
+      "file": "src/shared/types.ts",
+      "sha256": "398a58cbe506d1a0a75c93b0fb1555c3a78677be3df31977d90e77670cc7c3f9"
+    },
+    {
+      "file": "scripts/build-ui.ts",
+      "sha256": "d9d28afe151820045f555a13ff8acee60717824b9779216e667a01e0067cfae1"
+    },
+    {
+      "file": "scripts/demo-kill-payment.ts",
+      "sha256": "b27b879628c6a23c80ed1b018888e60acf60a7a88f3c817fe46951aac1d024a0"
+    },
+    {
+      "file": "scripts/demo-restart-order.ts",
+      "sha256": "d55d885143e2ccc150d416198a27464637c3f40ccf2dbb27424e0f1a04806ad0"
+    },
+    {
+      "file": "scripts/dev.ts",
+      "sha256": "f328db87a7c506bd3bcdf99991f76c8e4a73f7250a88f58022dea37aa3801e03"
+    },
+    {
+      "file": "scripts/evidence.ts",
+      "sha256": "a32d8ea56f6d06cb4654cf83e4087e034d5707222dfd678e22002c3f644035db"
+    },
+    {
+      "file": "scripts/lab.ts",
+      "sha256": "ae451ec1d7d892c8ac0e81bdae29ce65e52da57bf7f3e65166d2ccc55e7d46ea"
+    },
+    {
+      "file": "scripts/reset.ts",
+      "sha256": "e1b85bc28c6b674d4757612fd33570ac6abf3b0d2343b00b66909352c2828e4d"
+    },
+    {
+      "file": "scripts/ui-smoke.ts",
+      "sha256": "332817e02201943ffee397da1cd7b180e73eb2a3eb058c498e99a6c91420f62d"
+    },
+    {
+      "file": "tests/http.test.ts",
+      "sha256": "75d18a72b300bab7e70bfbaba1404ea22907655062a118cd70d3a245229baa49"
+    },
+    {
+      "file": "public/app.ts",
+      "sha256": "19d4cdc22a16d4fd42a2706d9ca8ff9901cacdb57d352b62a70dac557ba852ee"
+    },
+    {
+      "file": "public/index.html",
+      "sha256": "12ab86cc7d7d4a0d0e9e4ab5dca9787e363388b2dec761bcb086ad84efb7d20f"
+    },
+    {
+      "file": "public/products.svg",
+      "sha256": "ff8d8e0a4691a39d92fc6948f5664c05ae329309313bd6caab04b7f0f1098b24"
+    },
+    {
+      "file": "public/styles.css",
+      "sha256": "46a9c5437e4428f89510b36a8a3477df1905ad2e96917590de11d1a50050e459"
+    }
+  ]
+}

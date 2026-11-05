@@ -1,0 +1,301 @@
+{
+  "passed": true,
+  "scope": "V3 F5/F6 compensation and restart",
+  "capturedAt": "2026-11-05T15:38:52.303Z",
+  "freshFixtures": true,
+  "checkpointMethod": "IPC pause after reading durable recovery state, before enabling worker; default app startup is not paused",
+  "cases": [
+    "F5",
+    "F6"
+  ],
+  "phases": [
+    "before-stop",
+    "after-restart",
+    "converged"
+  ],
+  "artifacts": [
+    {
+      "file": "f5-01-before-stop.json",
+      "sha256": "28cd53b0b6ce287c31acdf247a6ab8a24d4e8485f39c779031fc865c7bc58f70"
+    },
+    {
+      "file": "f5-01-before-stop.png",
+      "sha256": "8b6c175906a78f5188bac96a71dbb120114d7d945090f34fe05967190a2f9221"
+    },
+    {
+      "file": "f5-02-after-restart.json",
+      "sha256": "886d1bb4207c689ce3fe963654e7bbf2fc2efee4000361b2811ed8379f695911"
+    },
+    {
+      "file": "f5-02-after-restart.png",
+      "sha256": "f813934ae7a6c04f26b593e64f351a34c229ece73fb659c67c7b893985f43896"
+    },
+    {
+      "file": "f5-03-converged.json",
+      "sha256": "692698c75feeb49a362610ead86da74eba3b7e9c2e3b8eed957828861f4f9507"
+    },
+    {
+      "file": "f5-03-converged.png",
+      "sha256": "13b273eef56761b85df3c4bccea20c1b036deaf01f6125c8c77e11034b5b57a0"
+    },
+    {
+      "file": "f5-released-inventory.png",
+      "sha256": "cdc02b746c134d918c48ecac1956dab9cbe24333c394048bed8e50bde8a36551"
+    },
+    {
+      "file": "f6-01-before-stop.json",
+      "sha256": "7164bb82ef182fa713d2fe629150185c61c65c168d2433fa838d3a8413f8802e"
+    },
+    {
+      "file": "f6-01-before-stop.png",
+      "sha256": "0bfb5ee4b988967c6edd957e2cbc2e7f7daf91ba1bedc24342a3e949bfff1014"
+    },
+    {
+      "file": "f6-02-after-restart.json",
+      "sha256": "b4c93032c6b67a6d42310976a1fd03e12d7e1e319cf5fbf37d365622c90bda2f"
+    },
+    {
+      "file": "f6-02-after-restart.png",
+      "sha256": "c133105eacfc17f97afa701fa96369564752d94da3d24be9bfa7dd29caeb9fa8"
+    },
+    {
+      "file": "f6-03-converged.json",
+      "sha256": "32d419e66c3d79882133cb57d7387f51212d83f7ae164add069cf950ae58a654"
+    },
+    {
+      "file": "f6-03-converged.png",
+      "sha256": "552b57355785790fe0f4d6b27901d08ecc297cbff55cd95c2f9f428db74a5c08"
+    },
+    {
+      "file": "f6-released-inventory.png",
+      "sha256": "a6af0fbdd728ca272eff73fb7447c0c9a9f9287d4e38248d893e15b7bddabb2f"
+    },
+    {
+      "file": "refund-failure-logs/inventory.jsonl",
+      "sha256": "e498f335181180560c642b0439a2e075cfaa9565f6858e1f89bb9914d00fb594"
+    },
+    {
+      "file": "refund-failure-logs/order.jsonl",
+      "sha256": "44507751320e7240d09efc9959d4475e259dc9e8de2be5f62870acf07631a82f"
+    },
+    {
+      "file": "refund-failure-logs/payment.jsonl",
+      "sha256": "66064d7624d8670edb22285427c5685797e57c2674b7808cce5a3e2a44ef60a1"
+    },
+    {
+      "file": "refund-failure-logs/supervisor.jsonl",
+      "sha256": "12de983bce8cb935915f8d889398db23ffebf8021ca531e237bb81322da94350"
+    },
+    {
+      "file": "refund-failure.json",
+      "sha256": "b1d59f449f56944b431932010684a49fa1a691afd4cf04bbc23ac8aaf01e6a9b"
+    },
+    {
+      "file": "restart-order-logs/inventory.jsonl",
+      "sha256": "b77c83ac1b9b430ca565e66d5534c6d9cb4e397fcfabe557cfff5978b85e1a8f"
+    },
+    {
+      "file": "restart-order-logs/order.jsonl",
+      "sha256": "1beea8790fa2ecab31de7b52bca99c5990e32321bafec1dac3654e084f246c9f"
+    },
+    {
+      "file": "restart-order-logs/payment.jsonl",
+      "sha256": "fc206e0851de2619e0de2685f940598e3228152a6b74b57af904a1cd236c0c71"
+    },
+    {
+      "file": "restart-order-logs/supervisor.jsonl",
+      "sha256": "2cbf0dfc7d8931cc564bae493eda5d234239a61940344ecdf9769ef45a247c91"
+    },
+    {
+      "file": "restart-order.json",
+      "sha256": "d80432871da7b6d5adcc6adc9507602b8673b4c372f1382d9eaa1023027b0f14"
+    }
+  ],
+  "sources": [
+    {
+      "file": "package.json",
+      "sha256": "c10dcc66304f4ae8c4833936a3d4e372141c731bbd2b6c202d399acf7357b2f4"
+    },
+    {
+      "file": "src/inventory/server.ts",
+      "sha256": "591d5c7eacd38362fd91a8180fa55384ca50dd2cdacd270c948a6959163687d4"
+    },
+    {
+      "file": "src/order/engine.ts",
+      "sha256": "ffdc10d2aef535a237b55c7cca250933be1f750656835437de98c3ef6433a734"
+    },
+    {
+      "file": "src/order/server.ts",
+      "sha256": "9613fded009ddb7fd7b56e0d3b5c4a0ce030b2110f0434b831f4521f0310d317"
+    },
+    {
+      "file": "src/order/store.ts",
+      "sha256": "db3f3703cd555d0db0a8487139c69852052af19fb83413566ffb8fef90c50640"
+    },
+    {
+      "file": "src/payment/server.ts",
+      "sha256": "421d88ba9d9a8b0d1d81f733bf873a003ee6b6663c1fa4cf3f5ded3df3bca8e8"
+    },
+    {
+      "file": "src/shared/config.ts",
+      "sha256": "f6c1e6192a5c0804db53bc760a4858d5e66dce0587d6ec43fa9894a515a76034"
+    },
+    {
+      "file": "src/shared/db.ts",
+      "sha256": "3ba274b72fb6aabc0248ceca084b5842fd7d5cc57359a462aafe42a402b65728"
+    },
+    {
+      "file": "src/shared/http.ts",
+      "sha256": "478e8932fd9578ebdcc826305829b55fd69522f51d2b9bd9089fc3cb16a45e2a"
+    },
+    {
+      "file": "src/shared/migration.ts",
+      "sha256": "b71bb927567240bed33d5df053b03d7ade05f17b0851718d2fc2f214df520ff4"
+    },
+    {
+      "file": "src/shared/types.ts",
+      "sha256": "403e6ec943a513260eadb24bf3268efcf94b89a9cd2477a012941b702efd95a5"
+    },
+    {
+      "file": "scripts/build-ui.ts",
+      "sha256": "610ac69e897890ad0c1787e6580ec17ffe61d21a3fd425e057a29de1eff07fcf"
+    },
+    {
+      "file": "scripts/compensation-capture.ts",
+      "sha256": "6f3412118987742998661a48368adcd0d4c4214027f0428b827f1198514c8ec5"
+    },
+    {
+      "file": "scripts/control.ts",
+      "sha256": "6b586772a1c50351765d14371f6190e470a275281ef6b48fa73c3bcd92105ef2"
+    },
+    {
+      "file": "scripts/db-inspect.ts",
+      "sha256": "368d57e554b4dfe0c6ad85de117add59bc6f1fa594f522afc619beb135c0c3ca"
+    },
+    {
+      "file": "scripts/demo-kill-payment.ts",
+      "sha256": "9362ba1472ee0e5a029c18377a40bb1f859383e12682d4d4ccd35bd9f1ee1a4b"
+    },
+    {
+      "file": "scripts/demo-refund-failure.ts",
+      "sha256": "46d29302fb2a2b95c05675adbfef8633dd2a788ed77af9c8c84fc2df6a4aad15"
+    },
+    {
+      "file": "scripts/demo-restart-order.ts",
+      "sha256": "2241aed393325bae6533193fbbbc378d01f7c8535127f57c9ee3d12f9e02ce68"
+    },
+    {
+      "file": "scripts/dev.ts",
+      "sha256": "c960e07519961e9833ad0074edbc984f860d1f75719c0cbcc4541992f7888568"
+    },
+    {
+      "file": "scripts/evidence.ts",
+      "sha256": "8239c6c29b14ac581c897456cb4611289a2b3d7202b846b5de095332778339ac"
+    },
+    {
+      "file": "scripts/f4-recovery.ts",
+      "sha256": "ac07b9d709ae4c9fbd6816eaf18bfc5b9f9dcbb4c190f595261abe31bb7db840"
+    },
+    {
+      "file": "scripts/history-ui-smoke.ts",
+      "sha256": "854f11c4fe274da3d7aa97d1a59b23dcdd4cbfcd5848ea8a52e053f1aceb8191"
+    },
+    {
+      "file": "scripts/lab.ts",
+      "sha256": "d3a2b89f2b19fe936be790c3729475c64f7beef7c0127b55ce228b78151f8825"
+    },
+    {
+      "file": "scripts/manual-ui-smoke.ts",
+      "sha256": "0a1dddc4503916f98477000e2d1efe596e0264c94bdc793a069a3c9742240a87"
+    },
+    {
+      "file": "scripts/recovery-ui-smoke.ts",
+      "sha256": "a8f0d2dc3c2c6bb3041798c651f7eb8df184e2e01a9c3e78420fca00c58bf4ae"
+    },
+    {
+      "file": "scripts/render-report.py",
+      "sha256": "0fcebdcedd63047e8bbb308a79880295df11e57eaaf27779559553e2d8ffb7ec"
+    },
+    {
+      "file": "scripts/reset.ts",
+      "sha256": "1a4fac28af40dc5db05a240ec47cdef7e84a288f1615c973cba2971504f72cef"
+    },
+    {
+      "file": "scripts/resume.ts",
+      "sha256": "13e068786f9883c044b91c564c0c5c4abdfbf967532f1a3ca6e3e73184b3f5a2"
+    },
+    {
+      "file": "scripts/shared-ui-smoke.ts",
+      "sha256": "5382c5752a6f8d1e70a2b6162df632f417fcb55b17150df1602c4839c86b8bd2"
+    },
+    {
+      "file": "scripts/start-ui.ts",
+      "sha256": "f53b9c516aedae2d8f733b344e07e7cfcc3c7f47cd060be63481d68a73cff1cd"
+    },
+    {
+      "file": "scripts/stock-ui-smoke.ts",
+      "sha256": "c297d719220b1e91e143f524934f1f60aa08178422807f577a1cbd2f26036df5"
+    },
+    {
+      "file": "scripts/ui-server.ts",
+      "sha256": "17e478a7ebbce496539053a79dd6b06f8212aef476bd0a768adf8c772e89d937"
+    },
+    {
+      "file": "scripts/ui-smoke.ts",
+      "sha256": "98f32f8057e12f7e63c9b0c8d6e966b7cfeda6c508222431740f8a022ebd4e2f"
+    },
+    {
+      "file": "scripts/v3-evidence.ts",
+      "sha256": "edbbc8d28d46dffc7419696681c4fa66771335a684d211ecce0d30aa5e2ed4e6"
+    },
+    {
+      "file": "tests/f4.test.ts",
+      "sha256": "b170bceb7d7e6dda9fc2ab416d747ae4d545fdc69f542fc89ded2578fec63255"
+    },
+    {
+      "file": "tests/http.test.ts",
+      "sha256": "2cfc79fa039b4f8dc182cf77777180ab814402937a318dd32964c6d5a629d228"
+    },
+    {
+      "file": "tests/manual.test.ts",
+      "sha256": "6a94a1bd2392553175a806b217e4a99a4273da20fb3ae3cf6a7af4a5144323cb"
+    },
+    {
+      "file": "tests/observability.test.ts",
+      "sha256": "32d9f98cfd152d85f2de4130cc6cc920b7ab1c07d84cb60528a014bb7fca6e48"
+    },
+    {
+      "file": "tests/retry.test.ts",
+      "sha256": "c0169e5b923d17780c2f137e61bd88c05264b3e252289edd78419e29fbfa3c6f"
+    },
+    {
+      "file": "tests/shared.test.ts",
+      "sha256": "5280446608bb3a64469c424b6ca3854b41b080d201acbc40cf807cc619ed222b"
+    },
+    {
+      "file": "tests/v3.test.ts",
+      "sha256": "0c1fd7e09c97af503082071f973ac114cd1d1ad293003b026121baf0ffaa638f"
+    },
+    {
+      "file": "public/app.ts",
+      "sha256": "86588a5e9e413a35e13fdbee4f09db069cbc126d0329d1bffcce447eec57d80c"
+    },
+    {
+      "file": "public/index.html",
+      "sha256": "05be7e89654a529463a1c37238be7a932b5e6269477cfab39b2a558c13f244ff"
+    },
+    {
+      "file": "public/log-format.ts",
+      "sha256": "6de5d6f4fe247bce086c4df37ed9028b68cd6601f6d73ef0289e9d4e4c85658d"
+    },
+    {
+      "file": "public/products.svg",
+      "sha256": "ff8d8e0a4691a39d92fc6948f5664c05ae329309313bd6caab04b7f0f1098b24"
+    },
+    {
+      "file": "public/styles.css",
+      "sha256": "2a9ff4f8e55532aad635ea78c8568dcb86edc589dfe3cf915126db26b511a35b"
+    }
+  ],
+  "browserErrors": []
+}
