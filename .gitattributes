@@ -1,4 +1,6 @@
-* text=auto
+* text=auto eol=lf
+# Keep captured artifacts byte-for-byte, including their recorded checksums.
+evidence/** -text
 *.bat text eol=crlf
 *.ts text eol=lf
 *.md text eol=lf
